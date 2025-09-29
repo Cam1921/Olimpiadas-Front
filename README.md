@@ -1,65 +1,90 @@
 # OLIMPIADAS FRONT
 
-Frontend de la plataforma **Olimpiadas**.  
-Este proyecto consume la API del backend en Laravel 11 y está preparado para que todo el equipo trabaje en conjunto.
+Repositorio para el desarrollo **Front-end** de la aplicación web Olimpiadas.  
+Este proyecto es parte del desarrollo grupal de Nebula Soft para la materia Ingeniería de Software.
 
----
-
-## 🧩 Tecnologías principales
-
-- React 18 + Vite
-- Tailwind CSS 3.4.x
-- Axios (cliente HTTP)
+Las tecnologías que se usarán para su desarrollo son:
+- React + Vite
+- Tailwind CSS
+- Axios
 - React Router DOM
 
 ---
 
-## ✅ Requisitos previos
+## 🛠 Tecnologías Requeridas
 
-1. **Node.js** LTS (20.x recomendado)  
-   Verifica que esté instalado:
+- [Node.js](https://nodejs.org/) (LTS recomendado 20.x)
+- [NPM] (se instala junto con Node.js)
+- Git
+- Visual Studio Code
 
-   ```bash
-   node -v
-   npm -v
-🚀 Instalación y ejecución
+Extensiones recomendadas en VSCode:
+- Tailwind CSS IntelliSense
+- ESLint
+- Prettier
+- Thunder Client (o Postman para probar APIs)
+
+Verifica instalación en tu terminal:
+
+```bash
+node -v
+npm -v
+git --version
+
+
+🚀 Comienzo Rápido
 1. Clonar el repositorio
 
+Ejecuta el siguiente comando en la terminal para clonar el proyecto en tu máquina:
+
 git clone <URL-del-repositorio>
+
+
+Accede a la carpeta del proyecto:
+
 cd Olimpiadas-Front
 
-2. Instalar dependencias
+2. Cambiar a la rama de desarrollo
+
+Cambia a la rama principal de trabajo del equipo (develop):
+
+git checkout develop
+
+3. Instalar dependencias
+
+Ejecuta:
 
 npm install
 
-3. Configurar variables de entorno
 
-Crea un archivo .env en la raíz del proyecto:
+Esto descargará todos los paquetes necesarios.
 
-# URL del backend
+4. Configurar variables de entorno
+
+Crea un archivo .env en la raíz del proyecto con el siguiente contenido:
+
+# URL del backend (Laravel)
 VITE_API_BASE=http://localhost:8000
 
 
-Si el backend corre en otro puerto, cambia el valor.
+⚠️ Cambia esta URL si tu backend corre en otro puerto o en un servidor externo.
 
-4. Ejecutar en desarrollo
+5. Ejecutar el servidor de desarrollo
+
+Inicia la aplicación:
 
 npm run dev
 
-Abre en el navegador el enlace que muestre Vite, normalmente:
-http://localhost:5173
 
-📂 Estructura básica del proyecto
-src/
-├─ assets/            # Imágenes y recursos estáticos
-├─ lib/
-│  └─ api.ts          # Cliente Axios centralizado
-├─ pages/
-│  ├─ HomePage.jsx    # Página de inicio
-│  └─ AboutPage.jsx   # Página de ejemplo
-├─ App.jsx            # Layout y rutas
-├─ index.css          # Estilos principales (Tailwind)
-└─ main.jsx           # Punto de entrada
+Si todo está bien, verás un resultado similar:
+
+  VITE v5.0.0  ready in 300ms
+
+  ➜  Local:   http://localhost:5173/
+
+
+Abre en tu navegador: http://localhost:5173
+
 
 🔧 Configuración de Tailwind
 
@@ -69,13 +94,23 @@ export default {
   theme: { extend: {} },
   plugins: [],
 };
+
 src/index.css
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 html, body, #root { height: 100%; }
+📄 Notas para el equipo
 
+La rama principal del proyecto es develop.
+
+Cada integrante debe crear sus ramas de feature a partir de develop:
+
+git checkout -b feature/nueva-pantalla
+
+
+Una vez finalizada la tarea, hacer Pull Request hacia develop.
 
 📄 Licencia
 
