@@ -1,4 +1,5 @@
-import { Routes, Route } from "react-router-dom";
+// src/App.jsx
+import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -15,7 +16,7 @@ export default function App() {
           </ProtectedRoute>
         }
       />
-      <Route path="*" element={<Login />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

@@ -1,18 +1,24 @@
-import api, { setAuthToken } from "../lib/api";
+// src/services/auth.js
+import api from "../lib/api";
 
 export async function login(email, password) {
   const { data } = await api.post("/login", { email, password });
-  setAuthToken(data.token);      // guarda token
-  return data.user;              // retorna usuario
+  sessionStorage.setItem("token", data.token);
+  sessionStorage.setItem("user", JSON.stringify(data.user));
+  return data;
 }
 
 export async function me() {
-  // usa /me; si en tu backend aún está pendiente, cambia temporalmente a /me-test
   const { data } = await api.get("/me");
+  sessionStorage.setItem("user", JSON.stringify(data));
   return data;
 }
 
 export async function logout() {
-  try { await api.post("/logout"); } catch {}
-  setAuthToken(null);
+  try {
+    await api.post("/logout");
+  } finally {
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("user");
+  }
 }
