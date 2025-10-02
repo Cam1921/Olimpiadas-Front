@@ -1,35 +1,25 @@
+// src/lib/api.js
 import axios from "axios";
 
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+const baseURL = (import.meta.env.VITE_API_URL || "").replace(/\/+$/, "");
+const api = axios.create({ baseURL, timeout: 15000 });
+
+api.interceptors.request.use((config) => {
+  const token = sessionStorage.getItem("token");
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
 });
 
-const saved = localStorage.getItem("token");
-if (saved) {
-  api.defaults.headers.common.Authorization = `Bearer ${saved}`;
-}
-
 api.interceptors.response.use(
-  (res) => res,
+  (r) => r,
   (err) => {
     if (err?.response?.status === 401) {
-      localStorage.removeItem("token");
-      delete api.defaults.headers.common.Authorization;
-      // opcional: redirigir al login
-      // window.location.href = "/login";
+      sessionStorage.removeItem("token");
+      sessionStorage.removeItem("user");
+      window.location.href = "/login";
     }
     return Promise.reject(err);
   }
 );
-
-export const setAuthToken = (token) => {
-  if (token) {
-    localStorage.setItem("token", token);
-    api.defaults.headers.common.Authorization = `Bearer ${token}`;
-  } else {
-    localStorage.removeItem("token");
-    delete api.defaults.headers.common.Authorization;
-  }
-};
 
 export default api;

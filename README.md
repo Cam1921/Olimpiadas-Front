@@ -32,7 +32,7 @@ npm -v
 git --version
 
 
-🚀 Comienzo Rápido
+# 🚀 Inicio Rápido
 1. Clonar el repositorio
 
 Ejecuta el siguiente comando en la terminal para clonar el proyecto en tu máquina:
@@ -61,13 +61,14 @@ Esto descargará todos los paquetes necesarios.
 
 4. Configurar variables de entorno
 
-Crea un archivo .env en la raíz del proyecto con el siguiente contenido:
+Crea .env.development en la raíz (no subir a git):
 
 # URL del backend (Laravel)
-VITE_API_BASE=http://localhost:8000
+VITE_API_URL=http://localhost:8000/api
 
 
-⚠️ Cambia esta URL si tu backend corre en otro puerto o en un servidor externo.
+Esta URL debe apuntar al backend Laravel. Si corre en otro host/puerto, cámbiala aquí.
+Importante: si cambias el .env, reinicia el servidor de Vite.
 
 5. Ejecutar el servidor de desarrollo
 
@@ -101,6 +102,7 @@ src/index.css
 @tailwind utilities;
 
 html, body, #root { height: 100%; }
+
 📄 Notas para el equipo
 
 La rama principal del proyecto es develop.
@@ -111,6 +113,15 @@ git checkout -b feature/nueva-pantalla
 
 
 Una vez finalizada la tarea, hacer Pull Request hacia develop.
+
+🔍 Smoke test (5 min)
+
+Navega a http://localhost:8000/api/health → debe responder { ok: true }.
+
+Desde el front, intenta login con el admin seed:
+admin@nebula.com / Admin12345!
+
+Debe guardar token en sessionStorage, redirigir y cargar me().
 
 📄 Licencia
 
