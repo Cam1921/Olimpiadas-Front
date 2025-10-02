@@ -2,8 +2,11 @@
 export default {
   content: ["./index.html", "./src/**/*.{js,jsx}"],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        sans: ['"Comfortaa"', "ui-sans-serif", "system-ui"],
+      },
+    },
   },
   plugins: [],
 }
-
