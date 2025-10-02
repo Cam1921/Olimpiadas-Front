@@ -76,3 +76,63 @@
   .scrollbar-hide::-webkit-scrollbar { display: none; }
   .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 }
+
+@layer components {
+  .btn-login {
+    width: 8.5em;
+    height: 2.6em;
+    margin: 0;
+    background: var(--primary);         /* #0284C7 */
+    color: var(--surface);              /* #F8FAFB */
+    border: 2px solid var(--primary);
+    border-radius: 0.625em;
+    font-size: 0.9rem;
+    line-height: 1;
+    white-space: nowrap;
+    font-weight: 700;
+    cursor: pointer;
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: color .35s ease;
+  }
+
+  .btn-login:hover {                    /* texto azul sobre fondo claro al pasar */
+    color: var(--primary);
+  }
+
+  .btn-login::after {                   /* wipe effect */
+    content: "";
+    background: var(--surface);         /* #F8FAFB */
+    position: absolute;
+    z-index: -1;
+    left: -20%;
+    right: -20%;
+    top: 0;
+    bottom: 0;
+    transform: skewX(-45deg) scale(0, 1);
+    transition: transform .5s ease;
+  }
+
+  .btn-login:hover::after {
+    transform: skewX(-45deg) scale(1, 1);
+  }
+
+  .btn-login:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 40%, transparent);
+  }
+
+  .btn-login:active {                   /* clic: vuelve a azul sólido */
+    color: var(--surface);
+  }
+  .btn-login:active::after {
+    transform: skewX(-45deg) scale(0, 1);
+  }
+}
+
