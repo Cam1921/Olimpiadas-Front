@@ -2,7 +2,7 @@
 import { Link } from "react-router-dom";
 import sansi from "../assets/sansi.png";
 
-export default function Navbar() {
+export default function Navbar({ onLoginClick }) {
   return (
     <header className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-slate-100">
       <div className="mx-auto max-w-6xl h-16 px-4 flex items-center justify-between">
@@ -20,9 +20,15 @@ export default function Navbar() {
         </div>
 
         {/* Botón Iniciar sesión */}
-        <Link to="/login" className="btn-login">
-          Iniciar sesión
-        </Link>
+        {onLoginClick ? (
+          <button type="button" className="btn-login" onClick={onLoginClick}>
+            Iniciar sesión
+          </button>
+        ) : (
+          <Link to="/login" className="btn-login">
+            Iniciar sesión
+          </Link>
+        )}
       </div>
     </header>
   );
