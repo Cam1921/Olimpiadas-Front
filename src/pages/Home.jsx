@@ -1,12 +1,12 @@
 // src/pages/Home.jsx
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
-import LoginModal from "../features/auth/components/LoginModal";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import LoginModal from "@/features/auth/components/LoginModal";
 import { useState } from "react";
 import { GrTrophy } from "react-icons/gr";
 import { HiAdjustmentsVertical } from "react-icons/hi2";
 import { FiDownload } from "react-icons/fi";
-import olimpiadas from "../assets/olimpiadas.png";
+import olimpiadas from "@/assets/olimpiadas.png";
 
 export default function Home() {
   const [open, setOpen] = useState(false);

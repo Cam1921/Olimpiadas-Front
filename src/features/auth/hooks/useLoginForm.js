@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { login } from "../../../services/auth";
+import { login } from "@/services/auth";
 
 export default function useLoginForm(onSuccess) {
   const [email, setEmail] = useState("");

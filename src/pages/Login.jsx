@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { login } from "../services/auth";
+import { login } from "@/services/auth";
 
 export default function Login() {
   const [email, setEmail] = useState("admin@nebula.com");
