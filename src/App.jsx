@@ -3,7 +3,7 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
-
+import ResponsablesAcademicos from "./pages/ResponsablesAcademicos";
 
 export default function App() {
   return (
@@ -17,7 +17,13 @@ export default function App() {
             <Dashboard />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route path="responsables" element={<ResponsablesAcademicos />} />
+      </Route>
+
+      {/* 🔹 Ruta de prueba sin login */}
+      <Route path="/responsables-test" element={<ResponsablesAcademicos />} />
+
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
