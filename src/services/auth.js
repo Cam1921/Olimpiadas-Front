@@ -3,6 +3,7 @@ import api from "../lib/api";
 
 export async function login(email, password) {
   const { data } = await api.post("/login", { email, password });
+  console.log(data.token);
   sessionStorage.setItem("token", data.token);
   sessionStorage.setItem("user", JSON.stringify(data.user));
   return data;
