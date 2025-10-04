@@ -39,8 +39,8 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen p-6 bg-gray-50">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen p-10 bg-gray-50">
+      <div className="w-full mx-auto">
         <header className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-semibold">Nebula — Dashboard</h1>
           <button className="border rounded px-3 py-1" onClick={onLogout}>

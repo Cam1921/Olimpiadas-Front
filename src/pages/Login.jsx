@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { login } from "../services/auth";
-import { Navigate, useNavigate } from "react-router-dom";
+import { login } from "@/services/auth";
+import { useNavigate } from "react-router-dom";
 
 export default function Login() {
   const [email, setEmail] = useState("admin@nebula.com");
