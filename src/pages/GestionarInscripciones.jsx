@@ -1,0 +1,255 @@
+import { useEffect, useState } from "react";
+import { FiDownload } from "react-icons/fi";
+import { HiOutlineUpload } from "react-icons/hi";
+import axios from "axios";
+import * as XLSX from "xlsx";
+import { API_URL } from "../config";
+import Navbar from "../components/Navbar";
+
+export default function GestionInscripciones() {
+  const [gestion, setGestion] = useState(2025);
+  const [areaId, setAreaId] = useState("");
+  const [nivelId, setNivelId] = useState("");
+  const [busqueda, setBusqueda] = useState("");
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [perPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const fetchCompetidores = async (page = currentPage) => {
+    setLoading(true);
+    try {
+      const params = { gestion };
+      if (areaId) params.area_id = areaId;
+      if (nivelId) params.nivel_id = nivelId;
+      params.page = page;
+      params.per_page = perPage;
+
+      const res = await axios.get(`${API_URL}/competidores/listar`, { params });
+      setData(res.data.data || []);
+      setCurrentPage(res.data.pagination.current_page);
+      setTotalPages(res.data.pagination.last_page);
+    } catch (error) {
+      setData([]);
+      console.error("Error al obtener competidores", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCompetidores(currentPage);
+  }, [areaId, nivelId, gestion, currentPage]);
+
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // manejar el envío al backend para importar CSV
+      console.log("Archivo seleccionado:", file.name);
+    }
+  };
+
+  const exportExcel = () => {
+
+    const worksheetData = data.filter((c) =>
+                            c.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
+                            c.ci.includes(busqueda) ||
+                            c.unidad_educativa.toLowerCase().includes(busqueda.toLowerCase()) ||
+                            c.area.toLowerCase().includes(busqueda.toLowerCase()) ||
+                            c.nivel.toLowerCase().includes(busqueda.toLowerCase())
+                          ).map((item) => ({
+                            "Nombre": item.nombre,
+                            "CI": item.ci,
+                            "Unidad Educativa": item.unidad_educativa,
+                            "Departamento": item.departamento,
+                            "Área": item.area,
+                            "Nivel": item.nivel,
+                            "Tutor Académico": item.tutor_academico,
+                          }));
+    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Competidores");
+
+    XLSX.writeFile(workbook, `competidores_${new Date().getFullYear()}.xlsx`);
+  };
+
+  const areas = [
+    { id: "", nombre: "Todos" },
+    { id: 1, nombre: "Matemáticas" },
+    { id: 2, nombre: "Lenguaje" },
+    { id: 3, nombre: "Física" },
+  ];
+
+  const niveles = [
+    { id: "", nombre: "Todos" },
+    { id: 1, nombre: "Primaria" },
+    { id: 2, nombre: "Secundaria" },
+  ];
+
+  return (
+    <div className="min-h-screen bg-[#f9fbfb] p-6">
+      <Navbar />
+      <main className="mx-auto max-w-6xl px-4 py-12">
+
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">Gestión de Inscripciones</h1>
+          <p className="text-gray-600">Importa inscritos desde CSV</p>
+        </div>
+
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-8 text-center">
+          <label
+            htmlFor="csvUpload"
+            className="flex flex-col items-center justify-center cursor-pointer p-6 border-2 border-dashed rounded-xl hover:bg-gray-50 transition"
+          >
+            <HiOutlineUpload size={32} className="text-gray-500 mb-2" />
+            <span className="text-gray-600">
+              Suelta tu archivo CSV aquí o haz clic para seleccionar
+            </span>
+            <input
+              id="csvUpload"
+              type="file"
+              accept=".csv"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+          </label>
+          <p className="text-sm text-gray-500 mt-2">
+            Campos requeridos: Nombre Completo, CI, Contacto, Unidad educativa, Departamento, Grado, Área, Nivel, Tutor académico (opcional)
+          </p>
+        </div>
+        <p className="text-gray-600 py-5">Generar listas por área y nivel</p>
+        
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+          <div className="flex flex-wrap gap-4 mb-6 items-end">
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Área</label>
+              <select
+                className="border rounded-lg px-3 py-2 text-sm"
+                value={areaId}
+                onChange={(e) => setAreaId(e.target.value)}
+              >
+                {areas.map(a => (
+                  <option key={a.id} value={a.id}>{a.nombre}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Nivel</label>
+              <select
+                className="border rounded-lg px-3 py-2 text-sm"
+                value={nivelId}
+                onChange={(e) => setNivelId(e.target.value)}
+              >
+                {niveles.map(n => (
+                  <option key={n.id} value={n.id}>{n.nombre}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex-1 min-w-[200px]">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Búsqueda</label>
+              <input
+                type="text"
+                placeholder="Por nombre / CI / Unidad educativa"
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+                className="border rounded-lg px-3 py-2 w-full text-sm"
+              />
+            </div>
+
+            <button
+              onClick={fetchCompetidores}
+              className="flex items-center gap-2 border px-5 py-2 rounded-lg text-sm hover:text-white hover:bg-[var(--primary)] transition"
+            >
+              Generar listas
+            </button>
+
+            <button
+              onClick={exportExcel}
+              className="flex items-center border text-sm hover:text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[var(--primary)] transition"
+            >
+              <FiDownload size={16} />
+              Exportar Excel
+            </button>
+          </div>
+
+          {/* Tabla */}
+          {loading ? (
+            <p className="text-center text-gray-500 py-10">Cargando...</p>
+          ) : data.length === 0 ? (
+            <p className="text-center text-gray-500 py-10">No se encontraron competidores</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm border border-slate-200 rounded-lg overflow-hidden">
+                <thead className="bg-gray-50 text-gray-700">
+                  <tr>
+                    <th className="px-4 py-2 text-left">Nombre</th>
+                    <th className="px-4 py-2 text-left">CI</th>
+                    <th className="px-4 py-2 text-left">Unidad educativa</th>
+                    <th className="px-4 py-2 text-left">Departamento</th>
+                    <th className="px-4 py-2 text-left">Área</th>
+                    <th className="px-4 py-2 text-left">Nivel</th>
+                    <th className="px-4 py-2 text-left">Tutor</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data
+                    .filter((c) =>
+                      c.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
+                      c.ci.includes(busqueda) ||
+                      c.unidad_educativa.toLowerCase().includes(busqueda.toLowerCase()) ||
+                      c.area.toLowerCase().includes(busqueda.toLowerCase()) ||
+                      c.nivel.toLowerCase().includes(busqueda.toLowerCase())
+                    )
+                    .map((c, index) => (
+                      <tr key={index} className="border-t hover:bg-gray-50">
+                        <td className="px-4 py-2">{c.nombre}</td>
+                        <td className="px-4 py-2">{c.ci}</td>
+                        <td className="px-4 py-2">{c.unidad_educativa}</td>
+                        <td className="px-4 py-2">{c.departamento}</td>
+                        <td className="px-4 py-2">{c.area}</td>
+                        <td className="px-4 py-2">{c.nivel}</td>
+                        <td className="px-4 py-2">{c.tutor_academico ?? "—"}</td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+              <div className="flex justify-center items-center gap-2 mt-4">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+                >
+                  Anterior
+                </button>
+
+                <span className="text-sm">
+                  Página {currentPage} de {totalPages}
+                </span>
+
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+                >
+                  Siguiente
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </main>
+    </div>
+  );
+}
