@@ -132,6 +132,16 @@ export default function InscripcionesManagement() {
       return () => clearTimeout(timer); // Limpiar el timer si el componente se desmonta o cambia el error
     }
   }, [validationError]);
+
+  useEffect(() => {
+    if (importSuccess) {
+      const timer = setTimeout(() => {
+        setImportSuccess(false);
+      }, 5000); // 5000 ms = 5 segundos
+
+      return () => clearTimeout(timer); // Limpia el temporizador si el componente se desmonta
+    }
+  }, [importSuccess]);
   // --- validar archivo ---
   const handleValidateFile = async () => {
     if (!file) return;
@@ -214,14 +224,16 @@ export default function InscripcionesManagement() {
         toast.success("✅ Inscritos importados correctamente");
         setConfirmedData(
           result.data.map((item, index) => ({
-            id: item.id || index, // o cualquier campo único que tenga
-            nombre: item.nombres || "—",
-            ci: item.ci || "—",
-            unidad_educativa: item.unidad_educativa || "—",
-            departamento: item.departamento || "—",
-            area: item.area || "—",
-            nivel: item.nivel || "—",
-            contacto_totor_legal: item.tutor_academico || "—",
+            id: index + 1,
+            nombre: item["nombres"] || "—",
+            ci: item["ci"] || "—",
+            unidad_educativa: item["unidad educativa"] || "—",
+            departamento: item["departamento"] || "—",
+            grado: item["grado"] || "—",
+            area: item["area"] || "—",
+            nivel: item["nivel"] || "—",
+            contacto_tutor_legal: item["contacto tutor legal"] || "—",
+            contacto_tutor_academico: item["contacto tutor academico"] || "—",
           }))
         );
         setImportSuccess(true);
@@ -528,7 +540,9 @@ export default function InscripcionesManagement() {
             </div>
             <div>
               <div className="flex items-center justify-between">
-                <h4 className="font-semibold mb-2">Errores detectados</h4>
+                <h4 className="font-semibold mb-2">
+                  Resumen de Errores detectados
+                </h4>
                 <span className="px-2 py-1 text-xs font-medium text-red-700 bg-red-100 rounded-full">
                   {responseData.meta.invalid_rows} errores
                 </span>
@@ -547,7 +561,7 @@ export default function InscripcionesManagement() {
                     <tbody>
                       {responseData &&
                         responseData.errors &&
-                        responseData.errors.map((err, i) => (
+                        responseData.errors.slice(0, 10).map((err, i) => (
                           <tr key={i} className="border-t h-10">
                             <td className="text-start px-2 ">
                               <span>#</span>
