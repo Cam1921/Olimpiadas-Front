@@ -1,0 +1,30 @@
+// src/constants/menu.js
+export const ROLE_NAMES = {
+  ADMINISTRADOR: "ADMINISTRADOR",
+  EVALUADOR: "EVALUADOR",
+  RESPONSABLE_DE_AREA: "RESPONSABLE_DE_AREA",
+};
+
+export const MENU_BY_ROLE = {
+  [ROLE_NAMES.ADMINISTRADOR]: [
+    { icon: "BiHome", label: "Panel Principal", path: "panel-principal" },
+    { icon: "GoPeople", label: "Gestion de Inscripciones", path: "gestion-inscripciones" },
+    { icon: "HiOutlineUserGroup", label: "Gestion de Roles", path: "gestion-roles" },
+    { icon: "BsSliders2", label: "Control de Fases", path: "control-fases" },
+    { icon: "HiAcademicCap", label: "Entorno Final", path: "entorno-final" },
+    { icon: "GrTrophy", label: "Medallero y Premiación", path: "medallero-premiacion" },
+    { icon: "FaRegFileAlt", label: "Resultados y Reportes", path: "resultados-reportes" },
+    { icon: "LuFileCheck", label: "Certificados", path: "certificados" },
+    { icon: "ImSphere", label: "Publicación", path: "publicacion" },
+    { icon: "IoTimeOutline", label: "Trazabilidad/Log", path: "trazabilidad-log" },
+  ],
+  [ROLE_NAMES.EVALUADOR]: [
+    { icon: "BiHome", label: "Panel Principal", path: "panel-principal" },
+    { icon: "HiOutlinePencilSquare", label: "Calificación", path: "calificacion" },
+  ],
+  [ROLE_NAMES.RESPONSABLE_DE_AREA]: [
+    { icon: "BiHome", label: "Panel Principal", path: "panel-principal" },
+    { icon: "BsSliders2", label: "Control de Fases de mi Área", path: "control-fases-area" },
+    { icon: "FaRegFileAlt", label: "Reportes de mi Área", path: "reportes-area" },
+  ],
+};
