@@ -14,6 +14,7 @@ import {
   Pencil,
   Trash,
 } from "lucide-react";
+import GestionInscripciones from "./GestionarInscripciones";
 
 const mockCompetitors = [
   {
@@ -24,7 +25,8 @@ const mockCompetitors = [
     department: "La Paz",
     area: "Matemáticas",
     level: "Secundaria",
-    tutor: "Prof. María González",
+    tutor_legal: "Prof. María González",
+    tutor_academico: "Prof. María González",
     status: "VALIDADA",
   },
   {
@@ -45,7 +47,8 @@ const mockCompetitors = [
     department: "Cochabamba",
     area: "Matemáticas",
     level: "Primaria",
-    tutor: "Prof. Carlos Quispe",
+    tutor_legal: "Prof. María González",
+    tutor_academico: "Prof. María González",
     status: "VALIDADA",
   },
 ];
@@ -209,7 +212,18 @@ export default function InscripcionesManagement() {
 
       if (response.ok && result.status === "success") {
         toast.success("✅ Inscritos importados correctamente");
-        setConfirmedData(result.data);
+        setConfirmedData(
+          result.data.map((item, index) => ({
+            id: item.id || index, // o cualquier campo único que tenga
+            nombre: item.nombres || "—",
+            ci: item.ci || "—",
+            unidad_educativa: item.unidad_educativa || "—",
+            departamento: item.departamento || "—",
+            area: item.area || "—",
+            nivel: item.nivel || "—",
+            contacto_totor_legal: item.tutor_academico || "—",
+          }))
+        );
         setImportSuccess(true);
         setIsValidated(false);
         setResponseData(null);
@@ -561,60 +575,11 @@ export default function InscripcionesManagement() {
 
       {/* --- Listas filtradas --- */}
       <div className="bg-white shadow rounded-lg p-6 border space-y-4">
-        <h3 className="text-lg font-medium">Listas por Área y Nivel</h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Área</label>
-            <select
-              value={selectedArea}
-              onChange={(e) => setSelectedArea(e.target.value)}
-              className="border rounded w-full p-2"
-            >
-              <option value="all">Todas</option>
-              {areas.map((a) => (
-                <option key={a} value={a}>
-                  {a}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">Nivel</label>
-            <div className="flex gap-2">
-              {levels.map((level) => (
-                <button
-                  key={level}
-                  onClick={() =>
-                    setSelectedLevel(selectedLevel === level ? "all" : level)
-                  }
-                  className={`px-3 py-1 rounded border ${
-                    selectedLevel === level
-                      ? "bg-blue-600 text-white"
-                      : "bg-white text-gray-700 border-gray-300"
-                  }`}
-                >
-                  {level}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium mb-1">Buscar</label>
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full border rounded p-2"
-              placeholder="Por nombre, CI o colegio"
-            />
-          </div>
-        </div>
-
+        <h2 className=" font-semibold text-gray-800">
+          Listas por Área y Nivel
+        </h2>
         {/* Tabla */}
-        <div className="overflow-x-auto border rounded">
+        {/* <div className="overflow-x-auto border rounded">
           <table className="w-full text-sm">
             <thead className="bg-gray-100">
               <tr>
@@ -646,7 +611,8 @@ export default function InscripcionesManagement() {
               ))}
             </tbody>
           </table>
-        </div>
+        </div> */}
+        <GestionInscripciones importedData={confirmedData} />
 
         <p className="text-sm text-gray-600 mt-2">
           {filteredCompetitors.length} resultados
