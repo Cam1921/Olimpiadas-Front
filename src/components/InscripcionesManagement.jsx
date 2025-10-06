@@ -463,7 +463,7 @@ export default function InscripcionesManagement() {
               <button
                 onClick={handleImportFile}
                 disabled={isImporting || responseData.meta.valid_rows === 0}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-[var(--primary)] hover:bg-[var(--primary)] text-white px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isImporting ? "Importando..." : "Importar inscritos"}
               </button>
@@ -480,7 +480,7 @@ export default function InscripcionesManagement() {
               <button
                 onClick={handleValidateFile}
                 disabled={isImporting}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+                className="bg-[var(--primary)] hover:bg-[var(--primary)] text-white px-4 py-2 rounded-lg"
               >
                 {isValidated ? "Validando..." : "Validar archivo"}
               </button>
@@ -499,7 +499,7 @@ export default function InscripcionesManagement() {
                 <button
                   onClick={handleImportFile}
                   disabled={isImporting || responseData.meta.valid_rows === 0}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-[var(--primary)] hover:bg-[var(--primary)] text-white px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isImporting ? "Importando..." : "Importar inscritos"}
                 </button>
@@ -627,10 +627,6 @@ export default function InscripcionesManagement() {
           </table>
         </div> */}
         <GestionInscripciones importedData={confirmedData} />
-
-        <p className="text-sm text-gray-600 mt-2">
-          {filteredCompetitors.length} resultados
-        </p>
       </div>
     </div>
   );

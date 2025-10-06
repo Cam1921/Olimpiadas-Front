@@ -6,7 +6,7 @@ import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PanelPrincipal from "@/pages/dashboard/panelPrincipal/administrador/PanelPrincipal";
 import GestionInscripciones from "@/pages/dashboard/gestionInscripciones/GestionInscripciones";
-
+import InscripcionesManagement from "./components/InscripcionesManagement";
 
 export default function App() {
   return (
@@ -23,7 +23,10 @@ export default function App() {
       >
         <Route index element={<PanelPrincipal />} />
         <Route path="panel-principal" element={<PanelPrincipal />} />
-        <Route path="gestion-inscripciones" element={<GestionInscripciones />} />
+        <Route
+          path="gestion-inscripciones"
+          element={<InscripcionesManagement />}
+        />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
