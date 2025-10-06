@@ -2,7 +2,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import { FiX, FiLock, FiArrowRight } from "react-icons/fi";
 import { BsEye } from "react-icons/bs";
-import ButtonIo from "../../../shared/ui/ButtonIo";
+import ButtonIo from "@/shared/ui/ButtonIo";
 import useLoginForm from "../hooks/useLoginForm";
 
 export default function LoginModal({ open, onClose }) {

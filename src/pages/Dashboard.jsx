@@ -1,56 +1,36 @@
 // src/pages/Dashboard.jsx
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { me, logout } from "../services/auth";
-import CsvUploader from "../components/CsvUploader";
-import GestionInscripciones from "@/components/GestionarInscripciones";
-import InscripcionesManagement from "@/components/InscripcionesManagement";
+import { Outlet, useNavigate } from "react-router-dom";
+import React, { useState, useCallback } from "react";
+import SideMenu from "../components/SideMenu";
+import Header from "../components/ui/Header";
 
 export default function Dashboard() {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const navigate = useNavigate();
 
-  // Hidrata desde sessionStorage para evitar parpadeo
-  const [user, setUser] = useState(() => {
-    const raw = sessionStorage.getItem("user");
-    return raw ? JSON.parse(raw) : null;
-  });
-  const [loading, setLoading] = useState(!user);
+  const toggleMenu = useCallback(() => setSidebarOpen(s => !s), []);
 
-  useEffect(() => {
-    let mounted = true;
-    me()
-      .then((u) => {
-        if (!mounted) return;
-        setUser(u);
-        setLoading(false);
-      })
-      .catch(() => {
-        // El interceptor 401 ya redirige; esto es fallback
-        sessionStorage.removeItem("token");
-        sessionStorage.removeItem("user");
-        navigate("/login", { replace: true });
-      });
-    return () => {
-      mounted = false;
-    };
+  const handleLogout = useCallback(() => {
+    // limpia sesión
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("user");
+    // redirige al HOME (nunca al /login)
+    navigate("/", { replace: true, state: { from: "logout" } });
   }, [navigate]);
 
-  const onLogout = async () => {
-    await logout();
-    navigate("/login", { replace: true });
-  };
-
   return (
-    <div className="min-h-screen p-10 bg-gray-50">
-      <div className="w-full mx-auto">
-        <header className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-semibold">Nebula — Dashboard</h1>
-          <button className="border rounded px-3 py-1" onClick={onLogout}>
-            Cerrar sesión
-          </button>
-        </header>
-
-        <InscripcionesManagement />
+    <div className="min-h-screen bg-[#f6f8f9] flex">
+      <SideMenu open={sidebarOpen} />
+      <div className="flex-1 flex flex-col min-w-0">
+        <Header
+          title="Nebula — Dashboard"
+          showMenu
+          onToggleMenu={toggleMenu}
+          onLogout={handleLogout}
+        />
+        <main className="p-4 md:p-6">
+          <Outlet />
+        </main>
       </div>
     </div>
   );
