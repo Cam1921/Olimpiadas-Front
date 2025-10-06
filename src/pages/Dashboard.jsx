@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { me, logout } from "../services/auth";
 import CsvUploader from "../components/CsvUploader";
+import GestionInscripciones from "@/components/GestionarInscripciones";
+import InscripcionesManagement from "@/components/InscripcionesManagement";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -48,17 +50,7 @@ export default function Dashboard() {
           </button>
         </header>
 
-        <div className="bg-white rounded-xl shadow p-4">
-          <h2 className="text-lg font-medium mb-2">Tu perfil</h2>
-          {!loading ? (
-            <pre className="text-sm bg-gray-50 p-3 rounded overflow-auto">
-              {JSON.stringify(user, null, 2)}
-            </pre>
-          ) : (
-            <p>Cargando...</p>
-          )}
-        </div>
-        <CsvUploader />
+        <InscripcionesManagement />
       </div>
     </div>
   );

@@ -1,18 +1,21 @@
 import React, { useState, useRef, useEffect } from "react";
 import Papa from "papaparse";
-import { Import, UploadCloud } from "lucide-react";
+import { Import, X, Download } from "lucide-react";
+import ImportResult from "./ImportResult";
 
 export default function CsvUploader() {
-  const [error, setError] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+  const [errorList, setErrorList] = useState([]);
   const [records, setRecords] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [success, setSuccess] = useState(false);
-  const fileInputRef = useRef(null);
   const [data, setData] = useState(null);
   const [showErrores, setShowErrores] = useState(false);
-  const [errores, setErrores] = useState([]);
   const [lista, setLista] = useState([]);
+  const [importId, setImportId] = useState(null);
+  const fileInputRef = useRef(null);
+  const [informatio, setInformatio] = useState(null);
 
   useEffect(() => {
     const fakeData = [
@@ -50,8 +53,52 @@ export default function CsvUploader() {
     "área",
     "nivel",
   ];
-  const OPTIONAL_FIELDS = ["Tutor académico"];
 
+  const errores = [
+    {
+      fila: 23,
+      motivo: "CI duplicado en la base de datos",
+      columna: "CI",
+      valor: "12345678",
+    },
+    { fila: 45, motivo: "Área no válida", columna: "Área", valor: "Robótica" },
+    {
+      fila: 67,
+      motivo: "Campo Nivel es obligatorio",
+      columna: "Nivel",
+      valor: "—",
+    },
+    {
+      fila: 89,
+      motivo: "Formato de CI inválido",
+      columna: "CI",
+      valor: "12AB3456",
+    },
+    {
+      fila: 112,
+      motivo: "Unidad Educativa muy larga",
+      columna: "Unidad Educativa",
+      valor: "Colegio Nacional San Andrés …",
+    },
+    {
+      fila: 134,
+      motivo: "Departamento no válido",
+      columna: "Departamento",
+      valor: "Lima",
+    },
+    {
+      fila: 145,
+      motivo: "Grado debe ser numérico",
+      columna: "Grado",
+      valor: "Primero",
+    },
+    {
+      fila: 178,
+      motivo: "Contacto tutor legal faltante",
+      columna: "Contacto Tutor Legal",
+      valor: "—",
+    },
+  ];
   const normalize = (str) => {
     return str
       .toLowerCase()
@@ -64,7 +111,7 @@ export default function CsvUploader() {
     if (!file) return;
 
     if (file.type !== "text/csv" && !file.name.endsWith(".csv")) {
-      setError("Solo se permiten archivos con extensión .csv");
+      setErrorMsg("Solo se permiten archivos con extensión .csv");
       setRecords([]);
       return;
     }
@@ -79,7 +126,7 @@ export default function CsvUploader() {
         );
 
         if (missing.length > 0) {
-          setError(
+          setErrorMsg(
             `El archivo CSV no contiene los campos requeridos: ${missing.join(
               ", "
             )}`
@@ -88,7 +135,7 @@ export default function CsvUploader() {
           return;
         }
 
-        setError("");
+        setErrorMsg("");
         setRecords(results.data);
         setSuccess(false);
       },
@@ -107,71 +154,77 @@ export default function CsvUploader() {
     handleFile(file);
   };
 
-  const exportarErroresCSV = () => {
-    if (errores.length === 0) return;
-    let csvContent = "data:text/csv;charset=utf-8,Fila,Error\n";
-    errores.forEach((e) => {
-      csvContent += `${e.fila},"${e.error.replace(/"/g, '""')}"\n`;
-    });
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "errores_importacion.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
   const handleImport = async () => {
     try {
       if (!fileInputRef.current.files[0]) {
-        setError("No se seleccionó ningún archivo.");
+        setErrorMsg("No se seleccionó ningún archivo.");
         return;
       }
 
       setIsImporting(true);
       setSuccess(false);
-      setErrores([]);
+      setErrorMsg("");
+      setErrorList([]);
 
       const formData = new FormData();
       formData.append("archivo", fileInputRef.current.files[0]);
 
-      const response = await fetch("http://127.0.0.1:8000/api/users/import", {
-        method: "POST",
-        body: formData,
-      });
+      // 🔍 Preview de validación
+      const previewResponse = await fetch(
+        "http://127.0.0.1:8000/api/importaciones/preview",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
-      const result = await response.json();
+      const previewResult = await previewResponse.json();
+      console.log("📦 Preview Result:", previewResult);
 
-      if (!response.ok) {
-        setError(result.message || "Error al importar el archivo");
+      if (previewResult.status === "error") {
+        if (Array.isArray(previewResult.errors)) {
+          setErrorList(previewResult.errors);
+        } else {
+          setErrorMsg(previewResult.errors || "Error desconocido");
+        }
         return;
       }
 
-      setData(result);
-
-      if (result.errores && result.errores.length > 0) {
-        setErrores(result.errores);
-      }
-
-      // 📌 Agregar los registros importados a la lista general
-      if (result.importados && result.importados.length > 0) {
-        setLista((prev) => [...prev, ...result.importados]);
-      }
-
+      setData(previewResult);
+      setImportId(previewResult?.meta?.import_id || null);
       setSuccess(true);
     } catch (err) {
-      setError(err.message);
+      setErrorMsg("Error al validar el archivo: " + err.message);
     } finally {
       setIsImporting(false);
     }
   };
 
+  const exportarErroresCSV = async () => {
+    if (!importId) return;
+    try {
+      const res = await fetch(
+        `http://127.0.0.1:8000/api/importaciones/errores?import_id=${importId}`
+      );
+      if (!res.ok) throw new Error("No se pudo descargar el CSV de errores.");
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "errores_importacion.csv";
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   return (
     <div className="flex flex-col items-center justify-center p-6">
-      {/* Zona de carga CSV */}
+      {/* 🟦 Zona de carga */}
       <div
-        className={`w-full  border-2 ${
+        className={`w-full border-2 ${
           isDragging ? "border-blue-400 bg-blue-50" : "border-gray-300"
         } border-dashed rounded-2xl p-10 text-center cursor-pointer transition`}
         onDragOver={(e) => {
@@ -192,7 +245,7 @@ export default function CsvUploader() {
           (opcional).
         </p>
         <p className="text-gray-600 font-medium ">
-          Solo se admiten archivos con extension .CSV
+          Solo se admiten archivos con extensión .CSV
         </p>
         <input
           type="file"
@@ -203,15 +256,95 @@ export default function CsvUploader() {
         />
       </div>
 
-      {/* Errores de validación */}
-      {error && (
-        <div className="mt-4 bg-red-50 border border-red-200 rounded-xl p-4 w-full  text-center">
-          <p className="mt-4  p-4 text-red-600 font-semibold">{error}</p>
+      <div className="p-6 bg-gray-50 min-h-screen text-gray-800">
+        {/* Mensaje de archivo validado */}
+        <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-6">
+          <div className="p-4 flex items-center justify-between border-b border-gray-200">
+            <div className="flex items-center space-x-2">
+              <span className="text-green-600 font-semibold">
+                ✓ Archivo validado correctamente.
+              </span>
+              <span className="text-gray-700">
+                Se detectaron <strong>153 filas de datos.</strong>
+              </span>
+            </div>
+            <button className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-md shadow">
+              Importar inscritos
+            </button>
+          </div>
+        </div>
+
+        {/* Mensaje de éxito */}
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+          <div className="flex items-center justify-between">
+            <p className="text-green-700 font-medium">
+              ✓ Inscritos importados correctamente
+            </p>
+            <span className="text-sm text-green-800">
+              156 filas procesadas, <strong>148 competidores creados</strong>, 8
+              con errores.
+            </span>
+          </div>
+          <div className="mt-3">
+            <button className="flex items-center text-green-700 hover:text-green-800 text-sm font-medium">
+              <Download size={18} className="mr-2" />
+              Descargar reporte de errores (.CSV)
+            </button>
+          </div>
+        </div>
+
+        {/* Detalle de errores */}
+        <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
+          <div className="p-4 flex items-center justify-between border-b border-gray-200">
+            <h2 className="font-semibold text-gray-800">
+              Detalle de errores por fila
+            </h2>
+            <span className="bg-red-100 text-red-700 text-sm font-semibold px-3 py-1 rounded-full">
+              8 errores
+            </span>
+          </div>
+
+          <table className="w-full text-left text-sm">
+            <thead className="bg-gray-100 border-b border-gray-200 text-gray-700">
+              <tr>
+                <th className="py-3 px-4 font-medium">Fila</th>
+                <th className="py-3 px-4 font-medium">Motivo del error</th>
+                <th className="py-3 px-4 font-medium">Columna</th>
+                <th className="py-3 px-4 font-medium">Valor</th>
+              </tr>
+            </thead>
+            <tbody>
+              {errores.map((err, idx) => (
+                <tr
+                  key={idx}
+                  className="border-b border-gray-100 hover:bg-red-50 transition"
+                >
+                  <td className="py-2 px-4 text-red-600 font-semibold">
+                    #{err.fila}
+                  </td>
+                  <td className="py-2 px-4 text-red-600">{err.motivo}</td>
+                  <td>
+                    <span className="ml-4 bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-medium">
+                      {err.columna}
+                    </span>
+                  </td>
+                  <td className="py-2 px-4 text-gray-700">{err.valor}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* 🔴 Mensaje de error simple */}
+      {errorMsg && !errorList.length && (
+        <div className="mt-4 bg-red-50 border border-red-200 rounded-xl p-4 w-full text-center">
+          <p className="text-red-600 font-semibold">{errorMsg}</p>
         </div>
       )}
 
-      {/* Previsualización antes de importar */}
-      {!error && records.length > 0 && (
+      {/* 🟢 Archivo cargado */}
+      {!errorMsg && records.length > 0 && (
         <div className="mt-6 bg-green-50 border border-green-200 rounded-xl p-4 w-full max-w-lg text-center">
           <p className="text-green-700 font-semibold">
             ✅ Archivo cargado correctamente
@@ -225,13 +358,13 @@ export default function CsvUploader() {
             disabled={isImporting}
             className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
           >
-            {isImporting ? "Importando..." : "Importar"}
+            {isImporting ? "Validando..." : "Validar"}
           </button>
         </div>
       )}
 
-      {/* Reporte General */}
-      {(success || errores.length > 0) && data && (
+      {/* 🧾 Reporte */}
+      {success && data && (
         <div className="mt-8 w-full max-w-4xl bg-gray-50 border rounded-xl p-6 shadow">
           <h2 className="text-lg font-bold text-gray-800 mb-4">
             📊 Reporte de Importación
@@ -239,120 +372,74 @@ export default function CsvUploader() {
           <div className="grid grid-cols-2 gap-4 mb-6">
             <div className="bg-green-100 border border-green-300 rounded-lg p-4 text-center">
               <p className="text-2xl font-bold text-green-700">
-                {data.insertados}
+                {data?.meta?.valid_rows || 0}
               </p>
-              <p className="text-green-800">
-                Registros insertados correctamente
-              </p>
+              <p className="text-green-800">Registros válidos</p>
             </div>
             <div className="bg-red-100 border border-red-300 rounded-lg p-4 text-center">
               <p className="text-2xl font-bold text-red-700">
-                {errores.length}
+                {data?.meta?.invalid_rows || 0}
               </p>
-              <p className="text-red-800">Errores encontrados</p>
+              <p className="text-red-800">Registros inválidos</p>
             </div>
           </div>
-          {errores.length > 0 && (
-            <div className="mb-6 text-right">
-              <button
-                onClick={() => setShowErrores(true)}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-              >
-                Ver errores
-              </button>
-            </div>
-          )}
         </div>
       )}
 
-      {/* 📌 Lista General de Inscritos */}
-      <div className="mt-8 w-full max-w-5xl bg-white border rounded-xl p-6 shadow">
-        <h2 className="text-lg font-bold mb-4">📋 Lista de Inscritos</h2>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm border-collapse">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="border px-3 py-2">ID</th>
-                <th className="border px-3 py-2">Nombre</th>
-                <th className="border px-3 py-2">CI</th>
-                <th className="border px-3 py-2">Institución</th>
-                <th className="border px-3 py-2">Departamento</th>
-                <th className="border px-3 py-2">Grado</th>
-                <th className="border px-3 py-2">Área</th>
-                <th className="border px-3 py-2">Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              {lista.map((item) => (
-                <tr key={item.id} className="hover:bg-gray-50">
-                  <td className="border px-3 py-2">{item.id}</td>
-                  <td className="border px-3 py-2">{item.nombre_completo}</td>
-                  <td className="border px-3 py-2">{item.ci}</td>
-                  <td className="border px-3 py-2">{item.institucion}</td>
-                  <td className="border px-3 py-2">{item.departamento}</td>
-                  <td className="border px-3 py-2">{item.grado}</td>
-                  <td className="border px-3 py-2">{item.area}</td>
-                  <td className="border px-3 py-2">
-                    <span
-                      className={`px-2 py-1 rounded text-white text-xs ${
-                        item.estado === "VALIDADA"
-                          ? "bg-green-500"
-                          : "bg-yellow-500"
-                      }`}
-                    >
-                      {item.estado}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <p className="mt-2 text-gray-500 text-sm">{lista.length} resultados</p>
-      </div>
-
-      {/* Modal de errores */}
-      {showErrores && errores.length > 0 && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl p-6 relative">
-            <button
-              onClick={() => setShowErrores(false)}
-              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
-            >
-              ✖
-            </button>
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-red-700">
-                ⚠️ Se encontraron {errores.length} errores en la importación
-              </h2>
+      {/* ⚠️ MODAL DE ERRORES */}
+      {showErrores && errorList.length > 0 && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white w-11/12 max-w-4xl rounded-2xl shadow-lg overflow-hidden">
+            {/* Header */}
+            <div className="flex justify-between items-center bg-red-600 text-white p-4">
+              <h3 className="text-lg font-semibold">
+                🚫 Errores detectados en el archivo
+              </h3>
               <button
-                onClick={exportarErroresCSV}
-                className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
+                onClick={() => setShowErrores(false)}
+                className="hover:bg-red-700 p-1 rounded-full"
               >
-                Descargar CSV
+                <X size={20} />
               </button>
             </div>
-            <div className="max-h-[70vh] overflow-y-auto border rounded-lg">
-              <table className="w-full text-sm border-collapse">
-                <thead className="sticky top-0 bg-red-100">
+
+            {/* Tabla de errores */}
+            <div className="p-6 max-h-[400px] overflow-y-auto">
+              <table className="w-full border border-gray-200 text-sm text-left">
+                <thead className="bg-gray-100 text-gray-700 font-semibold">
                   <tr>
                     <th className="border px-3 py-2">Fila</th>
-                    <th className="border px-3 py-2">Error</th>
+                    <th className="border px-3 py-2">Campo</th>
+                    <th className="border px-3 py-2">Descripción del error</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {errores.map((e, index) => (
-                    <tr key={index} className="hover:bg-red-50">
-                      <td className="border px-3 py-2">{e.fila}</td>
-                      <td className="border px-3 py-2 text-red-600">
-                        {e.error}
+                  {errorList.map((err, i) => (
+                    <tr
+                      key={i}
+                      className="border hover:bg-red-50 transition-colors"
+                    >
+                      <td className="border px-3 py-2 text-center">
+                        {err.row}
+                      </td>
+                      <td className="border px-3 py-2">{err.field}</td>
+                      <td className="border px-3 py-2 text-red-600 font-medium">
+                        {err.error}
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-            <div className="mt-4 flex justify-end">
+
+            {/* Footer */}
+            <div className="flex justify-between items-center bg-gray-50 p-4 border-t">
+              <button
+                onClick={exportarErroresCSV}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                <Download size={18} /> Exportar errores CSV
+              </button>
               <button
                 onClick={() => setShowErrores(false)}
                 className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400"
