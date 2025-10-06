@@ -39,7 +39,7 @@ export default function SideMenu({
   return (
     <aside
       className={[
-        "h-screen border-r bg-[var(--blanco)] flex flex-col",
+        "h-screen border-r bg-white flex flex-col",
         "transition-[width] duration-300 ease-out",
       ].join(" ")}
       style={{ width: open ? WIDTH_EXPANDED : WIDTH_COLLAPSED }}
@@ -48,12 +48,7 @@ export default function SideMenu({
     >
       {/* Header/logo */}
       <div className="flex items-center justify-center px-3 h-[68px] border-b">
-        {open ? (
-          <img src="/assets/logo1.png" alt="Logo" width={160} height={160} />
-        ) : (
-          // mini logo cuando está colapsado
-          <img src="/assets/logo1.png" alt="Logo" width={36} height={36} className="rounded" />
-        )}
+        
       </div>
 
       {/* Menú */}
@@ -93,46 +88,6 @@ export default function SideMenu({
         })}
       </nav>
 
-      {/* Footer */}
-      <div className="border-t px-3 py-3">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="h-9 w-9 rounded-full bg-[var(--primary)] flex items-center justify-center">
-            <FiUser className="text-white" />
-          </div>
-
-          {/* nombre/rol solo cuando está abierto */}
-          <div
-            className={[
-              "min-w-0 transition-all duration-200 overflow-hidden",
-              open ? "opacity-100 max-w-[160px]" : "opacity-0 max-w-0",
-            ].join(" ")}
-            aria-hidden={!open}
-          >
-            <p className="text-sm font-bold text-gray-900 truncate">
-              {sessionStorage.getItem("user")
-                ? JSON.parse(sessionStorage.getItem("user")).nombre ?? "Usuario"
-                : "Usuario"}
-            </p>
-            <p className="text-[11px] font-semibold text-gray-500 uppercase truncate">
-              {role?.toString?.() ?? "rol"}
-            </p>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={onLogout}
-          className={[
-            "w-full inline-flex items-center gap-2 text-xs font-semibold",
-            "text-gray-700 hover:bg-[var(--grisClaro)] h-9 rounded-xl px-3",
-            open ? "justify-start" : "justify-center",
-          ].join(" ")}
-          title={!open ? "Cerrar sesión" : undefined}
-        >
-          <FiLogOut className="h-4 w-4" />
-          <span className={open ? "inline" : "hidden"}>Cerrar Sesión</span>
-        </button>
-      </div>
     </aside>
   );
 }

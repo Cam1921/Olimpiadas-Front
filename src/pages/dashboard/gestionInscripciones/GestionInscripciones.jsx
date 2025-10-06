@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect } from "react";
 import Papa from "papaparse";
 import { toast } from "sonner";
+
 import {
   ArrowUpTrayIcon,
   ArrowDownTrayIcon,
@@ -651,6 +652,7 @@ export default function GestionInscripcionest() {
         <p className="text-sm text-gray-600 mt-2">
           {filteredCompetitors.length} resultados
         </p>
+        
       </div>
     </div>
   );

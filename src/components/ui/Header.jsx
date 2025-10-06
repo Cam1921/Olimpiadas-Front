@@ -2,6 +2,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { FiSidebar, FiChevronDown, FiLogOut, FiUser, FiSearch } from "react-icons/fi";
 import { Link } from "react-router-dom";
+import sansi from "@/assets/sansi.png"; 
 
 export default function Header({
   title,
@@ -21,7 +22,6 @@ export default function Header({
   const [openUser, setOpenUser] = useState(false);
   const dropdownRef = useRef(null);
 
-  // Compacta y agrega sombra al hacer scroll
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 4);
     onScroll();
@@ -29,7 +29,6 @@ export default function Header({
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Cierra dropdown al hacer click fuera
   useEffect(() => {
     if (!openUser) return;
     const onClick = (e) => {
@@ -56,7 +55,7 @@ export default function Header({
     <header
       className={[
         "sticky top-0 z-40",
-        "bg-[var(--blanco)]/80 backdrop-blur-sm supports-[backdrop-filter]:bg-[var(--blanco)]",
+        "bg-[var(--bg)]/80 backdrop-blur-sm supports-[backdrop-filter]:bg-[var(--bg)]",
         "border-b",
         scrolled ? "shadow-sm border-gray-200" : "border-gray-100",
         "px-3 sm:px-4 lg:px-6",
@@ -95,6 +94,8 @@ export default function Header({
             </nav>
           )}
           <div className="flex items-end gap-3">
+            {/* ← añadido: logo al lado del título */}
+            <img src={sansi} alt="Sansi" className="h-9 w-auto" />
             <h1 className="text-base sm:text-lg font-semibold leading-5 text-[var(--negro)] truncate">
               {title}
             </h1>
@@ -136,7 +137,7 @@ export default function Header({
               </div>
               <div className="hidden sm:flex flex-col items-start leading-4">
                 <span className="text-xs font-semibold text-gray-900 max-w-[140px] truncate">
-                  {user?.nombre || "Usuario"}
+                  {user?.nombre || "Administrador"}
                 </span>
                 <span className="text-[10px] uppercase tracking-wide text-gray-500 max-w-[140px] truncate">
                   {roleName}
