@@ -5,14 +5,12 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PanelPrincipal from "@/pages/dashboard/panelPrincipal/administrador/PanelPrincipal";
-import GestionInscripciones from "@/pages/dashboard/gestionInscripciones/GestionInscripciones";
-import InscripcionesManagement from "./components/InscripcionesManagement";
+import GestionInscripciones from "./pages/dashboard/gestionInscripciones/GestionInscripciones";
 
 export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
-      <Route path="/login" element={<Login />} />
       <Route
         path="/dashboard"
         element={
@@ -25,7 +23,7 @@ export default function App() {
         <Route path="panel-principal" element={<PanelPrincipal />} />
         <Route
           path="gestion-inscripciones"
-          element={<InscripcionesManagement />}
+          element={<GestionInscripciones />}
         />
       </Route>
 

@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { FiDownload } from "react-icons/fi";
 import axios from "axios";
-import * as XLSX from "xlsx";
+import Dropdown from "@/components/Dropdown";
+import { FaChevronDown } from "react-icons/fa";
 
 export default function GestionInscripciones({ importedData = [] }) {
   const [gestion, setGestion] = useState(2025);
@@ -18,8 +19,6 @@ export default function GestionInscripciones({ importedData = [] }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
-
-  // 🔹 Cargar áreas y niveles
   const fetchCatalogos = async () => {
     try {
       const res = await axios.get("http://localhost:8000/api/catalogos");
@@ -38,7 +37,25 @@ export default function GestionInscripciones({ importedData = [] }) {
       console.error("Error al obtener áreas y niveles", error);
     }
   };
+  // Puedes poner esto arriba del componente o dentro del mismo archivo
+  const getColorForName = (name) => {
+    const colors = [
+      "bg-blue-500",
+      "bg-green-500",
+      "bg-pink-500",
+      "bg-purple-500",
+      "bg-yellow-500",
+      "bg-orange-500",
+      "bg-teal-500",
+      "bg-indigo-500",
+    ];
 
+    if (!name) return "bg-gray-400";
+
+    // Calcula un índice basado en el nombre
+    const index = name.charCodeAt(0) % colors.length;
+    return colors[index];
+  };
   useEffect(() => {
     fetchCatalogos();
   }, []);
@@ -50,6 +67,7 @@ export default function GestionInscripciones({ importedData = [] }) {
       const params = { gestion, page, per_page: perPage };
       if (areaId) params.area_id = areaId;
       if (nivelId) params.nivel_id = nivelId;
+      if (busqueda) params.busqueda = busqueda;
 
       const res = await axios.get(
         "http://localhost:8000/api/competidores/listar",
@@ -70,8 +88,41 @@ export default function GestionInscripciones({ importedData = [] }) {
       setLoading(false);
     }
   };
+  const exportExcel = async () => {
+    try {
+      const params = { gestion };
+      if (areaId) params.area_id = areaId;
+      if (nivelId) params.nivel_id = nivelId;
+      if (busqueda) params.busqueda = busqueda;
 
-  // 🔹 Si se importan datos, activar modo local
+      // Hacer request al backend para obtener el archivo
+      const response = await axios.get(
+        "http://localhost:8000/api/competidores/exportar",
+        {
+          params,
+          responseType: "blob", // importante para archivos binarios
+        }
+      );
+
+      // Crear un enlace para descargar el archivo
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+
+      // Nombre del archivo
+      link.setAttribute(
+        "download",
+        `competidores_${new Date().getFullYear()}.xlsx`
+      );
+
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error("Error al descargar el Excel:", error);
+    }
+  };
+
   useEffect(() => {
     if (importedData.length > 0) {
       setData(importedData);
@@ -81,27 +132,16 @@ export default function GestionInscripciones({ importedData = [] }) {
       fetchCompetidores(1);
     }
   }, [importedData]);
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      fetchCompetidores(1);
+    }, 500); // espera 500ms después de que el usuario deja de escribir
 
-  // 🔹 Filtro y paginación local cuando hay datos importados
+    return () => clearTimeout(delay);
+  }, [busqueda]);
+
   useEffect(() => {
     if (importedData.length > 0) {
-      /*  let filtered = importedData.filter((c) => {
-        const matchArea = !areaId || c.area_id == areaId || c.area === areaId;
-        const matchNivel =
-          nivelId || c.nivel_id == nivelId || c.nivel === nivelId;
-        const texto = busqueda.toLowerCase();
-
-        const matchBusqueda =
-          c.nombre?.toLowerCase().includes(texto) ||
-          c.ci?.toLowerCase().includes(texto) ||
-          c.unidad_educativa?.toLowerCase().includes(texto) ||
-          c.departamento?.toLowerCase().includes(texto) ||
-          c.area?.toLowerCase().includes(texto) ||
-          c.nivel?.toLowerCase().includes(texto);
-
-        return matchArea && matchNivel && matchBusqueda;
-      }); */
-
       const total = Math.ceil(importedData.length / perPage);
       setTotalPages(total);
 
@@ -111,7 +151,6 @@ export default function GestionInscripciones({ importedData = [] }) {
     }
   }, [importedData, currentPage, perPage]);
 
-  // 🔹 Filtro remoto (cuando no hay importación)
   useEffect(() => {
     fetchCompetidores(currentPage);
   }, [areaId, nivelId, gestion, currentPage, perPage]);
@@ -122,70 +161,45 @@ export default function GestionInscripciones({ importedData = [] }) {
     }
   };
 
-  // 🔹 Exportar a Excel
-  const exportExcel = () => {
-    const worksheetData = data.map((item) => ({
-      Nombre: item.nombre,
-      CI: item.ci,
-      "Unidad Educativa": item.unidad_educativa,
-      Departamento: item.departamento,
-      Área: item.area,
-      Nivel: item.nivel,
-      "Contacto tutor legal": item.contacto_tutor_legal,
-      "Contacto tutor academico": item.contacto_tutor_academico,
-    }));
-
-    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Competidores");
-    XLSX.writeFile(workbook, `competidores_${new Date().getFullYear()}.xlsx`);
-  };
-
   return (
     <main className="mx-auto">
-      <p className="text-gray-600 py-5">Generar listas por área y nivel</p>
-
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+      <div className="bg-white py-6">
         <div className="flex flex-wrap gap-4 mb-6 items-end">
           {/* Filtros */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Área
             </label>
-            <select
-              className="border rounded-lg px-3 py-2 text-sm"
-              value={areaId}
-              onChange={(e) => {
-                setAreaId(e.target.value);
+            <Dropdown
+              icon={FaChevronDown}
+              items={areas.map((a) => a.nombre)}
+              defaultLabel="Todos"
+              onSelect={(nombreSeleccionado) => {
+                const areaSeleccionada = areas.find(
+                  (a) => a.nombre === nombreSeleccionado
+                );
+                setAreaId(areaSeleccionada?.id || "");
                 setCurrentPage(1);
               }}
-            >
-              {areas.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.nombre}
-                </option>
-              ))}
-            </select>
+            />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Nivel
             </label>
-            <select
-              className="border rounded-lg px-3 py-2 text-sm"
-              value={nivelId}
-              onChange={(e) => {
-                setNivelId(e.target.value);
+            <Dropdown
+              icon={FaChevronDown}
+              items={niveles.map((n) => n.nombre)}
+              defaultLabel="Todos"
+              onSelect={(nombreSeleccionado) => {
+                const nivelSeleccionado = niveles.find(
+                  (n) => n.nombre === nombreSeleccionado
+                );
+                setNivelId(nivelSeleccionado?.id || "");
                 setCurrentPage(1);
               }}
-            >
-              {niveles.map((n) => (
-                <option key={n.id} value={n.id}>
-                  {n.nombre}
-                </option>
-              ))}
-            </select>
+            />
           </div>
 
           <div className="flex-1 min-w-[200px]">
@@ -198,29 +212,22 @@ export default function GestionInscripciones({ importedData = [] }) {
               value={busqueda}
               onChange={(e) => {
                 setBusqueda(e.target.value);
-                setCurrentPage(1);
+                console.log(displayedData);
+                console.log("se esta leengo el busqueda", busqueda);
               }}
               className="border rounded-lg px-3 py-2 w-full text-sm"
             />
           </div>
 
           <button
-            onClick={() => fetchCompetidores(1)}
-            className="flex items-center gap-2 border px-5 py-2 rounded-lg text-sm hover:text-white hover:bg-[var(--primary)] transition"
-          >
-            Generar listas
-          </button>
-
-          <button
             onClick={exportExcel}
-            className="flex items-center border hover:text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[var(--primary)] transition"
+            className="flex items-center border hover:text-white text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[var(--primary)] bg-[var(--primary)] transition"
           >
             <FiDownload size={16} />
             Exportar Excel
           </button>
         </div>
 
-        {/* Tabla */}
         {loading ? (
           <p className="text-center text-gray-500 py-10">Cargando...</p>
         ) : displayedData.length === 0 ? (
@@ -228,52 +235,49 @@ export default function GestionInscripciones({ importedData = [] }) {
             No se encontraron competidores
           </p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm border border-slate-200 rounded-lg overflow-hidden">
-              <thead className="bg-gray-50 text-gray-700">
-                <tr>
-                  <th className="px-4 py-2 text-left">Nombre</th>
-                  <th className="px-4 py-2 text-left">CI</th>
-                  <th className="px-4 py-2 text-left">Unidad educativa</th>
-                  <th className="px-4 py-2 text-left">Departamento</th>
-                  <th className="px-4 py-2 text-left">Área</th>
-                  <th className="px-4 py-2 text-left">Nivel</th>
-                  <th className="px-4 py-2 text-left">Contacto Tutor Legal</th>
-                  <th className="px-4 py-2 text-left">
-                    Contacto Tutor Académico
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {displayedData
-                  .filter(
-                    (c) =>
-                      c.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-                      c.ci.includes(busqueda) ||
-                      c.unidad_educativa
-                        .toLowerCase()
-                        .includes(busqueda.toLowerCase()) ||
-                      c.area.toLowerCase().includes(busqueda.toLowerCase()) ||
-                      c.nivel.toLowerCase().includes(busqueda.toLowerCase())
-                  )
-                  .map((c, index) => (
-                    <tr key={index} className="border-t hover:bg-gray-50">
-                      <td className="px-4 py-2">{c.nombre}</td>
-                      <td className="px-4 py-2">{c.ci}</td>
-                      <td className="px-4 py-2">{c.unidad_educativa}</td>
-                      <td className="px-4 py-2">{c.departamento}</td>
-                      <td className="px-4 py-2">{c.area}</td>
-                      <td className="px-4 py-2">{c.nivel}</td>
-                      <td className="px-4 py-2">{c.contacto_tutor_legal}</td>
-                      <td className="px-4 py-2">
-                        {c.contacto_tutor_academico}
-                      </td>
+          <>
+            <div className="border-base-content/25 w-full rounded-lg border bg-white shadow-sm">
+              <div className="overflow-x-auto">
+                <table className="table w-full">
+                  <thead className="bg-gray-50 ">
+                    <tr>
+                      <th className="px-4 py-2 text-left">Nombre</th>
+                      <th className="px-4 py-2 text-left">CI</th>
+                      <th className="px-4 py-2 text-left">Unidad educativa</th>
+                      <th className="px-4 py-2 text-left">Departamento</th>
+                      <th className="px-4 py-2 text-left">Área</th>
+                      <th className="px-4 py-2 text-left">Nivel</th>
+                      <th className="px-4 py-2 text-left">
+                        Contacto Tutor Legal
+                      </th>
+                      <th className="px-4 py-2 text-left">
+                        Contacto Tutor Académico
+                      </th>
                     </tr>
-                  ))}
-              </tbody>
-            </table>
-
-            {/* Paginación */}
+                  </thead>
+                  <tbody>
+                    {displayedData.map((c, index) => (
+                      <tr key={index} className="border-t hover:bg-gray-50">
+                        <td className="px-4 py-2 flex items-center gap-3">
+                          <span className="font-medium text-gray-800">
+                            {c.nombre}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2">{c.ci}</td>
+                        <td className="px-4 py-2">{c.unidad_educativa}</td>
+                        <td className="px-4 py-2">{c.departamento}</td>
+                        <td className="px-4 py-2">{c.area}</td>
+                        <td className="px-4 py-2">{c.nivel}</td>
+                        <td className="px-4 py-2">{c.contacto_tutor_legal}</td>
+                        <td className="px-4 py-2">
+                          {c.contacto_tutor_academico || "-"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
             <div className="flex justify-center items-center gap-2 mt-4">
               <button
                 onClick={() => handlePageChange(currentPage - 1)}
@@ -293,7 +297,7 @@ export default function GestionInscripciones({ importedData = [] }) {
                 Siguiente
               </button>
             </div>
-          </div>
+          </>
         )}
       </div>
     </main>

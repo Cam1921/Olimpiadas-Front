@@ -1,97 +1,30 @@
 import React, { useState, useCallback, useEffect } from "react";
-import Papa from "papaparse";
 import { toast } from "sonner";
-
 import {
   ArrowUpTrayIcon,
-  ArrowDownTrayIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
-import {
-  Download,
-  FileWarning,
-  MoreVertical,
-  Pencil,
-  Trash,
-} from "lucide-react";
+import { Download, FileWarning } from "lucide-react";
+import GestionInscripciones from "./ListaCompetidores";
 
-const mockCompetitors = [
-  {
-    id: "1",
-    name: "Juan Carlos Pérez",
-    ci: "12345678",
-    school: "Colegio San Andrés",
-    department: "La Paz",
-    area: "Matemáticas",
-    level: "Secundaria",
-    tutor: "Prof. María González",
-    status: "VALIDADA",
-  },
-  {
-    id: "2",
-    name: "Ana María Rodriguez",
-    ci: "87654321",
-    school: "Unidad Educativa Central",
-    department: "Santa Cruz",
-    area: "Física",
-    level: "Secundaria",
-    status: "PENDIENTE",
-  },
-  {
-    id: "3",
-    name: "Pedro Luis Mamani",
-    ci: "11223344",
-    school: "Colegio Boliviano",
-    department: "Cochabamba",
-    area: "Matemáticas",
-    level: "Primaria",
-    tutor: "Prof. Carlos Quispe",
-    status: "VALIDADA",
-  },
-];
-
-const areas = [
-  "Matemáticas",
-  "Física",
-  "Química",
-  "Biología",
-  "Informática",
-  "Astronomía",
-  "Geografía",
-];
-const levels = ["Primaria", "Secundaria"];
-const REQUIRED_COLUMNS = [
-  "nombre completo",
-  "ci",
-  "contacto tutor legal",
-  "unidad educativa",
-  "departamento",
-  "grado",
-  "área",
-  "nivel",
-];
-
-export default function GestionInscripcionest() {
+export default function InscripcionesManagement() {
   const [file, setFile] = useState(null);
   const [isValidated, setIsValidated] = useState(false);
   const [validationError, setValidationError] = useState(null);
   const [confirmedData, setConfirmedData] = useState([]);
   const [isImporting, setIsImporting] = useState(false);
-  const [selectedArea, setSelectedArea] = useState("all");
-  const [selectedLevel, setSelectedLevel] = useState("all");
-  const [searchTerm, setSearchTerm] = useState("");
+  const [isFormatValid, setIsformatValid] = useState(true);
   const [importSuccess, setImportSuccess] = useState(false);
-  const [competitors, setCompetitors] = useState(mockCompetitors);
+  const [isDragging, setIsDragging] = useState(false);
   const [responseData, setResponseData] = useState(null);
+  const [isValidating, setIsValidating] = useState(false);
 
-  // --- manejo de archivo ---
   const handleFileSelect = (e) => {
     const selected = e.target.files?.[0];
-    resetValidation();
     if (!selected) return;
     if (!selected.name.endsWith(".csv")) {
-      toast.error("Solo se admiten archivos CSV");
+      setIsformatValid(false);
       return;
     }
     setFile(selected);
@@ -100,17 +33,26 @@ export default function GestionInscripcionest() {
 
   const handleDrop = useCallback((event) => {
     event.preventDefault();
+    setIsDragging(false);
     const dropped = event.dataTransfer.files?.[0];
     resetValidation();
     if (!dropped) return;
     if (!dropped.name.endsWith(".csv")) {
-      toast.error("Solo se admiten archivos CSV");
+      setIsformatValid(false);
+      setFile(null);
       return;
     }
     setFile(dropped);
   }, []);
 
-  const handleDragOver = (e) => e.preventDefault();
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
 
   const resetValidation = () => {
     setIsValidated(false);
@@ -121,18 +63,36 @@ export default function GestionInscripcionest() {
   useEffect(() => {
     if (validationError) {
       const timer = setTimeout(() => {
-        setValidationError(null); // Limpiar el error después de X segundos
+        setValidationError(null);
         setFile(null);
         setResponseData(null);
         setIsValidated(false);
-      }, 5000); // 5000 ms = 5 segundos
+      }, 5000);
 
-      return () => clearTimeout(timer); // Limpiar el timer si el componente se desmonta o cambia el error
+      return () => clearTimeout(timer);
     }
   }, [validationError]);
-  // --- validar archivo ---
+
+  useEffect(() => {
+    if (!isFormatValid) {
+      const timer = setTimeout(() => {
+        setIsformatValid(true);
+      }, 6000);
+    }
+  }, [isFormatValid]);
+  useEffect(() => {
+    if (importSuccess) {
+      const timer = setTimeout(() => {
+        setImportSuccess(false);
+      }, 5000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [importSuccess]);
+
   const handleValidateFile = async () => {
     if (!file) return;
+    setIsValidating(true);
     try {
       const formData = new FormData();
       formData.append("archivo", file);
@@ -167,20 +127,17 @@ export default function GestionInscripcionest() {
         }
       } else if (previewResult.status === "success") {
         console.log("validado con exito");
-        setResponseData(previewResult); // Guardamos info
+        setResponseData(previewResult);
         setIsValidated(true);
       }
     } catch (error) {
       toast.error("Error al validar CSV");
-      /*  setResponse(
-      { : 23, reason: "CI duplicado", column: "CI", value: "12345678" },
-      { row: 45, reason: "Área no válida", column: "Área", value: "Robótica" }
-    ); */
       console.log("se produjo un error al realizar la peticion");
+    } finally {
+      setIsValidating(false);
     }
   };
 
-  // --- importar ---
   const handleImportFile = async () => {
     if (!responseData?.meta?.import_id) {
       toast.error("No se encontró el identificador de importación");
@@ -209,8 +166,21 @@ export default function GestionInscripcionest() {
       console.log("📦 Confirm Import Result:", result);
 
       if (response.ok && result.status === "success") {
-        toast.success("✅ Inscritos importados correctamente");
-        setConfirmedData(result.data);
+        toast.success("Inscritos importados correctamente");
+        setConfirmedData(
+          result.data.map((item, index) => ({
+            id: index + 1,
+            nombre: item["nombres"] || "—",
+            ci: item["ci"] || "—",
+            unidad_educativa: item["unidad educativa"] || "—",
+            departamento: item["departamento"] || "—",
+            grado: item["grado"] || "—",
+            area: item["area"] || "—",
+            nivel: item["nivel"] || "—",
+            contacto_tutor_legal: item["contacto tutor legal"] || "—",
+            contacto_tutor_academico: item["contacto tutor academico"] || "—",
+          }))
+        );
         setImportSuccess(true);
         setIsValidated(false);
         setResponseData(null);
@@ -219,7 +189,7 @@ export default function GestionInscripcionest() {
         toast.error(result.message || "Error al confirmar la importación");
       }
     } catch (error) {
-      console.error("❌ Error al confirmar la importación:", error);
+      console.error(" Error al confirmar la importación:", error);
       toast.error("Error de conexión al confirmar la importación");
     } finally {
       setIsImporting(false);
@@ -235,7 +205,6 @@ export default function GestionInscripcionest() {
     try {
       const importId = responseData.meta.import_id;
 
-      // Hacer la petición GET al backend
       const response = await fetch(
         `http://127.0.0.1:8000/api/importaciones/errores?import_id=${importId}`,
         {
@@ -251,11 +220,9 @@ export default function GestionInscripcionest() {
         return;
       }
 
-      // Convertir la respuesta en un archivo descargable
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
 
-      // Crear enlace temporal para descarga
       const link = document.createElement("a");
       link.href = url;
       link.setAttribute(
@@ -271,37 +238,13 @@ export default function GestionInscripcionest() {
 
       toast.success("Reporte de errores descargado");
     } catch (error) {
-      console.error("❌ Error al descargar reporte de errores:", error);
+      console.error(" Error al descargar reporte de errores:", error);
       toast.error("Ocurrió un error al descargar el archivo");
     }
   };
-  // --- filtrado ---
-  const filteredCompetitors = competitors.filter((c) => {
-    const byArea = selectedArea === "all" || c.area === selectedArea;
-    const byLevel = selectedLevel === "all" || c.level === selectedLevel;
-    const bySearch =
-      !searchTerm ||
-      c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.ci.includes(searchTerm) ||
-      c.school.toLowerCase().includes(searchTerm.toLowerCase());
-    return byArea && byLevel && bySearch;
-  });
-
-  const getStatusBadge = (status) => {
-    const colors = {
-      VALIDADA: "bg-green-500 text-white",
-      PENDIENTE: "bg-yellow-500 text-white",
-      ANULADA: "bg-red-500 text-white",
-    };
-    return (
-      <span className={`px-2 py-1 rounded text-sm ${colors[status]}`}>
-        {status}
-      </span>
-    );
-  };
 
   return (
-    <div className="p-6 lg:p-8 space-y-8 bg-gray-50 min-h-screen">
+    <div className="p-3 lg:p-5 space-y-8 bg-gray-50 min-h-screen">
       <div>
         <h2 className=" font-semibold text-gray-800">
           Gestión de Inscripciones
@@ -311,15 +254,20 @@ export default function GestionInscripcionest() {
         </p>
       </div>
 
-      {/* --- Importar CSV --- */}
       <div className="bg-white shadow rounded-xl p-6 space-y-6 border">
         <h2 className=" font-medium">Importar inscritos (CSV)</h2>
 
         <div
           onDrop={handleDrop}
           onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
           onClick={() => document.getElementById("csv-input").click()}
-          className="border-2 border-dashed rounded-xl p-8 text-center cursor-pointer hover:border-blue-400 transition"
+          className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition 
+        ${
+          isDragging
+            ? "border-blue-400 bg-blue-100/40"
+            : "border-gray-300 hover:border-blue-400"
+        }`}
         >
           <input
             id="csv-input"
@@ -329,7 +277,10 @@ export default function GestionInscripcionest() {
             onChange={handleFileSelect}
           />
           <ArrowUpTrayIcon className="h-12 w-12 text-gray-500 mx-auto mb-4" />
-          <p className="text-lg font-semibold mb-4">
+          <p
+            className="text-lg font-semibold mb-4 truncate max-w-full text-center px-2"
+            title={file ? file.name : ""}
+          >
             {file
               ? file.name
               : "Suelta tu archivo CSV aquí o haz clic para seleccionar"}
@@ -343,6 +294,17 @@ export default function GestionInscripcionest() {
             Solo se admiten archivos con extensión .CSV
           </p>
         </div>
+        {!isFormatValid && (
+          <div className="p-4 mb-4 border border-red-400 bg-red-50/40 rounded-xl flex items-center gap-3">
+            <ExclamationTriangleIcon className="h-6 w-6 text-red-600" />
+            <div>
+              <p className="font-semibold text-red-700">Formato inválido</p>
+              <p className="text-red-600 text-sm">
+                Solo se admiten archivos con extensión .csv.
+              </p>
+            </div>
+          </div>
+        )}
         {importSuccess && (
           <div className="p-4 mb-4 border border-green-400 bg-green-50/40 rounded-xl flex items-center gap-3">
             <CheckCircleIcon className="h-6 w-6 text-green-600" />
@@ -367,7 +329,6 @@ export default function GestionInscripcionest() {
 
             <p className="text-red-600 mb-3">{validationError.message}</p>
 
-            {/* 🔸 Caso 1: Faltan encabezados requeridos */}
             {validationError.error_type === "requered headers missing" && (
               <>
                 <p className="text-gray-700 font-medium">
@@ -391,7 +352,6 @@ export default function GestionInscripcionest() {
               </>
             )}
 
-            {/* 🔸 Caso 2: Encabezados inválidos */}
             {validationError.message ===
               "El archivo contiene encabezados no válidos o desconocidos" && (
               <>
@@ -438,7 +398,7 @@ export default function GestionInscripcionest() {
               <button
                 onClick={handleImportFile}
                 disabled={isImporting || responseData.meta.valid_rows === 0}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-[var(--primary)] hover:bg-[var(--primary)] text-white px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isImporting ? "Importando..." : "Importar inscritos"}
               </button>
@@ -454,10 +414,10 @@ export default function GestionInscripcionest() {
               <p>Tiene fila de encabezados</p>
               <button
                 onClick={handleValidateFile}
-                disabled={isImporting}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+                disabled={isImporting || isValidating}
+                className="bg-[var(--primary)] hover:bg-[var(--primary)] text-white px-4 py-2 rounded-lg"
               >
-                {isValidated ? "Validando..." : "Validar archivo"}
+                {isValidating ? "Validando..." : "Validar archivo"}
               </button>
             </div>
           </>
@@ -465,7 +425,7 @@ export default function GestionInscripcionest() {
 
         {isValidated && responseData?.status === "error" && (
           <>
-            <div className="flex w-full flex-row flex-start p-3 items-start gap-3 border rounded-lg bg-white">
+            {/* <div className="flex w-full flex-row flex-start p-3 items-start gap-3 border rounded-lg bg-white">
               <CheckCircleIcon className="h-4 w-4" />
               <div className="gap-2">
                 <p className="text-gray-500 text-sm flex items-center gap-1">
@@ -474,18 +434,24 @@ export default function GestionInscripcionest() {
                 <button
                   onClick={handleImportFile}
                   disabled={isImporting || responseData.meta.valid_rows === 0}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-[var(--primary)] hover:bg-[var(--primary)] text-white px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isImporting ? "Importando..." : "Importar inscritos"}
                 </button>
               </div>
-            </div>
+            </div> */}
             <div
-              className={`p-4 border rounded-lg flex flex-row gap-4  ${"border-green-400 bg-white"}`}
+              className={`p-4 border rounded-lg flex flex-row gap-4  ${"border-red-400 bg-white"}`}
             >
               <CheckCircleIcon className="h-4 w-4" />
-              <div className="gap-3">
-                <p className="font-semibold">Validación exitosa</p>
+              <div className="flex flex-col gap-3">
+                <p className="font-semibold">
+                  {responseData.message} no es posible importar los competidores{" "}
+                  <span>
+                    (Intente nuevamente con un archivo con los campos requeridos
+                    correctos)
+                  </span>
+                </p>
                 <p className="text-sm text-gray-700">
                   <span className="px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-full">
                     {responseData.meta.total_rows}
@@ -515,7 +481,9 @@ export default function GestionInscripcionest() {
             </div>
             <div>
               <div className="flex items-center justify-between">
-                <h4 className="font-semibold mb-2">Errores detectados</h4>
+                <h4 className="font-semibold mb-2">
+                  Resumen de Errores detectados
+                </h4>
                 <span className="px-2 py-1 text-xs font-medium text-red-700 bg-red-100 rounded-full">
                   {responseData.meta.invalid_rows} errores
                 </span>
@@ -534,7 +502,7 @@ export default function GestionInscripcionest() {
                     <tbody>
                       {responseData &&
                         responseData.errors &&
-                        responseData.errors.map((err, i) => (
+                        responseData.errors.slice(0, 10).map((err, i) => (
                           <tr key={i} className="border-t h-10">
                             <td className="text-start px-2 ">
                               <span>#</span>
@@ -560,99 +528,12 @@ export default function GestionInscripcionest() {
         )}
       </div>
 
-      {/* --- Listas filtradas --- */}
       <div className="bg-white shadow rounded-lg p-6 border space-y-4">
-        <h3 className="text-lg font-medium">Listas por Área y Nivel</h3>
+        <h2 className=" font-semibold text-gray-800">
+          Listas por Área y Nivel
+        </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Área</label>
-            <select
-              value={selectedArea}
-              onChange={(e) => setSelectedArea(e.target.value)}
-              className="border rounded w-full p-2"
-            >
-              <option value="all">Todas</option>
-              {areas.map((a) => (
-                <option key={a} value={a}>
-                  {a}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">Nivel</label>
-            <div className="flex gap-2">
-              {levels.map((level) => (
-                <button
-                  key={level}
-                  onClick={() =>
-                    setSelectedLevel(selectedLevel === level ? "all" : level)
-                  }
-                  className={`px-3 py-1 rounded border ${
-                    selectedLevel === level
-                      ? "bg-blue-600 text-white"
-                      : "bg-white text-gray-700 border-gray-300"
-                  }`}
-                >
-                  {level}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium mb-1">Buscar</label>
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full border rounded p-2"
-              placeholder="Por nombre, CI o colegio"
-            />
-          </div>
-        </div>
-
-        {/* Tabla */}
-        <div className="overflow-x-auto border rounded">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="p-2 text-left">Nombre</th>
-                <th className="p-2 text-left">CI</th>
-                <th className="p-2 text-left">Unidad Educativa</th>
-                <th className="p-2 text-left">Departamento</th>
-                <th className="p-2 text-left">Área</th>
-                <th className="p-2 text-left">Nivel</th>
-                <th className="p-2 text-left">Tutor</th>
-                <th className="p-2 text-left">Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(confirmedData.length > 0
-                ? confirmedData
-                : filteredCompetitors
-              ).map((c, index) => (
-                <tr key={c.id || index} className="border-t hover:bg-gray-50">
-                  <td className="p-2">{c.name}</td>
-                  <td className="p-2 font-mono">{c.ci}</td>
-                  <td className="p-2">{c.school}</td>
-                  <td className="p-2">{c.department}</td>
-                  <td className="p-2">{c.area}</td>
-                  <td className="p-2">{c.level}</td>
-                  <td className="p-2">{c.tutor || "—"}</td>
-                  <td className="p-2">{getStatusBadge(c.status)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <p className="text-sm text-gray-600 mt-2">
-          {filteredCompetitors.length} resultados
-        </p>
-        
+        <GestionInscripciones importedData={confirmedData} />
       </div>
     </div>
   );

@@ -1,14 +1,18 @@
 // src/components/SideMenu.jsx
 import { NavLink } from "react-router-dom";
-import { BiHome } from "react-icons/bi"; 
-import { GoPeople } from "react-icons/go"; 
-import { HiOutlineUserGroup,HiAcademicCap,HiOutlinePencilSquare } from "react-icons/hi2"; 
-import { BsSliders2 } from "react-icons/bs"; 
-import { GrTrophy } from "react-icons/gr"; 
-import { FaRegFileAlt } from "react-icons/fa"; 
-import { LuFileCheck } from "react-icons/lu"; 
-import { ImSphere } from "react-icons/im"; 
-import { IoTimeOutline } from "react-icons/io5"; 
+import { BiHome } from "react-icons/bi";
+import { GoPeople } from "react-icons/go";
+import {
+  HiOutlineUserGroup,
+  HiAcademicCap,
+  HiOutlinePencilSquare,
+} from "react-icons/hi2";
+import { BsSliders2 } from "react-icons/bs";
+import { GrTrophy } from "react-icons/gr";
+import { FaRegFileAlt } from "react-icons/fa";
+import { LuFileCheck } from "react-icons/lu";
+import { ImSphere } from "react-icons/im";
+import { IoTimeOutline } from "react-icons/io5";
 import { FiUser, FiLogOut } from "react-icons/fi";
 import { MENU_BY_ROLE, ROLE_NAMES } from "@/constants/menu";
 
@@ -39,7 +43,7 @@ export default function SideMenu({
   return (
     <aside
       className={[
-        "h-screen border-r bg-white flex flex-col",
+        "fixed top-0 left-0 h-full z-40 bg-white border-r flex flex-col",
         "transition-[width] duration-300 ease-out",
       ].join(" ")}
       style={{ width: open ? WIDTH_EXPANDED : WIDTH_COLLAPSED }}
@@ -47,9 +51,7 @@ export default function SideMenu({
       aria-label="Barra lateral de navegación"
     >
       {/* Header/logo */}
-      <div className="flex items-center justify-center px-3 h-[68px] border-b">
-        
-      </div>
+      <div className="flex items-center justify-center px-3 h-[68px] border-b"></div>
 
       {/* Menú */}
       <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
@@ -71,7 +73,13 @@ export default function SideMenu({
               }
               end
             >
-              {Icon && <Icon size={20} className="shrink-0 text-gray-700" aria-hidden />}
+              {Icon && (
+                <Icon
+                  size={20}
+                  className="shrink-0 text-gray-700"
+                  aria-hidden
+                />
+              )}
               {/* Etiqueta: solo visible cuando está abierto */}
               <span
                 className={[
@@ -87,7 +95,6 @@ export default function SideMenu({
           );
         })}
       </nav>
-
     </aside>
   );
 }
