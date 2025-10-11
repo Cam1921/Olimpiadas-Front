@@ -1,58 +1,69 @@
-import { useMemo, useState } from "react";
+// src/pages/ResponsablesAcademicos.jsx
+import { useMemo, useState, useEffect } from "react"; // 👈 Agregado useEffect
 import { UserPlusIcon } from "@heroicons/react/24/outline";
-
 import StatsCard from "../components/StatsCard";
 import ResponsablesTable from "../components/ResponsablesTable";
 import RegisterResponsibleModal from "../components/RegisterResponsibleModal";
 import EditResponsibleModal from "../components/EditResponsibleModal";
 import SuccessDialog from "../components/SuccessDialog";
 import ConfirmDeleteModal from "../components/ConfirmDeleteModal";
+import { useRegisterResponsable } from "../application/responsables/useRegisterResponsible"; // 👈 Corregido nombre (a)
+import { AREAS } from "../services/areas";
 
 export default function ResponsablesAcademicos() {
-  // ===== Datos iniciales (mock) =====
-  const [rows, setRows] = useState([
-    {
-      nombre: "María",
-      apellidos: "González Pérez",
-      correo: "maria.gonzalez@gmail.com",
-      telefono: "+591 71234567",
-      area: "Matemáticas",
-      fecha: "2025-01-15",
-    },
-    {
-      nombre: "Juan",
-      apellidos: "Pérez López",
-      correo: "juan.perez@gmail.com",
-      telefono: "+591 72345678",
-      area: "Física",
-      fecha: "2025-01-20",
-    },
-  ]);
+  const [rows, setRows] = useState([]);
 
-  // ===== UI state =====
-  const [open, setOpen] = useState(false);               // Registrar
-  const [editOpen, setEditOpen] = useState(false);       // Editar
+  const [open, setOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [editingRow, setEditingRow] = useState(null);
   const [editingIndex, setEditingIndex] = useState(-1);
-
-  const [deleteOpen, setDeleteOpen] = useState(false);   // Eliminar
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [deletingRow, setDeletingRow] = useState(null);
   const [deletingIndex, setDeletingIndex] = useState(-1);
+  const [successOpen, setSuccessOpen] = useState(false);
+  const [successMsg, setSuccessMsg] = useState("");
 
-  const [successOpen, setSuccessOpen] = useState(false); // Popup éxito
-  const [successMsg, setSuccessMsg] = useState("Los cambios se han guardado correctamente en el sistema.");
-
-  // ===== KPIs =====
-  const areasCubiertas = useMemo(() => new Set(rows.map(r => r.area)).size, [rows]);
-  const areasDisponibles = 5; // UI (ajústalo si conoces el total del catálogo)
-
-  // ===== Helpers =====
-  const normalizeTelefono = (tel) => (tel?.startsWith("+591") ? tel : `+591 ${tel}`);
-
-  // Áreas ocupadas actuales (para bloquear duplicados en REGISTRO)
   const takenAreas = useMemo(() => rows.map(r => r.area), [rows]);
+  const areasCubiertas = useMemo(() => new Set(rows.map(r => r.area)).size, [rows]);
+  const areasDisponibles = AREAS.length - areasCubiertas;
 
-  // ===== Handlers: Tabla -> editar/eliminar =====
+  const { form, setField, errors, submitting, submit, resetForm, setErrors } = useRegisterResponsable(takenAreas);
+
+  // 👇 Función para cargar responsables desde el backend
+  const fetchResponsables = async () => {
+    try {
+      const response = await fetch('/api/responsable-academico');
+      if (!response.ok) throw new Error('Error al cargar responsables');
+      const data = await response.json();
+      setRows(data); // ✅ Actualiza con datos reales del backend
+    } catch (err) {
+      console.error('Error al cargar responsables:', err);
+      // Opcional: mostrar mensaje de error al usuario
+    }
+  };
+
+  // 👇 Cargar datos al montar el componente
+  useEffect(() => {
+    fetchResponsables();
+  }, []);
+
+  // 👇 Función para cerrar el modal Y limpiar el formulario
+  const handleCloseModal = () => {
+    setOpen(false);
+    resetForm();
+  };
+
+  const handleCreate = async () => {
+    const result = await submit();
+    if (result.ok) {
+      await fetchResponsables(); // ✅ Recarga los datos reales del backend
+      setSuccessMsg("Responsable académico registrado correctamente.");
+      setSuccessOpen(true);
+      handleCloseModal();
+    }
+  };
+
+  // === Handlers de edición y eliminación ===
   const handleOpenEdit = (row, idx) => {
     setEditingRow(row);
     setEditingIndex(idx);
@@ -66,28 +77,22 @@ export default function ResponsablesAcademicos() {
   };
 
   const confirmDelete = () => {
+    // 👇 Opcional: también podrías llamar a fetchResponsables() aquí
     setRows(prev => prev.filter((_, i) => i !== deletingIndex));
     setDeleteOpen(false);
-    setDeletingRow(null);
-    setDeletingIndex(-1);
-    // Si quieres popup de éxito al eliminar, descomenta:
-    // setSuccessMsg("El responsable fue eliminado correctamente.");
-    // setSuccessOpen(true);
+    setSuccessMsg("El responsable fue eliminado correctamente.");
+    setSuccessOpen(true);
   };
 
   return (
     <div className="p-6 md:p-8">
-      {/* Tabs Header */}
       <div className="flex items-center gap-8 border-b border-slate-200">
         <button className="py-3 border-b-2 border-cta text-cta font-semibold">
           Responsables Académicos
         </button>
-        <button className="py-3 text-slate-400 hover:text-slate-600">
-          Evaluadores
-        </button>
+        <button className="py-3 text-slate-400 hover:text-slate-600">Evaluadores</button>
       </div>
 
-      {/* Título + CTA */}
       <div className="mt-6 flex items-center justify-between">
         <div>
           <h1 className="text-5xl font-semibold text-primary">
@@ -103,55 +108,44 @@ export default function ResponsablesAcademicos() {
         </button>
       </div>
 
-      {/* Tarjetas KPI */}
       <div className="grid md:grid-cols-3 gap-6 mt-8">
         <StatsCard title="Total Responsables" value={rows.length} variant="cta" icon="userplus" />
         <StatsCard title="Áreas Cubiertas" value={areasCubiertas} variant="accent" icon="check" />
         <StatsCard title="Áreas Disponibles" value={areasDisponibles} variant="cta" icon="check" />
       </div>
 
-      {/* Tabla */}
       <div className="mt-8">
-        <ResponsablesTable
-          data={rows}
-          onEdit={handleOpenEdit}
-          onDelete={handleOpenDelete}
-        />
+        <ResponsablesTable data={rows} onEdit={handleOpenEdit} onDelete={handleOpenDelete} />
       </div>
 
-      {/* ===== Modal: Registrar ===== */}
       <RegisterResponsibleModal
         open={open}
-        onClose={() => setOpen(false)}
-        takenAreas={takenAreas} // bloquea áreas ya ocupadas
-        onCreate={(payload) => {
-          const nuevo = {
-            ...payload,
-            telefono: normalizeTelefono(payload.telefono),
-            fecha: new Date().toISOString().slice(0, 10),
-          };
-          setRows(prev => [...prev, nuevo]);
-          setSuccessMsg("Responsable académico registrado correctamente.");
-          setSuccessOpen(true);
-        }}
+        onClose={handleCloseModal}
+        form={form}
+        setField={setField}
+        errors={errors}
+        setErrors={setErrors} // 👈 AÑADE ESTA LÍNEA
+
+        submitting={submitting}
+        onSubmit={handleCreate}
+        takenAreas={takenAreas}
       />
 
-      {/* ===== Modal: Editar ===== */}
       <EditResponsibleModal
         open={editOpen}
         onClose={() => setEditOpen(false)}
         initial={editingRow}
-        takenAreas={rows.map(r => r.area)} // el modal permite mantener su propia área
+        takenAreas={rows.map(r => r.area)}
         onUpdate={(updated) => {
-          setRows(prev => prev.map((r, i) => (i === editingIndex ? { ...r, ...updated } : r)));
+          setRows(prev =>
+            prev.map((r, i) => (i === editingIndex ? { ...r, ...updated, fecha: new Date().toISOString().slice(0, 10) } : r))
+          );
           setEditOpen(false);
-          // Si quieres popup de éxito al actualizar, descomenta:
-          // setSuccessMsg("La información se actualizó correctamente.");
-          // setSuccessOpen(true);
+          setSuccessMsg("La información se actualizó correctamente.");
+          setSuccessOpen(true);
         }}
       />
 
-      {/* ===== Modal: Confirmar Eliminación ===== */}
       <ConfirmDeleteModal
         open={deleteOpen}
         onClose={() => setDeleteOpen(false)}
@@ -159,14 +153,10 @@ export default function ResponsablesAcademicos() {
         record={deletingRow}
       />
 
-      {/* Popup de éxito */}
       <SuccessDialog
         open={successOpen}
         onClose={() => setSuccessOpen(false)}
-        title="Operación Exitosa"
-        subtitle="La operación se completó correctamente"
         message={successMsg}
-        confirmLabel="Aceptar"
       />
     </div>
   );

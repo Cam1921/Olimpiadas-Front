@@ -2,6 +2,8 @@ export const AREAS = [
   "Química",
   "Biología",
   "Informática",
-  "Astronomía",
-  "Geografía",
+  "Astronomía-Astrofísica",
+  "Física",
+  "Robótica",
+  "Matemáticas",
 ];

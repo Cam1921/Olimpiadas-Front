@@ -1,11 +1,14 @@
-// Mensajes centralizados (fácil de testear/cambiar)
 export const MSG = {
   required: "Completa este campo",
   min2: "Mínimo 2 caracteres",
-  emailAt: "Incluye un signo de @ en la dirección de correo electrónico",
-  emailUser: "Ingrese nombre de usuario antes del signo @",
-  emailDomain: "Ingrese un dominio después del signo @",
-  emailLen: "Cantidad máxima 70 caracteres",
-  emailNotFound: "Correo ingresado no se encuentra en el sistema",
+  lettersOnly: "Solo letras y espacios permitidos",
+  emailFormat: "El correo debe tener un formato válido (ej. nombre@dominio.com)",
+  emailExists: "Este correo ya está registrado",
   phoneFormat: "Formato: 8 dígitos, inicia con 6 o 7",
+  phoneExists: "Este número ya está registrado",
+  ciRequired: "El CI es obligatorio",
+  ciFormat: "El CI debe tener entre 6 y 10 dígitos",
+  ciExists: "Este CI ya está registrado",
+  areaRequired: "Selecciona un área",
+  areaTaken: "Esta área ya está asignada",
 };

@@ -4,5 +4,6 @@ export const newResponsable = () => ({
   apellidos: "",
   correo: "",
   telefono: "",
+  ci: "",
   area: "",
 });

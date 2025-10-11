@@ -1,50 +1,60 @@
 import { MSG } from "./messages";
 
-// Helpers
 const isEmpty = (v) => !v || v.trim() === "";
 
-// === Validación por campo (devuelve {ok:boolean, msg?:string}) ===
+const isLettersOnly = (v) => /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(v.trim());
+
 export const validateNombre = (v) => {
   if (isEmpty(v)) return { ok: false, msg: MSG.required };
   if (v.trim().length < 2) return { ok: false, msg: MSG.min2 };
+  if (!isLettersOnly(v)) return { ok: false, msg: MSG.lettersOnly };
   return { ok: true };
 };
 
-export const validateApellidos = (v) => {
+export const validateApellidos = validateNombre;
+
+export const validateCorreo = async (v, repo) => {
   if (isEmpty(v)) return { ok: false, msg: MSG.required };
-  if (v.trim().length < 2) return { ok: false, msg: MSG.min2 };
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return { ok: false, msg: MSG.emailFormat };
+  const exists = await repo.isEmailRegistered(v);
+  if (exists) return { ok: false, msg: MSG.emailExists };
   return { ok: true };
 };
 
-export const validateCorreo = (v, opts = {}) => {
-  const { checkRegistered = false, registeredOK = true } = opts;
-  if (isEmpty(v)) return { ok: false, msg: MSG.required };
-  if (v.length > 70) return { ok: false, msg: MSG.emailLen };
-  const hasAt = v.includes("@");
-  if (!hasAt) return { ok: false, msg: MSG.emailAt };
-  const [user, domain] = v.split("@");
-  if (!user || user.trim() === "") return { ok: false, msg: MSG.emailUser };
-  if (!domain || domain.trim() === "") return { ok: false, msg: MSG.emailDomain };
-  if (checkRegistered && !registeredOK) return { ok: false, msg: MSG.emailNotFound };
-  return { ok: true };
-};
-
-export const validateTelefono = (v) => {
+export const validateTelefono = async (v, repo) => {
   if (isEmpty(v)) return { ok: false, msg: MSG.required };
   if (!/^(6|7)\d{7}$/.test(v)) return { ok: false, msg: MSG.phoneFormat };
+  const exists = await repo.isPhoneRegistered(v);
+  if (exists) return { ok: false, msg: MSG.phoneExists };
   return { ok: true };
 };
 
-export const validateArea = (v) => {
-  if (isEmpty(v)) return { ok: false, msg: MSG.required };
+export const validateCI = async (v, repo) => {
+  if (!v || v.trim() === "") return { ok: false, msg: MSG.ciRequired };
+  if (!/^\d{6,10}$/.test(v)) return { ok: false, msg: MSG.ciFormat };
+  const exists = await repo.isCIRegistered(v);
+  if (exists) return { ok: false, msg: MSG.ciExists };
   return { ok: true };
 };
 
-// === Validación de formulario completo ===
-export const validateResponsable = (r, opts) => ({
-  nombre:    validateNombre(r.nombre),
-  apellidos: validateApellidos(r.apellidos),
-  correo:    validateCorreo(r.correo, opts),
-  telefono:  validateTelefono(r.telefono),
-  area:      validateArea(r.area),
-});
+
+export const validateArea = (v, takenAreas) => {
+  if (isEmpty(v)) return { ok: false, msg: MSG.areaRequired };
+  if (takenAreas.includes(v)) return { ok: false, msg: MSG.areaTaken };
+  return { ok: true };
+};
+
+export const validateResponsable = async (form, repo, takenAreas, originalArea = null) => {
+  const areaList = form.area !== originalArea 
+    ? takenAreas.filter(a => a !== originalArea) 
+    : takenAreas;
+
+  return {
+    nombre: validateNombre(form.nombre),
+    apellidos: validateApellidos(form.apellidos),
+    correo: await validateCorreo(form.correo, repo),
+    telefono: await validateTelefono(form.telefono, repo),
+    ci: await validateCI(form.ci, repo), // ← AGREGAR
+    area: validateArea(form.area, areaList),
+  };
+};
