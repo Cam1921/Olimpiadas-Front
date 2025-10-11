@@ -6,6 +6,7 @@ import {
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { AREAS } from "../services/areas";
+import { isAreaCompleta } from "../utils/areaUtils";
 
 export default function RegisterEvaluadorModal({
   open,
@@ -81,7 +82,7 @@ export default function RegisterEvaluadorModal({
                 {getErrorMsg("nombre")}
               </p>
             ) : (
-              <p className="text-xs text-slate-400 mt-1">Debe tener al menos 2 letras.</p>
+              <p className="text-xs text-slate-400 mt-1">Debe tener al menos 4 letras.</p>
             )}
           </div>
           {/* Apellidos */}
@@ -99,7 +100,7 @@ export default function RegisterEvaluadorModal({
                 {getErrorMsg("apellidos")}
               </p>
             ) : (
-              <p className="text-xs text-slate-400 mt-1">Debe tener al menos 2 letras.</p>
+              <p className="text-xs text-slate-400 mt-1">Debe tener al menos 4 letras.</p>
             )}
           </div>
           {/* Correo */}
@@ -172,20 +173,21 @@ export default function RegisterEvaluadorModal({
             {showAreas && (
               <div className="absolute z-10 mt-1 w-full card p-0 overflow-hidden">
                 <ul className="max-h-56 overflow-auto">
-                  {AREAS.map(a => (
-                    <li key={a}>
-                      <button
-                        className="w-full text-left px-4 py-3 hover:bg-slate-50"
-                        onMouseDown={e => e.preventDefault()}
-                        onClick={() => {
-                          setField("area", a);
-                          setShowAreas(false);
-                        }}
-                      >
-                        {a}
-                      </button>
-                    </li>
-                  ))}
+                  {AREAS.filter(area => !isAreaCompleta(area, takenAreas)).map(a => (
+  <li key={a}>
+    <button
+      className="w-full text-left px-4 py-3 hover:bg-slate-50"
+      onMouseDown={e => e.preventDefault()}
+      onClick={() => {
+        setField("area", a);
+        setShowAreas(false);
+      }}
+    >
+      {a}
+    </button>
+  </li>
+))}
+                
                 </ul>
               </div>
             )}

@@ -6,7 +6,7 @@ const isLettersOnly = (v) => /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(v.trim
 
 export const validateNombre = (v) => {
   if (isEmpty(v)) return { ok: false, msg: MSG.required };
-  if (v.trim().length < 2) return { ok: false, msg: MSG.min2 };
+  if (v.trim().length < 4) return { ok: false, msg: MSG.min4 };
   if (!isLettersOnly(v)) return { ok: false, msg: MSG.lettersOnly };
   return { ok: true };
 };

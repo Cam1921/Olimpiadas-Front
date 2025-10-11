@@ -7,6 +7,7 @@ import {
   LockClosedIcon,
 } from "@heroicons/react/24/outline";
 import { AREAS } from "../services/areas";
+import { isAreaCompleta } from "../utils/areaUtils";
 
 export default function EditEvaluadorModal({
   open,
@@ -263,20 +264,24 @@ export default function EditEvaluadorModal({
             {showAreas && (
               <div className="absolute z-10 mt-1 w-full card p-0 overflow-hidden">
                 <ul className="max-h-56 overflow-auto">
-                  {AREAS.map((a) => (
-                    <li key={a}>
-                      <button
-                        className="w-full text-left px-4 py-3 hover:bg-slate-50"
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={() => {
-                          setForm({ ...form, area: a });
-                          setShowAreas(false);
-                        }}
-                      >
-                        {a}
-                      </button>
-                    </li>
-                  ))}
+                  {AREAS.filter(area => {
+  // Si el usuario está editando, permitir su área actual aunque esté completa
+  if (initial?.area === area) return true;
+  return !isAreaCompleta(area, takenAreas);
+}).map(a => (
+  <li key={a}>
+    <button
+      className="w-full text-left px-4 py-3 hover:bg-slate-50"
+      onMouseDown={(e) => e.preventDefault()}
+      onClick={() => {
+        setForm({ ...form, area: a });
+        setShowAreas(false);
+      }}
+    >
+      {a}
+    </button>
+  </li>
+))}
                 </ul>
               </div>
             )}
