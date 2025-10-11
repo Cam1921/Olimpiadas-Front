@@ -1,3 +1,4 @@
+// src/domain/evaluadores/messages.js
 export const MSG = {
   required: "Completa este campo",
   min2: "Mínimo 3 caracteres",
@@ -11,4 +12,7 @@ export const MSG = {
   ciExists: "Este CI ya está registrado",
   areaRequired: "Selecciona un área",
   areaTaken: "Esta área ya está asignada",
+  // Nivel (no estaba en el original de responsable, lo agregamos aquí)
+  nivelRequired: "Selecciona un nivel",
+  nivelInvalid: "El nivel debe ser 'Primaria' o 'Secundaria'",
 };
