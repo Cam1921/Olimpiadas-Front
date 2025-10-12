@@ -1,13 +1,13 @@
 // src/components/SideMenu.jsx
 import { NavLink } from "react-router-dom";
-import { BiHome } from "react-icons/bi";
+import { BiHome,BiCategoryAlt } from "react-icons/bi";
 import { GoPeople } from "react-icons/go";
 import {
   HiOutlineUserGroup,
   HiAcademicCap,
   HiOutlinePencilSquare,
 } from "react-icons/hi2";
-import { BsSliders2 } from "react-icons/bs";
+import { BsSliders2,BsPersonCheck } from "react-icons/bs";
 import { GrTrophy } from "react-icons/gr";
 import { FaRegFileAlt } from "react-icons/fa";
 import { LuFileCheck } from "react-icons/lu";
@@ -18,11 +18,13 @@ import { MENU_BY_ROLE, ROLE_NAMES } from "@/constants/menu";
 
 const ICONS = {
   BiHome,
+  BiCategoryAlt,
   GoPeople,
   HiOutlineUserGroup,
   HiAcademicCap,
   HiOutlinePencilSquare,
   BsSliders2,
+  BsPersonCheck,
   GrTrophy,
   FaRegFileAlt,
   LuFileCheck,

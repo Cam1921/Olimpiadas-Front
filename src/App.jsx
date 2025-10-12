@@ -1,7 +1,6 @@
 // src/App.jsx
 import { Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/Home";
-import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PanelPrincipal from "@/pages/dashboard/panelPrincipal/administrador/PanelPrincipal";

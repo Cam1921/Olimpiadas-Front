@@ -19,11 +19,12 @@ export const MENU_BY_ROLE = {
     { icon: "IoTimeOutline", label: "Trazabilidad/Log", path: "trazabilidad-log" },
   ],
   [ROLE_NAMES.EVALUADOR]: [
-    { icon: "BiHome", label: "Panel Principal", path: "panel-principal" },
-    { icon: "HiOutlinePencilSquare", label: "Calificación", path: "calificacion" },
+    { icon: "BsPersonCheck", label: "Información Personal", path: "informacion-personal" },
+    { icon: "HiOutlinePencilSquare", label: "Registrar Notas", path: "registrar-notas" },
+    { icon: "BiCategoryAlt", label: "Clasificación", path: "clasificacion" },
   ],
   [ROLE_NAMES.RESPONSABLE_DE_AREA]: [
-    { icon: "BiHome", label: "Panel Principal", path: "panel-principal" },
+    { icon: "BsPersonCheck", label: "Información Personal", path: "informacion-ppersonal" },
     { icon: "BsSliders2", label: "Control de Fases de mi Área", path: "control-fases-area" },
     { icon: "FaRegFileAlt", label: "Reportes de mi Área", path: "reportes-area" },
   ],
