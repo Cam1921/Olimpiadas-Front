@@ -52,9 +52,9 @@ export function useRegisterResponsable(takenAreas = []) {
     if (form.telefono && !/^[67]\d{7}$/.test(form.telefono.replace(/\D/g, ''))) {
       newErrors.telefono = 'El teléfono debe tener 8 dígitos y comenzar con 6 o 7. Ej: 71234567';
     }
-    if (form.ci && !/^\d{7,10}$/.test(form.ci.replace(/\D/g, ''))) {
-      newErrors.ci = 'El CI debe tener entre 7 y 10 dígitos. Ej: 1234567';
-    }
+    if (form.ci && !/^\d{6,10}$/.test(form.ci.replace(/\D/g, ''))) {
+  newErrors.ci = 'El CI debe tener entre 6 y 10 dígitos.';
+}
 
     setErrors(prev => {
       const updated = { ...prev, ...newErrors };
@@ -79,7 +79,7 @@ export function useRegisterResponsable(takenAreas = []) {
     else if (!/^[67]\d{7}$/.test(data.telefono.replace(/\D/g, ''))) newErrors.telefono = 'El teléfono debe tener 8 dígitos y comenzar con 6 o 7.';
 
     if (!data.ci?.trim()) newErrors.ci = 'El CI es obligatorio.';
-    else if (!/^\d{7,10}$/.test(data.ci.replace(/\D/g, ''))) newErrors.ci = 'El CI debe tener entre 7 y 10 dígitos.';
+    else if (!/^\d{6,10}$/.test(data.ci.replace(/\D/g, ''))) newErrors.ci = 'El CI debe tener entre 6 y 10 dígitos.';
 
     if (!data.area) newErrors.area = 'Selecciona un área.';
     else if (takenAreas.includes(data.area)) newErrors.area = 'Esta área ya tiene un responsable asignado.';
