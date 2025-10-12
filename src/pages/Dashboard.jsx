@@ -1,3 +1,4 @@
+// src/pages/Dashboard.jsx
 import { Outlet, useNavigate } from "react-router-dom";
 import React, { useState, useCallback } from "react";
 import SideMenu from "../components/SideMenu";

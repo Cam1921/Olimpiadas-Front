@@ -1,4 +1,4 @@
-
+// src/services/auth.js
 import api from "../lib/api";
 
 export async function login(email, password) {

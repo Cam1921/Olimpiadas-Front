@@ -1,3 +1,4 @@
+// src/pages/dashboard/panelPrincipal/administrador/PanelPrincipal.jsx
 export default function PanelPrincipal() {
   return (
     <section className="bg-white rounded-2xl shadow-soft border border-slate-200 p-6">

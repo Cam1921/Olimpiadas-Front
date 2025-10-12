@@ -1,3 +1,4 @@
+// src/pages/dashboard/gestionInscripciones/GestionInscripciones.jsx
 import React, { useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import {

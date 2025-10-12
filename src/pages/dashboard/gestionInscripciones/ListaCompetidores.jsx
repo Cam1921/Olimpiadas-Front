@@ -1,3 +1,4 @@
+// src/pages/dashboard/gestionInscripciones/ListaCompetidores.jsx
 import { useEffect, useState } from "react";
 import { FiDownload } from "react-icons/fi";
 import axios from "axios";
