@@ -4,6 +4,7 @@ export const AREAS = [
   "Informática",
   "Astronomía-Astrofísica",
   "Física",
-  "Robótica",
+  "Robótica-Grupal",
+  "Robótica-Individual",
   "Matemáticas",
 ];
