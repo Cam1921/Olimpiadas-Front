@@ -117,18 +117,17 @@ export default function EditResponsibleModal({
 
   if (!open) return null;
 
-  const onSubmit = () => {
-    setSubmitted(true);
-    if (!canSubmit) return;
-
-    const payload = {
-      ...form,
-      telefono: `+591 ${form.telefono}`,
-      fecha: initial?.fecha || new Date().toISOString().slice(0, 10),
-    };
-    onUpdate?.(payload); // <- el padre reemplaza la fila
-    onClose?.();
+ const onSubmit = () => {
+  setSubmitted(true);
+  if (!canSubmit) return;
+  const payload = {
+    ...form,
+    // NO añadimos +591: el backend recibe solo los 8 dígitos
+    fecha: initial?.fecha || new Date().toISOString().slice(0, 10),
   };
+  onUpdate?.(payload);
+  onClose?.();
+};
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">

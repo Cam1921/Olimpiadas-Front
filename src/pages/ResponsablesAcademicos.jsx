@@ -76,13 +76,23 @@ export default function ResponsablesAcademicos() {
     setDeleteOpen(true);
   };
 
-  const confirmDelete = () => {
-    // 👇 Opcional: también podrías llamar a fetchResponsables() aquí
-    setRows(prev => prev.filter((_, i) => i !== deletingIndex));
-    setDeleteOpen(false);
+ const confirmDelete = async () => {
+  try {
+    const response = await fetch(`/api/responsable-academico/${deletingRow.id}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) throw new Error('No se pudo eliminar el registro');
+    await fetchResponsables(); // Recarga la lista real desde el backend
     setSuccessMsg("El responsable fue eliminado correctamente.");
     setSuccessOpen(true);
-  };
+  } catch (err) {
+    console.error('Error al eliminar:', err);
+    setSuccessMsg("No se pudo eliminar el responsable. Inténtalo más tarde.");
+    setSuccessOpen(true);
+  } finally {
+    setDeleteOpen(false);
+  }
+};
 
   return (
     <div className="p-6 md:p-8">
