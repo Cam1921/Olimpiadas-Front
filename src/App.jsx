@@ -11,10 +11,15 @@ import InformacionPersonal from "@/pages/dashboard/informacionPersonal/Informaci
 
 import ResponsablesAcademicos from "./pages/ResponsablesAcademicos";
 import Evaluadores from "./pages/Evaluadores";
+// 👇 Importa la página del evaluador en la ruta real (dentro de /pages)
+import EvaluadorHome from "./pages/dashboard/evaluador/pages/EvaluadorHome.jsx";
+
 export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
+
+      {/* Ruta directa para probar Evaluador SIN login */}
 
       <Route
         path="/dashboard"
@@ -26,11 +31,11 @@ export default function App() {
       >
         {/* index decide a dónde ir según rol */}
         <Route index element={<RoleIndexRedirect />} />
-
         {/* Admin */}
         <Route path="panel-principal" element={<PanelPrincipal />} />
         <Route path="gestion-roles" element={<ResponsablesAcademicos />} />
         <Route path="evaluadores" element={<Evaluadores />} />
+        <Route path="registrar-notas" element={<EvaluadorHome />} />
         <Route
           path="gestion-inscripciones"
           element={<GestionInscripciones />}
@@ -44,6 +49,10 @@ export default function App() {
             <Route path="control-fases-area" element={<ControlFasesArea />} />
             <Route path="reportes-area" element={<ReportesArea />} />
         */}
+        <Route
+          path="gestion-inscripciones"
+          element={<GestionInscripciones />}
+        />
       </Route>
 
       <Route path="/responsables-test" element={<ResponsablesAcademicos />} />
