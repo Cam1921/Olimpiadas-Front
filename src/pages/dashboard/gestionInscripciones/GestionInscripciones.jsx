@@ -99,7 +99,7 @@ export default function InscripcionesManagement() {
       formData.append("archivo", file);
 
       const previewResponse = await fetch(
-        "http://127.0.0.1:8000/api/importaciones/preview",
+        "http://nebulasoft.tis.cs.umss.edu.bo/api/importaciones/preview",
         {
           method: "POST",
           body: formData,
@@ -150,7 +150,7 @@ export default function InscripcionesManagement() {
 
     try {
       const response = await fetch(
-        "http://127.0.0.1:8000/api/importaciones/confirmar",
+        "http://nebulasoft.tis.cs.umss.edu.bo/api/importaciones/confirmar",
         {
           method: "POST",
           headers: {
@@ -207,7 +207,7 @@ export default function InscripcionesManagement() {
       const importId = responseData.meta.import_id;
 
       const response = await fetch(
-        `http://127.0.0.1:8000/api/importaciones/errores?import_id=${importId}`,
+        `http://nebulasoft.tis.cs.umss.edu.bo/api/importaciones/errores?import_id=${importId}`,
         {
           method: "GET",
           headers: {

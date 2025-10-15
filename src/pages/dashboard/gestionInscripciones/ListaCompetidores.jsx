@@ -22,7 +22,9 @@ export default function GestionInscripciones({ importedData = [] }) {
   const [totalPages, setTotalPages] = useState(1);
   const fetchCatalogos = async () => {
     try {
-      const res = await axios.get("http://localhost:8000/api/catalogos");
+      const res = await axios.get(
+        "http://nebulasoft.tis.cs.umss.edu.bo/api/catalogos"
+      );
       const areasApi = res.data.areas.map((a) => ({
         id: a.id,
         nombre: a.nombre_area,
@@ -71,7 +73,7 @@ export default function GestionInscripciones({ importedData = [] }) {
       if (busqueda) params.busqueda = busqueda;
 
       const res = await axios.get(
-        "http://localhost:8000/api/competidores/listar",
+        "http://nebulasoft.tis.cs.umss.edu.bo/api/competidores/listar",
         { params }
       );
 
@@ -98,7 +100,7 @@ export default function GestionInscripciones({ importedData = [] }) {
 
       // Hacer request al backend para obtener el archivo
       const response = await axios.get(
-        "http://localhost:8000/api/competidores/exportar",
+        "http://nebulasoft.tis.cs.umss.edu.bo/api/competidores/exportar",
         {
           params,
           responseType: "blob", // importante para archivos binarios
