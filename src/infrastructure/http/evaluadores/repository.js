@@ -17,6 +17,7 @@ export const evaluadoresRepo = {
   async remove(id) {
     await api.delete(`/evaluador/${id}`);
   },
+
   async isEmailRegistered(email) {
     if (!email) return false;
     const res = await api.get(`/evaluador/check?field=correo&value=${encodeURIComponent(email)}`);

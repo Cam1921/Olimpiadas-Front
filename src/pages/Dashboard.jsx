@@ -24,10 +24,16 @@ export default function Dashboard() {
     try {
       const raw = sessionStorage.getItem("user");
       return raw ? JSON.parse(raw) : null;
-    } catch { return null; }
+    } catch {
+      return null;
+    }
   }, []);
 
-  const roleName = user?.role?.nombre || user?.rol?.nombre || ROLE_NAMES.ADMINISTRADOR;
+  const roleName =
+    user?.role?.nombre || // por si alguna vez viene así
+    user?.rol?.[0] || // tu JSON actual: "rol": ["evaluador"]
+    user?.user?.personas?.[0]?.rols?.[0]?.nombre || // por si accedemos al nivel interno
+    ROLE_NAMES.ADMINISTRADOR;
 
   return (
     <div className="min-h-screen bg-[#f6f8f9]">

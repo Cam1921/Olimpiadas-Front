@@ -6,6 +6,8 @@ import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PanelPrincipal from "@/pages/dashboard/panelPrincipal/administrador/PanelPrincipal";
 import GestionInscripciones from "./pages/dashboard/gestionInscripciones/GestionInscripciones";
+import RoleIndexRedirect from "@/pages/dashboard/RoleIndexRedirect";
+import InformacionPersonal from "@/pages/dashboard/informacionPersonal/InformacionPersonal";
 
 import ResponsablesAcademicos from "./pages/ResponsablesAcademicos";
 import Evaluadores from "./pages/Evaluadores";
@@ -13,6 +15,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
+
       <Route
         path="/dashboard"
         element={
@@ -21,14 +24,26 @@ export default function App() {
           </ProtectedRoute>
         }
       >
-        <Route index element={<PanelPrincipal />} />
+        {/* index decide a dónde ir según rol */}
+        <Route index element={<RoleIndexRedirect />} />
+
+        {/* Admin */}
         <Route path="panel-principal" element={<PanelPrincipal />} />
+        <Route path="gestion-roles" element={<ResponsablesAcademicos />} />
+        <Route path="evaluadores" element={<Evaluadores />} />
         <Route
           path="gestion-inscripciones"
           element={<GestionInscripciones />}
         />
-        <Route path="gestion-roles" element={<ResponsablesAcademicos />} />
-        <Route path="evaluadores" element={<Evaluadores />} />
+
+        {/* Evaluador / Responsable (comparten la misma vista) */}
+        <Route path="informacion-personal" element={<InformacionPersonal />} />
+        {/* (más adelante puedes añadir:)
+            <Route path="registrar-notas" element={<RegistrarNotas />} />
+            <Route path="clasificacion" element={<Clasificacion />} />
+            <Route path="control-fases-area" element={<ControlFasesArea />} />
+            <Route path="reportes-area" element={<ReportesArea />} />
+        */}
       </Route>
 
       <Route path="/responsables-test" element={<ResponsablesAcademicos />} />

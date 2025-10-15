@@ -199,7 +199,7 @@ export default function LoginModal({ open, onClose }) {
           </div>
 
           {/* Selector de rol (UI) */}
-          <div>
+          {/*        <div>
             <p className="text-ink mb-2">Seleccionar rol</p>
             <div className="bg-surface rounded-2xl p-1 flex gap-2">
               {["Administrador", "Evaluador", "Responsable de área"].map(
@@ -223,7 +223,7 @@ export default function LoginModal({ open, onClose }) {
                 }
               )}
             </div>
-          </div>
+          </div> */}
 
           {/* ¿Olvidaste tu contraseña? */}
           <div className="text-center">

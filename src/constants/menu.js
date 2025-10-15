@@ -1,8 +1,8 @@
 // src/constants/menu.js
 export const ROLE_NAMES = {
-  ADMINISTRADOR: "ADMINISTRADOR",
-  EVALUADOR: "EVALUADOR",
-  RESPONSABLE_DE_AREA: "RESPONSABLE_DE_AREA",
+  ADMINISTRADOR: "administrador",
+  EVALUADOR: "evaluador",
+  RESPONSABLE_DE_AREA: "responsable",
 };
 
 export const MENU_BY_ROLE = {
@@ -24,7 +24,7 @@ export const MENU_BY_ROLE = {
     { icon: "BiCategoryAlt", label: "Clasificación", path: "clasificacion" },
   ],
   [ROLE_NAMES.RESPONSABLE_DE_AREA]: [
-    { icon: "BsPersonCheck", label: "Información Personal", path: "informacion-ppersonal" },
+    { icon: "BsPersonCheck", label: "Información Personal", path: "informacion-personal" },
     { icon: "BsSliders2", label: "Control de Fases de mi Área", path: "control-fases-area" },
     { icon: "FaRegFileAlt", label: "Reportes de mi Área", path: "reportes-area" },
   ],

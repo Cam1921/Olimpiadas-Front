@@ -37,7 +37,7 @@ export default function useLoginForm(onSuccess) {
 
   const validatePassword = useCallback((v) => {
     if (!v) return "";
-    if (v.length < 8 || v.length > 25) return "La cantidad mínima es de 8 caracteres y el máximo es de 25 caracteres";
+    if (v.length < 7 || v.length > 25) return "La cantidad mínima es de 8 caracteres y el máximo es de 25 caracteres";
     return "";
   }, []);
 
@@ -62,8 +62,12 @@ export default function useLoginForm(onSuccess) {
       setLoading(true);
       // 👇 pasamos el rol seleccionado al servicio
       const res = await login(email, password, role);
-      if (res && res.token) onSuccess?.();
-      else setCredError("Credenciales inválidas");
+      if (res && res.token) {
+        setRole(res[0])
+        onSuccess?.();
+        console.log("Login exitoso", res);
+      }
+      else {setCredError("Credenciales inválidas");}
     } catch (err) {
       console.log("Error en login:", err);
       setCredError("Credenciales inválidas");

@@ -51,7 +51,8 @@ export async function login(email, password, roleLabel = "Administrador") {
     const { data } = await api.post("/login", { email, password });
     if (!data.token || !data.user) throw new Error("Credenciales inválidas");
     sessionStorage.setItem("token", data.token);
-    sessionStorage.setItem("user", JSON.stringify(data.user));
+    sessionStorage.setItem("user", JSON.stringify(data));
+    
     return data;
   } catch (error) {
     throw error.response?.data?.message
