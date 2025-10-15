@@ -11,8 +11,8 @@ export default function EditResponsibleModal({
   open,
   onClose,
   onUpdate,
-  initial = null,      // { nombre, apellidos, correo, telefono, area, fecha }
-  takenAreas = [],     // TODAS las áreas asignadas en la tabla
+  initial = null, // { nombre, apellidos, correo, telefono, area, fecha }
+  takenAreas = [], // TODAS las áreas asignadas en la tabla
 }) {
   const [form, setForm] = useState({
     nombre: "",
@@ -54,7 +54,10 @@ export default function EditResponsibleModal({
   const emailSyntaxOk =
     hasAt && userPart.trim() !== "" && domainPart.trim() !== "";
 
-  const telOk = useMemo(() => /^(6|7)\d{7}$/.test(form.telefono), [form.telefono]);
+  const telOk = useMemo(
+    () => /^(6|7)\d{7}$/.test(form.telefono),
+    [form.telefono]
+  );
   const nomOk = form.nombre.trim().length >= 2;
   const apeOk = form.apellidos.trim().length >= 2;
 
@@ -62,7 +65,7 @@ export default function EditResponsibleModal({
   const areaEmpty = isEmpty(form.area);
   const areaTakenByOther =
     form.area &&
-    form.area !== (initial?.area || "") &&      // ⬅️ permite su misma área
+    form.area !== (initial?.area || "") && // ⬅️ permite su misma área
     takenAreas.includes(form.area);
 
   const areaOk = !areaEmpty && !areaTakenByOther;
@@ -81,9 +84,12 @@ export default function EditResponsibleModal({
   const emailErrMsg = () => {
     if (!shouldShow("correo")) return null;
     if (isEmpty(form.correo)) return "El correo es obligatorio";
-    if (!hasAt) return "Incluye un signo de @ en la dirección de correo electrónico";
-    if (userPart.trim() === "") return "Ingrese nombre de usuario antes del signo @";
-    if (domainPart.trim() === "") return "Ingrese un dominio después del signo @";
+    if (!hasAt)
+      return "Incluye un signo de @ en la dirección de correo electrónico";
+    if (userPart.trim() === "")
+      return "Ingrese nombre de usuario antes del signo @";
+    if (domainPart.trim() === "")
+      return "Ingrese un dominio después del signo @";
     if (!emailLenOk) return "Cantidad máxima 70 caracteres";
     return null;
   };
@@ -108,12 +114,15 @@ export default function EditResponsibleModal({
   const areaErrMsg = () => {
     if (!shouldShow("area")) return null;
     if (areaEmpty) return "Completa este campo";
-    if (areaTakenByOther) return "Ya existe un responsable asignado a esta área";
+    if (areaTakenByOther)
+      return "Ya existe un responsable asignado a esta área";
     return null;
   };
 
   const errClass = (hasError) =>
-    hasError ? "border-2 border-red-500 focus:border-red-500 focus:ring-red-300" : "";
+    hasError
+      ? "border-2 border-red-500 focus:border-red-500 focus:ring-red-300"
+      : "";
 
   if (!open) return null;
 
@@ -145,7 +154,9 @@ export default function EditResponsibleModal({
         <h2 className="text-4xl md:text-5xl font-semibold text-primary leading-tight">
           Editar Responsable <br /> Académico
         </h2>
-        <p className="text-slate-500 mt-2">Actualiza los datos del responsable académico</p>
+        <p className="text-slate-500 mt-2">
+          Actualiza los datos del responsable académico
+        </p>
 
         <div className="grid grid-cols-2 gap-5 mt-6">
           {/* Nombre */}
@@ -213,7 +224,10 @@ export default function EditResponsibleModal({
               value={form.telefono}
               onBlur={() => setTouched((t) => ({ ...t, telefono: true }))}
               onChange={(e) =>
-                setForm({ ...form, telefono: e.target.value.replace(/\D/g, "") })
+                setForm({
+                  ...form,
+                  telefono: e.target.value.replace(/\D/g, ""),
+                })
               }
             />
             {phoneErrMsg() && (
@@ -231,7 +245,9 @@ export default function EditResponsibleModal({
               type="button"
               onClick={() => setShowAreas((v) => !v)}
               onBlur={() => setTouched((t) => ({ ...t, area: true }))}
-              className={`input flex items-center justify-between ${errClass(!!areaErrMsg())}`}
+              className={`input flex items-center justify-between ${errClass(
+                !!areaErrMsg()
+              )}`}
             >
               <span className={form.area ? "text-slate-900" : "text-slate-400"}>
                 {form.area || "Selecciona un área"}
@@ -269,8 +285,12 @@ export default function EditResponsibleModal({
 
         {/* Acciones */}
         <div className="flex items-center justify-end gap-3 mt-7">
-          <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
-          <button className="btn btn-cta" onClick={onSubmit}>Actualizar</button>
+          <button className="btn btn-ghost" onClick={onClose}>
+            Cancelar
+          </button>
+          <button className="btn btn-cta" onClick={onSubmit}>
+            Actualizar
+          </button>
         </div>
       </div>
     </div>

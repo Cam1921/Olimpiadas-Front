@@ -1,5 +1,5 @@
 // src/infrastructure/evaluadores/repository.js
-import api from "../../lib/api";
+import api from "../../../lib/api";
 
 export const evaluadoresRepo = {
   async list() {

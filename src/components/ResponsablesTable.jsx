@@ -29,8 +29,10 @@ export default function ResponsablesTable({ data = [], onEdit, onDelete }) {
 
           <tbody className="divide-y divide-slate-100">
             {data.map((r, idx) => (
-              <tr key={idx} className="hover:bg-slate-50">
-                <td className="px-6 py-4">{r.nombre} {r.apellidos}</td>
+              <tr key={r.id} className="hover:bg-slate-50">
+                <td className="px-6 py-4">
+                  {r.nombre} {r.apellidos}
+                </td>
                 <td className="px-6 py-4">{r.correo}</td>
                 <td className="px-6 py-4">{r.telefono}</td>
                 <td className="px-6 py-4">{r.ci}</td>
@@ -50,7 +52,7 @@ export default function ResponsablesTable({ data = [], onEdit, onDelete }) {
                       className="text-red-500 hover:opacity-80"
                       title="Eliminar"
                       aria-label="Eliminar responsable"
-                      onClick={() => onDelete?.(r, idx)}
+                      onClick={() => onDelete?.(r, r.id)}
                     >
                       <TrashIcon className="w-5 h-5" />
                     </button>

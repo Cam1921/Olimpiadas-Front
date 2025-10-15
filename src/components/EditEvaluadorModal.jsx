@@ -13,8 +13,8 @@ export default function EditEvaluadorModal({
   open,
   onClose,
   onUpdate,
-  initial = null,      // { nombre, apellidos, correo, telefono, area, fecha, nivel }
-  takenAreas = [],     // TODAS las áreas asignadas en la tabla
+  initial = null, // { nombre, apellidos, correo, telefono, area, fecha, nivel }
+  takenAreas = [], // TODAS las áreas asignadas en la tabla
 }) {
   const [form, setForm] = useState({
     nombre: "",
@@ -26,7 +26,10 @@ export default function EditEvaluadorModal({
   });
   const [showAreas, setShowAreas] = useState(false);
   const [showNiveles, setShowNiveles] = useState(false);
-  const [availableNiveles, setAvailableNiveles] = useState(["Primaria", "Secundaria"]); // Inicialmente ambos
+  const [availableNiveles, setAvailableNiveles] = useState([
+    "Primaria",
+    "Secundaria",
+  ]); // Inicialmente ambos
   const [touched, setTouched] = useState({});
   const [submitted, setSubmitted] = useState(false);
 
@@ -53,9 +56,9 @@ export default function EditEvaluadorModal({
   // Actualiza los niveles disponibles cuando cambia el área
   useEffect(() => {
     if (form.area) {
-      const takenForArea = takenAreas.filter(a => a.area === form.area);
-      const available = ["Primaria", "Secundaria"].filter(n => 
-        !takenForArea.some(t => t.nivel === n)
+      const takenForArea = takenAreas.filter((a) => a.area === form.area);
+      const available = ["Primaria", "Secundaria"].filter(
+        (n) => !takenForArea.some((t) => t.nivel === n)
       );
       setAvailableNiveles(available);
     } else {
@@ -72,7 +75,10 @@ export default function EditEvaluadorModal({
   const emailLenOk = form.correo.length <= 70;
   const emailSyntaxOk =
     hasAt && userPart.trim() !== "" && domainPart.trim() !== "";
-  const telOk = useMemo(() => /^(6|7)\d{7}$/.test(form.telefono), [form.telefono]);
+  const telOk = useMemo(
+    () => /^(6|7)\d{7}$/.test(form.telefono),
+    [form.telefono]
+  );
   const nomOk = form.nombre.trim().length >= 2;
   const apeOk = form.apellidos.trim().length >= 2;
   const nivelOk = ["Primaria", "Secundaria"].includes(form.nivel);
@@ -81,8 +87,8 @@ export default function EditEvaluadorModal({
   const areaEmpty = isEmpty(form.area);
   const areaTakenByOther =
     form.area &&
-    form.area !== (initial?.area || "") &&      // ⬅️ permite su misma área
-    takenAreas.some(a => a.area === form.area && a.nivel === form.nivel); // ✅ Combinación area+nivel
+    form.area !== (initial?.area || "") && // ⬅️ permite su misma área
+    takenAreas.some((a) => a.area === form.area && a.nivel === form.nivel); // ✅ Combinación area+nivel
   const areaOk = !areaEmpty && !areaTakenByOther;
 
   const canSubmit =
@@ -100,9 +106,12 @@ export default function EditEvaluadorModal({
   const emailErrMsg = () => {
     if (!shouldShow("correo")) return null;
     if (isEmpty(form.correo)) return "El correo es obligatorio";
-    if (!hasAt) return "Incluye un signo de @ en la dirección de correo electrónico";
-    if (userPart.trim() === "") return "Ingrese nombre de usuario antes del signo @";
-    if (domainPart.trim() === "") return "Ingrese un dominio después del signo @";
+    if (!hasAt)
+      return "Incluye un signo de @ en la dirección de correo electrónico";
+    if (userPart.trim() === "")
+      return "Ingrese nombre de usuario antes del signo @";
+    if (domainPart.trim() === "")
+      return "Ingrese un dominio después del signo @";
     if (!emailLenOk) return "Cantidad máxima 70 caracteres";
     return null;
   };
@@ -131,7 +140,8 @@ export default function EditEvaluadorModal({
   const areaErrMsg = () => {
     if (!shouldShow("area")) return null;
     if (areaEmpty) return "Completa este campo";
-    if (areaTakenByOther) return "Ya existe un evaluador asignado a esta área y nivel";
+    if (areaTakenByOther)
+      return "Ya existe un evaluador asignado a esta área y nivel";
     return null;
   };
 
@@ -143,7 +153,9 @@ export default function EditEvaluadorModal({
   };
 
   const errClass = (hasError) =>
-    hasError ? "border-2 border-red-500 focus:border-red-500 focus:ring-red-300" : "";
+    hasError
+      ? "border-2 border-red-500 focus:border-red-500 focus:ring-red-300"
+      : "";
 
   if (!open) return null;
 
@@ -237,7 +249,10 @@ export default function EditEvaluadorModal({
               value={form.telefono}
               onBlur={() => setTouched((t) => ({ ...t, telefono: true }))}
               onChange={(e) =>
-                setForm({ ...form, telefono: e.target.value.replace(/\D/g, "") })
+                setForm({
+                  ...form,
+                  telefono: e.target.value.replace(/\D/g, ""),
+                })
               }
             />
             {phoneErrMsg() && (
@@ -254,7 +269,9 @@ export default function EditEvaluadorModal({
               type="button"
               onClick={() => setShowAreas((v) => !v)}
               onBlur={() => setTouched((t) => ({ ...t, area: true }))}
-              className={`input flex items-center justify-between ${errClass(!!areaErrMsg())}`}
+              className={`input flex items-center justify-between ${errClass(
+                !!areaErrMsg()
+              )}`}
             >
               <span className={form.area ? "text-slate-900" : "text-slate-400"}>
                 {form.area || "Selecciona un área"}
@@ -264,24 +281,24 @@ export default function EditEvaluadorModal({
             {showAreas && (
               <div className="absolute z-10 mt-1 w-full card p-0 overflow-hidden">
                 <ul className="max-h-56 overflow-auto">
-                  {AREAS.filter(area => {
-  // Si el usuario está editando, permitir su área actual aunque esté completa
-  if (initial?.area === area) return true;
-  return !isAreaCompleta(area, takenAreas);
-}).map(a => (
-  <li key={a}>
-    <button
-      className="w-full text-left px-4 py-3 hover:bg-slate-50"
-      onMouseDown={(e) => e.preventDefault()}
-      onClick={() => {
-        setForm({ ...form, area: a });
-        setShowAreas(false);
-      }}
-    >
-      {a}
-    </button>
-  </li>
-))}
+                  {AREAS.filter((area) => {
+                    // Si el usuario está editando, permitir su área actual aunque esté completa
+                    if (initial?.area === area) return true;
+                    return !isAreaCompleta(area, takenAreas);
+                  }).map((a) => (
+                    <li key={a}>
+                      <button
+                        className="w-full text-left px-4 py-3 hover:bg-slate-50"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          setForm({ ...form, area: a });
+                          setShowAreas(false);
+                        }}
+                      >
+                        {a}
+                      </button>
+                    </li>
+                  ))}
                 </ul>
               </div>
             )}
@@ -299,11 +316,18 @@ export default function EditEvaluadorModal({
               type="button"
               onClick={() => setShowNiveles((v) => !v)}
               onBlur={() => setTouched((t) => ({ ...t, nivel: true }))}
-              className={`input flex items-center justify-between ${errClass(!!nivelErrMsg())}`}
+              className={`input flex items-center justify-between ${errClass(
+                !!nivelErrMsg()
+              )}`}
               disabled={!form.area} // ✅ Deshabilita si no hay área seleccionada
             >
-              <span className={form.nivel ? "text-slate-900" : "text-slate-400"}>
-                {form.nivel || (form.area ? "Selecciona un nivel" : "Primero selecciona un área")}
+              <span
+                className={form.nivel ? "text-slate-900" : "text-slate-400"}
+              >
+                {form.nivel ||
+                  (form.area
+                    ? "Selecciona un nivel"
+                    : "Primero selecciona un área")}
               </span>
               <ChevronDownIcon className="w-5 h-5 text-slate-400" />
             </button>
@@ -327,7 +351,9 @@ export default function EditEvaluadorModal({
                     ))
                   ) : (
                     <li>
-                      <p className="px-4 py-3 text-slate-400">Todos los niveles para esta área ya están asignados.</p>
+                      <p className="px-4 py-3 text-slate-400">
+                        Todos los niveles para esta área ya están asignados.
+                      </p>
                     </li>
                   )}
                 </ul>
@@ -343,8 +369,12 @@ export default function EditEvaluadorModal({
         </div>
         {/* Acciones */}
         <div className="flex items-center justify-end gap-3 mt-7">
-          <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
-          <button className="btn btn-cta" onClick={onSubmit}>Actualizar</button>
+          <button className="btn btn-ghost" onClick={onClose}>
+            Cancelar
+          </button>
+          <button className="btn btn-cta" onClick={onSubmit}>
+            Actualizar
+          </button>
         </div>
       </div>
     </div>

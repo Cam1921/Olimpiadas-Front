@@ -7,6 +7,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { AREAS } from "../services/areas";
 import { isAreaCompleta } from "../utils/areaUtils";
+import { getAreasConNiveles } from "../infrastructure/http/areas/areaRepostory";
 
 export default function RegisterEvaluadorModal({
   open,
@@ -20,7 +21,8 @@ export default function RegisterEvaluadorModal({
 }) {
   const [showAreas, setShowAreas] = useState(false);
   const [showNiveles, setShowNiveles] = useState(false);
-  const [availableNiveles, setAvailableNiveles] = useState(["Primaria", "Secundaria"]); // Inicialmente ambos
+  const [availableNiveles, setAvailableNiveles] = useState([]); // Inicialmente ambos
+  const [areasConNiveles, setAreasConNiveles] = useState([]);
 
   useEffect(() => {
     if (!open) {
@@ -29,22 +31,41 @@ export default function RegisterEvaluadorModal({
     }
   }, [open]);
 
+  useEffect(() => {
+    const fetchAreas = async () => {
+      try {
+        const data = await getAreasConNiveles(); // devuelve tu JSON
+        setAreasConNiveles(data);
+      } catch (err) {
+        console.error("Error al cargar áreas con niveles:", err);
+      }
+    };
+    fetchAreas();
+  }, []);
   // Actualiza los niveles disponibles cuando cambia el área
   useEffect(() => {
     if (form.area) {
-      const takenForArea = takenAreas.filter(a => a.area === form.area);
-      const available = ["Primaria", "Secundaria"].filter(n => 
-        !takenForArea.some(t => t.nivel === n)
-      );
-      setAvailableNiveles(available);
+      const selectedArea = areasConNiveles.find((a) => a.nombre === form.area);
+      if (selectedArea) {
+        const takenForArea = takenAreas.filter((a) => a.area === form.area);
+        const available = selectedArea.niveles.filter(
+          (n) => !takenForArea.some((t) => t.nivel === n.nombre_nivel)
+        );
+        setAvailableNiveles(available);
+      } else {
+        setAvailableNiveles([]);
+      }
     } else {
-      setAvailableNiveles(["Primaria", "Secundaria"]);
+      setAvailableNiveles([]);
     }
-  }, [form.area, takenAreas]);
+  }, [form.area, takenAreas, areasConNiveles]);
 
   if (!open) return null;
 
-  const errClass = (field) => errors[field] ? "border-2 border-red-500 focus:border-red-500 focus:ring-red-300" : "";
+  const errClass = (field) =>
+    errors[field]
+      ? "border-2 border-red-500 focus:border-red-500 focus:ring-red-300"
+      : "";
 
   const getErrorMsg = (field) => errors[field] || null;
 
@@ -52,7 +73,10 @@ export default function RegisterEvaluadorModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
       <div className="relative card w-[720px] p-8">
-        <button className="absolute right-4 top-4 text-slate-400 hover:text-slate-600" onClick={onClose}>
+        <button
+          className="absolute right-4 top-4 text-slate-400 hover:text-slate-600"
+          onClick={onClose}
+        >
           <XMarkIcon className="w-6 h-6" />
         </button>
         <h2 className="text-4xl md:text-5xl font-semibold text-primary leading-tight">
@@ -62,7 +86,8 @@ export default function RegisterEvaluadorModal({
         {Object.keys(errors).length > 0 && (
           <div className="bg-red-50 border-l-4 border-red-500 p-3 mb-4 rounded">
             <p className="text-red-700 text-sm font-medium">
-              ⚠️ Algunos datos ya están registrados o son inválidos. Revisa los campos marcados en rojo.
+              ⚠️ Algunos datos ya están registrados o son inválidos. Revisa los
+              campos marcados en rojo.
             </p>
           </div>
         )}
@@ -82,7 +107,9 @@ export default function RegisterEvaluadorModal({
                 {getErrorMsg("nombre")}
               </p>
             ) : (
-              <p className="text-xs text-slate-400 mt-1">Debe tener al menos 4 letras.</p>
+              <p className="text-xs text-slate-400 mt-1">
+                Debe tener al menos 4 letras.
+              </p>
             )}
           </div>
           {/* Apellidos */}
@@ -100,7 +127,9 @@ export default function RegisterEvaluadorModal({
                 {getErrorMsg("apellidos")}
               </p>
             ) : (
-              <p className="text-xs text-slate-400 mt-1">Debe tener al menos 4 letras.</p>
+              <p className="text-xs text-slate-400 mt-1">
+                Debe tener al menos 4 letras.
+              </p>
             )}
           </div>
           {/* Correo */}
@@ -118,7 +147,9 @@ export default function RegisterEvaluadorModal({
                 {getErrorMsg("correo")}
               </p>
             ) : (
-              <p className="text-xs text-slate-400 mt-1">Debe contener "@" y ".com".</p>
+              <p className="text-xs text-slate-400 mt-1">
+                Debe contener "@" y ".com".
+              </p>
             )}
           </div>
           {/* Teléfono */}
@@ -127,7 +158,9 @@ export default function RegisterEvaluadorModal({
             <input
               className={`input ${errClass("telefono")}`}
               value={form.telefono}
-              onChange={(e) => setField("telefono", e.target.value.replace(/\D/g, ""))}
+              onChange={(e) =>
+                setField("telefono", e.target.value.replace(/\D/g, ""))
+              }
               placeholder="ej: 71234567"
             />
             {getErrorMsg("telefono") ? (
@@ -136,7 +169,9 @@ export default function RegisterEvaluadorModal({
                 {getErrorMsg("telefono")}
               </p>
             ) : (
-              <p className="text-xs text-slate-400 mt-1">8 dígitos, empieza con 6 o 7.</p>
+              <p className="text-xs text-slate-400 mt-1">
+                8 dígitos, empieza con 6 o 7.
+              </p>
             )}
           </div>
           {/* CI */}
@@ -145,7 +180,9 @@ export default function RegisterEvaluadorModal({
             <input
               className={`input ${errClass("ci")}`}
               value={form.ci}
-              onChange={(e) => setField("ci", e.target.value.replace(/\D/g, ""))}
+              onChange={(e) =>
+                setField("ci", e.target.value.replace(/\D/g, ""))
+              }
               placeholder="ej: 1234567"
             />
             {getErrorMsg("ci") ? (
@@ -154,7 +191,9 @@ export default function RegisterEvaluadorModal({
                 {getErrorMsg("ci")}
               </p>
             ) : (
-              <p className="text-xs text-slate-400 mt-1">Entre 7 y 10 dígitos.</p>
+              <p className="text-xs text-slate-400 mt-1">
+                Entre 7 y 10 dígitos.
+              </p>
             )}
           </div>
           {/* Área */}
@@ -162,8 +201,10 @@ export default function RegisterEvaluadorModal({
             <label className="label">Área *</label>
             <button
               type="button"
-              onClick={() => setShowAreas(v => !v)}
-              className={`input flex items-center justify-between ${errClass("area")}`}
+              onClick={() => setShowAreas((v) => !v)}
+              className={`input flex items-center justify-between ${errClass(
+                "area"
+              )}`}
             >
               <span className={form.area ? "text-slate-900" : "text-slate-400"}>
                 {form.area || "Selecciona un área"}
@@ -173,21 +214,21 @@ export default function RegisterEvaluadorModal({
             {showAreas && (
               <div className="absolute z-10 mt-1 w-full card p-0 overflow-hidden">
                 <ul className="max-h-56 overflow-auto">
-                  {AREAS.filter(area => !isAreaCompleta(area, takenAreas)).map(a => (
-  <li key={a}>
-    <button
-      className="w-full text-left px-4 py-3 hover:bg-slate-50"
-      onMouseDown={e => e.preventDefault()}
-      onClick={() => {
-        setField("area", a);
-        setShowAreas(false);
-      }}
-    >
-      {a}
-    </button>
-  </li>
-))}
-                
+                  {areasConNiveles.map((a) => (
+                    <li key={a.id}>
+                      <button
+                        className="w-full text-left px-4 py-3 hover:bg-slate-50"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          setField("area", a.nombre);
+                          setField("nivel", "");
+                          setShowAreas(false);
+                        }}
+                      >
+                        {a.nombre}
+                      </button>
+                    </li>
+                  ))}
                 </ul>
               </div>
             )}
@@ -203,12 +244,19 @@ export default function RegisterEvaluadorModal({
             <label className="label">Nivel *</label>
             <button
               type="button"
-              onClick={() => setShowNiveles(v => !v)}
-              className={`input flex items-center justify-between ${errClass("nivel")}`}
+              onClick={() => setShowNiveles((v) => !v)}
+              className={`input flex items-center justify-between ${errClass(
+                "nivel"
+              )}`}
               disabled={!form.area} // ✅ Deshabilita si no hay área seleccionada
             >
-              <span className={form.nivel ? "text-slate-900" : "text-slate-400"}>
-                {form.nivel || (form.area ? "Selecciona un nivel" : "Primero selecciona un área")}
+              <span
+                className={form.nivel ? "text-slate-900" : "text-slate-400"}
+              >
+                {form.nivel ||
+                  (form.area
+                    ? "Selecciona un nivel"
+                    : "Primero selecciona un área")}
               </span>
               <ChevronDownIcon className="w-5 h-5 text-slate-400" />
             </button>
@@ -216,23 +264,25 @@ export default function RegisterEvaluadorModal({
               <div className="absolute z-10 mt-1 w-full card p-0 overflow-hidden">
                 <ul className="max-h-56 overflow-auto">
                   {availableNiveles.length > 0 ? (
-                    availableNiveles.map(n => (
-                      <li key={n}>
+                    availableNiveles.map((n) => (
+                      <li key={n.id}>
                         <button
                           className="w-full text-left px-4 py-3 hover:bg-slate-50"
-                          onMouseDown={e => e.preventDefault()}
+                          onMouseDown={(e) => e.preventDefault()}
                           onClick={() => {
-                            setField("nivel", n);
+                            setField("nivel", n.nombre_nivel);
                             setShowNiveles(false);
                           }}
                         >
-                          {n}
+                          {n.nombre_nivel}
                         </button>
                       </li>
                     ))
                   ) : (
                     <li>
-                      <p className="px-4 py-3 text-slate-400">Todos los niveles para esta área ya están asignados.</p>
+                      <p className="px-4 py-3 text-slate-400">
+                        Todos los niveles para esta área ya están asignados.
+                      </p>
                     </li>
                   )}
                 </ul>
@@ -247,7 +297,9 @@ export default function RegisterEvaluadorModal({
           </div>
         </div>
         <div className="flex items-center justify-end gap-3 mt-7">
-          <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-ghost" onClick={onClose}>
+            Cancelar
+          </button>
           <button
             className="btn btn-cta"
             onClick={onSubmit}

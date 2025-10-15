@@ -1,6 +1,6 @@
 // src/application/evaluadores/useRegisterEvaluador.js
 import { useState, useCallback, useEffect } from 'react';
-import { AREAS } from '../../services/areas';
+import { getAreasConNiveles } from "../../infrastructure/http/areas/areaRepostory";
 
 export function useRegisterEvaluador(takenAreas = []) {
   const [form, setForm] = useState({
@@ -15,6 +15,7 @@ export function useRegisterEvaluador(takenAreas = []) {
 
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+   const [allAreas, setAllAreas] = useState([]);
 
   // Al editar un campo, limpia su error
   const setField = useCallback((name, value) => {
@@ -38,6 +39,16 @@ export function useRegisterEvaluador(takenAreas = []) {
     setErrors({});
   }, []);
 
+    useEffect(() => {
+     
+      async function fetchAreas() {
+        const areas = await getAreasConNiveles();
+        setAllAreas(areas);
+        console.log(areas);
+      }
+      fetchAreas();
+    }, []);
+
   // Validación en tiempo real (solo si el campo tiene valor)
   useEffect(() => {
     const newErrors = {};
@@ -56,15 +67,35 @@ export function useRegisterEvaluador(takenAreas = []) {
     if (form.ci && !/^\d{7,10}$/.test(form.ci.replace(/\D/g, ''))) {
       newErrors.ci = 'El CI debe tener entre 7 y 10 dígitos. Ej: 1234567';
     }
-    if (form.nivel && !['Primaria', 'Secundaria'].includes(form.nivel)) {
+  /*   if (form.nivel && !['Primaria', 'Secundaria'].includes(form.nivel)) {
       newErrors.nivel = 'El nivel debe ser "Primaria" o "Secundaria".';
-    }
+    } */
     setErrors(prev => {
       const updated = { ...prev, ...newErrors };
       return updated;
     });
   }, [form]);
 
+
+  function obtenerIds(areas, nombreArea, nombreNivel) {
+  const area = areas.find(
+    (a) => a.nombre.toLowerCase() === nombreArea.toLowerCase()
+  );
+
+  if (!area) {
+    return { error: `No se encontró el área "${nombreArea}".` };
+  }
+
+  const nivel = area.niveles.find(
+    (n) => n.nombre_nivel.toLowerCase() === nombreNivel.toLowerCase()
+  );
+
+  if (!nivel) {
+    return { error: `No se encontró el nivel "${nombreNivel}" en el área "${nombreArea}".` };
+  }
+
+  return { id_area: area.id, id_nivel: nivel.id };
+}
   const validate = useCallback((data, takenAreas) => {
     const newErrors = {};
     if (!data.nombre.trim()) newErrors.nombre = 'El nombre es obligatorio.';
@@ -79,7 +110,7 @@ export function useRegisterEvaluador(takenAreas = []) {
     else if (!/^\d{7,10}$/.test(data.ci.replace(/\D/g, ''))) newErrors.ci = 'El CI debe tener entre 7 y 10 dígitos.';
     if (!data.area) newErrors.area = 'Selecciona un área.';
     if (!data.nivel) newErrors.nivel = 'Selecciona un nivel.';
-    else if (!['Primaria', 'Secundaria'].includes(data.nivel)) newErrors.nivel = 'El nivel debe ser "Primaria" o "Secundaria".';
+    /* else if (!['Primaria', 'Secundaria'].includes(data.nivel)) newErrors.nivel = 'El nivel debe ser "Primaria" o "Secundaria".'; */
 
     // ✅ Validación de combinación area + nivel
     if (data.area && data.nivel) {
@@ -98,7 +129,9 @@ export function useRegisterEvaluador(takenAreas = []) {
     if (Object.keys(newErrors).length > 0) {
       return { ok: false, error: 'Por favor corrige los errores en el formulario.' };
     }
+    console.log(form);
     setSubmitting(true);
+    const asignacion = obtenerIds(allAreas, form.area, form.nivel);
     try {
       const response = await fetch('/api/evaluador', {
         method: 'POST',
@@ -106,11 +139,10 @@ export function useRegisterEvaluador(takenAreas = []) {
         body: JSON.stringify({
           nombre: form.nombre,
           apellidos: form.apellidos,
-          correo: form.correo,
+          email: form.correo,
           telefono: form.telefono,
           ci: form.ci,
-          area: form.area,
-          nivel: form.nivel, // ✅ Enviar nivel
+          asignaciones: [asignacion],
         }),
       });
       const data = await response.json();
@@ -120,12 +152,15 @@ export function useRegisterEvaluador(takenAreas = []) {
           Object.keys(data.errors).forEach(key => {
             backendErrors[key] = data.errors[key][0];
           });
+          console.log(data.errors);
           setErrors(backendErrors);
           return { ok: false, error: 'Algunos datos ya están registrados. Revisa los campos marcados.' };
         }
         throw new Error(data.message || 'Error al registrar');
       }
       return { ok: true, data };
+      console.log('Simulando envío de datos:', form);
+      return { ok: true, data: { message: 'Simulación exitosa' } };
     } catch (err) {
       console.error('Error en submit:', err);
       return { ok: false, error: 'No se pudo conectar con el servidor. Inténtalo más tarde.' };

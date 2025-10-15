@@ -27,12 +27,10 @@ export default function App() {
           path="gestion-inscripciones"
           element={<GestionInscripciones />}
         />
+        <Route path="gestion-roles" element={<ResponsablesAcademicos />} />
+        <Route path="evaluadores" element={<Evaluadores />} />
       </Route>
 
-      <Route path="/responsables" element={<ResponsablesAcademicos />} />
-      <Route path="/evaluadores" element={<Evaluadores />} />
-
-      {/* 🔹 Ruta de prueba sin login */}
       <Route path="/responsables-test" element={<ResponsablesAcademicos />} />
 
       <Route path="/evaluadores-test" element={<Evaluadores />} />

@@ -1,6 +1,6 @@
 // src/application/responsables/useRegisterResponsable.js
 import { useState, useCallback, useEffect } from 'react';
-import { AREAS } from '../../services/areas';
+import { getAreasConNiveles } from "../../infrastructure/http/areas/areaRepostory";
 
 export function useRegisterResponsable(takenAreas = []) {
   const [form, setForm] = useState({
@@ -14,6 +14,7 @@ export function useRegisterResponsable(takenAreas = []) {
 
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+   const [allAreas, setAllAreas] = useState([]);
 
   // Al editar un campo, limpia su error
   const setField = useCallback((name, value) => {
@@ -23,6 +24,15 @@ export function useRegisterResponsable(takenAreas = []) {
       return rest;
     });
   }, []);
+
+   useEffect(() => {   
+      async function fetchAreas() {
+        const areas = await getAreasConNiveles();
+        setAllAreas(areas);
+        console.log(areas);
+      }
+      fetchAreas();
+    }, []);
 
   const resetForm = useCallback(() => {
     setForm({
@@ -36,6 +46,18 @@ export function useRegisterResponsable(takenAreas = []) {
     setErrors({});
   }, []);
 
+
+function obtenerIdArea(areas, nombreArea) {
+  const area = areas.find(
+    (a) => a.nombre.toLowerCase() === nombreArea.toLowerCase()
+  );
+
+  if (!area) {
+    return { error: `No se encontró el área "${nombreArea}".` };
+  }
+
+  return { id_area: area.id };
+}
   // Validación en tiempo real (solo si el campo tiene valor)
   useEffect(() => {
     const newErrors = {};
@@ -87,6 +109,9 @@ export function useRegisterResponsable(takenAreas = []) {
     return newErrors;
   }, []);
 
+
+
+  
   const submit = useCallback(async () => {
     const newErrors = validate(form, takenAreas);
     setErrors(newErrors);
@@ -94,8 +119,9 @@ export function useRegisterResponsable(takenAreas = []) {
     if (Object.keys(newErrors).length > 0) {
       return { ok: false, error: 'Por favor corrige los errores en el formulario.' };
     }
-
+   
     setSubmitting(true);
+    const asignacion = obtenerIdArea(allAreas, form.area);
     try {
       const response = await fetch('/api/responsable-academico', {
         method: 'POST',
@@ -103,10 +129,10 @@ export function useRegisterResponsable(takenAreas = []) {
         body: JSON.stringify({
           nombre: form.nombre,
           apellidos: form.apellidos,
-          correo: form.correo,
+          email: form.correo,
           telefono: form.telefono,
           ci: form.ci,
-          area: form.area,
+           asignaciones: [asignacion],
         }),
       });
 

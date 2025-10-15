@@ -27,9 +27,11 @@ export default function EvaluadoresTable({ data = [], onEdit, onDelete }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {data.map((r, idx) => (
-              <tr key={idx} className="hover:bg-slate-50">
-                <td className="px-6 py-4">{r.nombre} {r.apellidos}</td>
+            {data.map((r) => (
+              <tr key={r.id} className="hover:bg-slate-50">
+                <td className="px-6 py-4">
+                  {r.nombre} {r.apellidos}
+                </td>
                 <td className="px-6 py-4">{r.correo}</td>
                 <td className="px-6 py-4">{r.telefono}</td>
                 <td className="px-6 py-4">{r.ci}</td>
@@ -42,7 +44,7 @@ export default function EvaluadoresTable({ data = [], onEdit, onDelete }) {
                       className="text-cta hover:opacity-80"
                       title="Editar"
                       aria-label="Editar evaluador"
-                      onClick={() => onEdit?.(r, idx)} // <-- IMPORTANTE: pasamos idx
+                      onClick={() => onEdit?.(r, r.id)} // <-- IMPORTANTE: pasamos idx
                     >
                       <PencilSquareIcon className="w-5 h-5" />
                     </button>
@@ -50,7 +52,7 @@ export default function EvaluadoresTable({ data = [], onEdit, onDelete }) {
                       className="text-red-500 hover:opacity-80"
                       title="Eliminar"
                       aria-label="Eliminar evaluador"
-                      onClick={() => onDelete?.(r, idx)}
+                      onClick={() => onDelete?.(r, r.id)}
                     >
                       <TrashIcon className="w-5 h-5" />
                     </button>

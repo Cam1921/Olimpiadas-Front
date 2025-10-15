@@ -8,7 +8,8 @@ import EditEvaluadorModal from "../components/EditEvaluadorModal";
 import SuccessDialog from "../components/SuccessDialog";
 import ConfirmDeleteModal from "../components/ConfirmDeleteModal";
 import { useRegisterEvaluador } from "../application/responsables/useRegisterEvaluador"; // 👈 Hook específico
-import { AREAS } from "../services/areas";
+import { getAreasConNiveles } from "../infrastructure/http/areas/areaRepostory";
+import { evaluadoresRepo } from "../infrastructure/http/evaluadores/repository";
 
 export default function Evaluadores() {
   const [rows, setRows] = useState([]);
@@ -21,30 +22,71 @@ export default function Evaluadores() {
   const [deletingIndex, setDeletingIndex] = useState(-1);
   const [successOpen, setSuccessOpen] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
+  const [allAreas, setAllAreas] = useState([]);
 
   // ✅ Transforma rows en un array de objetos { area, nivel } para el hook
-  const takenAreas = useMemo(() => rows.map(r => ({ area: r.area, nivel: r.nivel })), [rows]);
-  const areasCubiertas = useMemo(() => new Set(rows.map(r => r.area)).size, [rows]);
-  const areasDisponibles = AREAS.length - areasCubiertas;
+  const takenAreas = useMemo(
+    () => rows.map((r) => ({ area: r.area, nivel: r.nivel })),
+    [rows]
+  );
+  const areasCubiertas = useMemo(
+    () => new Set(rows.map((r) => r.area)).size,
+    [rows]
+  );
+  const areasDisponibles = useMemo(() => {
+    if (!allAreas) return 0;
+    return allAreas.length - areasCubiertas;
+  }, [allAreas, areasCubiertas]);
 
-  const { form, setField, errors, submitting, submit, resetForm, setErrors } = useRegisterEvaluador(takenAreas);
+  const { form, setField, errors, submitting, submit, resetForm, setErrors } =
+    useRegisterEvaluador(takenAreas);
 
   // 👇 Función para cargar evaluadores desde el backend
   const fetchEvaluadores = async () => {
     try {
-      const response = await fetch('/api/evaluador');
-      if (!response.ok) throw new Error('Error al cargar evaluadores');
+      const response = await fetch("/api/evaluador");
+      if (!response.ok) throw new Error("Error al cargar evaluadores");
       const data = await response.json();
-      setRows(data); // ✅ Actualiza con datos reales del backend
+
+      // ✅ Adaptamos el formato del JSON recibido
+      const adaptedData = data.map((item) => ({
+        id: item.id,
+        nombre: item.nombre,
+        apellidos: item.apellidos,
+        ci: item.ci,
+        correo: item.correo,
+        telefono: item.telefono,
+        area: item.asignaciones?.[0]?.area || "—", // 👈 toma el primer área o vacío
+        nivel: item.asignaciones?.[0]?.nivel || "—",
+        fecha: item.fecha_registro,
+      }));
+
+      setRows(adaptedData); // ✅ Asignamos el array adaptado
     } catch (err) {
-      console.error('Error al cargar evaluadores:', err);
+      console.error("Error al cargar evaluadores:", err);
       // Opcional: mostrar mensaje de error al usuario
     }
   };
-
+  const handleDelete = async (id) => {
+    try {
+      await evaluadoresRepo.remove(id); // 🔥 Aquí usas el método remove
+      fetchEvaluadores();
+    } catch (err) {
+      console.error("Error al eliminar evaluador:", err);
+      alert("No se pudo eliminar el evaluador");
+    } finally {
+    }
+  };
+  async function fetchAreas() {
+    const areas = await getAreasConNiveles();
+    setAllAreas(areas);
+    console.log(areas);
+  }
   // 👇 Cargar datos al montar el componente
   useEffect(() => {
     fetchEvaluadores();
+
+    fetchAreas();
   }, []);
 
   // 👇 Función para cerrar el modal Y limpiar el formulario
@@ -77,7 +119,9 @@ export default function Evaluadores() {
   };
 
   const confirmDelete = () => {
-    setRows(prev => prev.filter((_, i) => i !== deletingIndex));
+    console.log(deletingIndex);
+    handleDelete(deletingIndex);
+    setRows((prev) => prev.filter((_, i) => i !== deletingIndex));
     setDeleteOpen(false);
     setSuccessMsg("El evaluador fue eliminado correctamente.");
     setSuccessOpen(true);
@@ -86,7 +130,14 @@ export default function Evaluadores() {
   return (
     <div className="p-6 md:p-8">
       <div className="flex items-center gap-8 border-b border-slate-200">
-        <button className="py-3 text-slate-400 hover:text-slate-600">Responsables Académicos</button>
+        <button
+          onClick={() => {
+            window.location.href = "gestion-roles";
+          }}
+          className="py-3 text-slate-400 hover:text-slate-600"
+        >
+          Responsables Académicos
+        </button>
         <button className="py-3 border-b-2 border-cta text-cta font-semibold">
           Evaluadores
         </button>
@@ -97,21 +148,44 @@ export default function Evaluadores() {
             Registro de Evaluadores
           </h1>
           <p className="text-slate-500 mt-2">
-            Registra evaluadores por área y nivel para garantizar la supervisión de la evaluación.
+            Registra evaluadores por área y nivel para garantizar la supervisión
+            de la evaluación.
           </p>
         </div>
-        <button className="btn btn-cta text-white" onClick={() => setOpen(true)}>
+        <button
+          className="btn btn-cta text-white"
+          onClick={() => setOpen(true)}
+        >
           <UserPlusIcon className="w-5 h-5" />
           Registrar Evaluador
         </button>
       </div>
       <div className="grid md:grid-cols-3 gap-6 mt-8">
-        <StatsCard title="Total Evaluadores" value={rows.length} variant="cta" icon="userplus" />
-        <StatsCard title="Áreas Cubiertas" value={areasCubiertas} variant="accent" icon="check" />
-        <StatsCard title="Áreas Disponibles" value={areasDisponibles} variant="cta" icon="check" />
+        <StatsCard
+          title="Total Evaluadores"
+          value={rows.length}
+          variant="cta"
+          icon="userplus"
+        />
+        <StatsCard
+          title="Áreas Cubiertas"
+          value={areasCubiertas}
+          variant="accent"
+          icon="check"
+        />
+        <StatsCard
+          title="Áreas Disponibles"
+          value={areasDisponibles}
+          variant="cta"
+          icon="check"
+        />
       </div>
       <div className="mt-8">
-        <EvaluadoresTable data={rows} onEdit={handleOpenEdit} onDelete={handleOpenDelete} />
+        <EvaluadoresTable
+          data={rows}
+          onEdit={handleOpenEdit}
+          onDelete={handleOpenDelete}
+        />
       </div>
       <RegisterEvaluadorModal
         open={open}
@@ -128,10 +202,18 @@ export default function Evaluadores() {
         open={editOpen}
         onClose={() => setEditOpen(false)}
         initial={editingRow}
-        takenAreas={rows.map(r => ({ area: r.area, nivel: r.nivel }))} // ✅ Pasa el array de objetos
+        takenAreas={rows.map((r) => ({ area: r.area, nivel: r.nivel }))} // ✅ Pasa el array de objetos
         onUpdate={(updated) => {
-          setRows(prev =>
-            prev.map((r, i) => (i === editingIndex ? { ...r, ...updated, fecha: new Date().toISOString().slice(0, 10) } : r))
+          setRows((prev) =>
+            prev.map((r, i) =>
+              i === editingIndex
+                ? {
+                    ...r,
+                    ...updated,
+                    fecha: new Date().toISOString().slice(0, 10),
+                  }
+                : r
+            )
           );
           setEditOpen(false);
           setSuccessMsg("La información se actualizó correctamente.");
