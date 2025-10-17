@@ -10,6 +10,7 @@ import ConfirmDeleteModal from "../components/ConfirmDeleteModal";
 import { useRegisterResponsable } from "../application/responsables/useRegisterResponsible"; // 👈 Corregido nombre (a)
 import { getAreasConNiveles } from "../infrastructure/http/areas/areaRepostory";
 import { responsablesRepo } from "../infrastructure/http/responsables/repository";
+import api from "@/lib/api";
 export default function ResponsablesAcademicos() {
   const [rows, setRows] = useState([]);
 
@@ -41,11 +42,9 @@ export default function ResponsablesAcademicos() {
   // 👇 Función para cargar responsables desde el backend
   const fetchResponsables = async () => {
     try {
-      const response = await fetch("/api/responsable-academico");
-      if (!response.ok) throw new Error("Error al cargar responsables");
-      const data = await response.json();
+      const response = await api.get("/responsable-academico");
+      const data = response.data;
 
-      // ✅ Adaptamos el formato del JSON recibido
       const adaptedData = data.map((item) => ({
         id: item.id,
         nombre: item.nombre,
@@ -53,15 +52,14 @@ export default function ResponsablesAcademicos() {
         ci: item.ci,
         correo: item.correo,
         telefono: item.telefono,
-        area: item.asignaciones?.[0] || "—", // 👈 toma la primera asignación o vacío
-        nivel: "—", // Como no hay nivel, dejamos un valor por defecto
+        area: item.asignaciones?.[0] || "—",
+        nivel: "—",
         fecha: item.fecha_registro,
       }));
 
-      setRows(adaptedData); // ✅ Asignamos el array adaptado
+      setRows(adaptedData);
     } catch (err) {
       console.error("Error al cargar responsables:", err);
-      // Opcional: mostrar mensaje de error al usuario
     }
   };
 

@@ -8,6 +8,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { Download, FileWarning } from "lucide-react";
 import GestionInscripciones from "./ListaCompetidores";
+import api from "@/lib/api";
 
 export default function InscripcionesManagement() {
   const [file, setFile] = useState(null);
@@ -98,42 +99,38 @@ export default function InscripcionesManagement() {
       const formData = new FormData();
       formData.append("archivo", file);
 
-      const previewResponse = await fetch(
-        "http://nebulasoft.tis.cs.umss.edu.bo/api/importaciones/preview",
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
-      const previewResult = await previewResponse.json();
-      console.log("📦 Preview Result:", previewResult);
-      if (previewResult.status === "error") {
-        setValidationError(previewResult);
-        if (previewResult.message == "Encabezados requeridos faltantes") {
-          toast.error("Encabezados requeridos faltantes");
-          console.log("los encabezados faltan");
-        } else if (
-          previewResult.message ==
-          "El archivo contiene encabezados no válidos o desconocidos"
-        ) {
-          console.log(
-            "El archivo contiene encabezados no válidos o desconocidos"
-          );
-        } else if (previewResult.message == "Validado con errores") {
-          setValidationError(null);
-          setResponseData(previewResult);
-          setIsValidated(true);
-          console.log(previewResult);
-          console.log("Validado con errores");
-        }
-      } else if (previewResult.status === "success") {
+      const previewResponse = await api.post("importaciones/preview", formData);
+      console.log(previewResponse);
+      const previewResult = previewResponse.data;
+      if (previewResult.status === "success") {
         console.log("validado con exito");
         setResponseData(previewResult);
         setIsValidated(true);
       }
     } catch (error) {
-      toast.error("Error al validar CSV");
-      console.log("se produjo un error al realizar la peticion");
+      if (error.response?.data?.status === "error") {
+        const previewResult = error.response.data;
+        setValidationError(previewResult);
+
+        switch (previewResult.message) {
+          case "Encabezados requeridos faltantes":
+            toast.error("Encabezados requeridos faltantes");
+            break;
+          case "El archivo contiene encabezados no válidos o desconocidos":
+            toast.error("Encabezados inválidos o desconocidos");
+            break;
+          case "Validado con errores":
+            setValidationError(null);
+            setResponseData(previewResult);
+            setIsValidated(true);
+            break;
+          default:
+            toast.error(previewResult.message);
+        }
+      } else {
+        toast.error("Error al validar CSV");
+        console.error(error);
+      }
     } finally {
       setIsValidating(false);
     }
@@ -149,24 +146,13 @@ export default function InscripcionesManagement() {
     const importId = responseData.meta.import_id;
 
     try {
-      const response = await fetch(
-        "http://nebulasoft.tis.cs.umss.edu.bo/api/importaciones/confirmar",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          body: JSON.stringify({
-            import_id: importId,
-          }),
-        }
-      );
-
-      const result = await response.json();
+      const response = await api.post("/importaciones/confirmar", {
+        import_id: importId,
+      });
+      const result = response.data;
       console.log("📦 Confirm Import Result:", result);
 
-      if (response.ok && result.status === "success") {
+      if (result.status === "success") {
         toast.success("Inscritos importados correctamente");
         setConfirmedData(
           result.data.map((item, index) => ({
@@ -202,44 +188,31 @@ export default function InscripcionesManagement() {
       toast.error("No se encontró el identificador de importación");
       return;
     }
-
     try {
       const importId = responseData.meta.import_id;
 
-      const response = await fetch(
-        `http://nebulasoft.tis.cs.umss.edu.bo/api/importaciones/errores?import_id=${importId}`,
-        {
-          method: "GET",
-          headers: {
-            Accept: "text/csv",
-          },
-        }
-      );
-
-      if (!response.ok) {
-        toast.error("No se pudo descargar el reporte de errores");
-        return;
-      }
-
-      const blob = await response.blob();
+      const response = await api.get("/importaciones/errores", {
+        params: { import_id: importId },
+        headers: { Accept: "text/csv" },
+        responseType: "blob",
+      });
+      const blob = new Blob([response.data], { type: "text/csv" });
       const url = window.URL.createObjectURL(blob);
 
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute(
-        "download",
-        `errores_validacion_${new Date()
-          .toISOString()
-          .slice(0, 19)
-          .replace(/[:T]/g, "-")}.csv`
-      );
+      link.download = `errores_validacion_${new Date()
+        .toISOString()
+        .slice(0, 19)
+        .replace(/[:T]/g, "-")}.csv`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
 
-      toast.success("Reporte de errores descargado");
+      toast.success("Reporte de errores descargado con éxito");
     } catch (error) {
-      console.error(" Error al descargar reporte de errores:", error);
+      console.error("Error al descargar reporte de errores:", error);
       toast.error("Ocurrió un error al descargar el archivo");
     }
   };

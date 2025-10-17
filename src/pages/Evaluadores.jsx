@@ -10,6 +10,7 @@ import ConfirmDeleteModal from "../components/ConfirmDeleteModal";
 import { useRegisterEvaluador } from "../application/responsables/useRegisterEvaluador"; // 👈 Hook específico
 import { getAreasConNiveles } from "../infrastructure/http/areas/areaRepostory";
 import { evaluadoresRepo } from "../infrastructure/http/evaluadores/repository";
+import api from "@/lib/api";
 
 export default function Evaluadores() {
   const [rows, setRows] = useState([]);
@@ -41,14 +42,11 @@ export default function Evaluadores() {
   const { form, setField, errors, submitting, submit, resetForm, setErrors } =
     useRegisterEvaluador(takenAreas);
 
-  // 👇 Función para cargar evaluadores desde el backend
   const fetchEvaluadores = async () => {
     try {
-      const response = await fetch("/api/evaluador");
-      if (!response.ok) throw new Error("Error al cargar evaluadores");
-      const data = await response.json();
+      const response = await api.get("/evaluador"); // no pongas /api si ya lo tienes en baseURL
+      const data = response.data;
 
-      // ✅ Adaptamos el formato del JSON recibido
       const adaptedData = data.map((item) => ({
         id: item.id,
         nombre: item.nombre,
@@ -56,20 +54,19 @@ export default function Evaluadores() {
         ci: item.ci,
         correo: item.correo,
         telefono: item.telefono,
-        area: item.asignaciones?.[0]?.area || "—", // 👈 toma el primer área o vacío
+        area: item.asignaciones?.[0]?.area || "—",
         nivel: item.asignaciones?.[0]?.nivel || "—",
         fecha: item.fecha_registro,
       }));
 
-      setRows(adaptedData); // ✅ Asignamos el array adaptado
+      setRows(adaptedData);
     } catch (err) {
-      console.error("Error al cargar evaluadores:", err);
-      // Opcional: mostrar mensaje de error al usuario
+      console.error("❌ Error al cargar evaluadores:", err);
     }
   };
   const handleDelete = async (id) => {
     try {
-      await evaluadoresRepo.remove(id); // 🔥 Aquí usas el método remove
+      await evaluadoresRepo.remove(id);
       fetchEvaluadores();
     } catch (err) {
       console.error("Error al eliminar evaluador:", err);

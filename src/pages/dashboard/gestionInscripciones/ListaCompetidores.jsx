@@ -1,9 +1,9 @@
 // src/pages/dashboard/gestionInscripciones/ListaCompetidores.jsx
 import { useEffect, useState } from "react";
 import { FiDownload } from "react-icons/fi";
-import axios from "axios";
 import Dropdown from "@/components/Dropdown";
 import { FaChevronDown } from "react-icons/fa";
+import api from "@/lib/api";
 
 export default function GestionInscripciones({ importedData = [] }) {
   const [gestion, setGestion] = useState(2025);
@@ -22,9 +22,7 @@ export default function GestionInscripciones({ importedData = [] }) {
   const [totalPages, setTotalPages] = useState(1);
   const fetchCatalogos = async () => {
     try {
-      const res = await axios.get(
-        "http://nebulasoft.tis.cs.umss.edu.bo/api/catalogos"
-      );
+      const res = await api.get("/catalogos");
       const areasApi = res.data.areas.map((a) => ({
         id: a.id,
         nombre: a.nombre_area,
@@ -40,30 +38,10 @@ export default function GestionInscripciones({ importedData = [] }) {
       console.error("Error al obtener áreas y niveles", error);
     }
   };
-  // Puedes poner esto arriba del componente o dentro del mismo archivo
-  const getColorForName = (name) => {
-    const colors = [
-      "bg-blue-500",
-      "bg-green-500",
-      "bg-pink-500",
-      "bg-purple-500",
-      "bg-yellow-500",
-      "bg-orange-500",
-      "bg-teal-500",
-      "bg-indigo-500",
-    ];
 
-    if (!name) return "bg-gray-400";
-
-    // Calcula un índice basado en el nombre
-    const index = name.charCodeAt(0) % colors.length;
-    return colors[index];
-  };
   useEffect(() => {
     fetchCatalogos();
   }, []);
-
-  // 🔹 Fetch desde backend
   const fetchCompetidores = async (page = 1) => {
     setLoading(true);
     try {
@@ -72,10 +50,7 @@ export default function GestionInscripciones({ importedData = [] }) {
       if (nivelId) params.nivel_id = nivelId;
       if (busqueda) params.busqueda = busqueda;
 
-      const res = await axios.get(
-        "http://nebulasoft.tis.cs.umss.edu.bo/api/competidores/listar",
-        { params }
-      );
+      const res = await api.get("/competidores/listar", { params });
 
       const competidores = res.data.data || [];
       const pagination = res.data.meta?.pagination || {};
@@ -99,13 +74,10 @@ export default function GestionInscripciones({ importedData = [] }) {
       if (busqueda) params.busqueda = busqueda;
 
       // Hacer request al backend para obtener el archivo
-      const response = await axios.get(
-        "http://nebulasoft.tis.cs.umss.edu.bo/api/competidores/exportar",
-        {
-          params,
-          responseType: "blob", // importante para archivos binarios
-        }
-      );
+      const response = await api.get("/competidores/exportar", {
+        params,
+        responseType: "blob",
+      });
 
       // Crear un enlace para descargar el archivo
       const url = window.URL.createObjectURL(new Blob([response.data]));

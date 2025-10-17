@@ -1,13 +1,11 @@
 // src/repositories/areaRepository.js
+import api from "@/lib/api";
 
 export async function getAreasConNiveles() {
   try {
-    // Si tu backend devuelve este JSON desde una ruta, usa fetch:
-    const response = await fetch('http://127.0.0.1:8000/api/catalogos/area-niveles');
-    const json = await response.json();
-
-    if (json.status === "success") {
-      return json.data; // Devolvemos solo la parte útil
+    const response = await api.get("catalogos/area-niveles");
+    if (response.data.status === "success") {
+      return response.data.data; // Suponiendo que los datos están en response.data.data
     } else {
       throw new Error("Error al obtener áreas y niveles");
     }

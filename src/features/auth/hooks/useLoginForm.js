@@ -11,7 +11,7 @@ export default function useLoginForm(onSuccess) {
   const [touchedEmail, setTouchedEmail] = useState(false);
   const [touchedPass, setTouchedPass] = useState(false);
   const [emailLimitMsg, setEmailLimitMsg] = useState("");
-  const [role, setRole] = useState("Administrador"); // 👈 usamos este valor
+  const [role, setRole] = useState("administrador"); // 👈 usamos este valor
 
   const onEmailChange = useCallback((v) => {
     if (v.length >= 70) {
@@ -86,7 +86,7 @@ export default function useLoginForm(onSuccess) {
     setTouchedEmail(false);
     setTouchedPass(false);
     setEmailLimitMsg("");
-    setRole("Administrador");
+    setRole("administrador");
   }, []);
 
   return {

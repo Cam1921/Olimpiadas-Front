@@ -1,7 +1,7 @@
 // src/application/responsables/useRegisterResponsable.js
 import { useState, useCallback, useEffect } from 'react';
 import { getAreasConNiveles } from "../../infrastructure/http/areas/areaRepostory";
-
+import api from "../../lib/api";
 export function useRegisterResponsable(takenAreas = []) {
   const [form, setForm] = useState({
     nombre: '',
@@ -112,52 +112,58 @@ function obtenerIdArea(areas, nombreArea) {
 
 
   
-  const submit = useCallback(async () => {
-    const newErrors = validate(form, takenAreas);
-    setErrors(newErrors);
+const submit = useCallback(async () => {
+  // 🧩 1. Validar el formulario localmente
+  const newErrors = validate(form, takenAreas);
+  setErrors(newErrors);
 
-    if (Object.keys(newErrors).length > 0) {
-      return { ok: false, error: 'Por favor corrige los errores en el formulario.' };
-    }
-   
-    setSubmitting(true);
-    const asignacion = obtenerIdArea(allAreas, form.area);
-    try {
-      const response = await fetch('/api/responsable-academico', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nombre: form.nombre,
-          apellidos: form.apellidos,
-          email: form.correo,
-          telefono: form.telefono,
-          ci: form.ci,
-           asignaciones: [asignacion],
-        }),
+  if (Object.keys(newErrors).length > 0) {
+    return { ok: false, error: "Por favor corrige los errores en el formulario." };
+  }
+
+  setSubmitting(true);
+  const asignacion = obtenerIdArea(allAreas, form.area);
+
+  try {
+    // 📨 2. Enviar los datos al backend
+    const response = await api.post("/responsable-academico", {
+      nombre: form.nombre,
+      apellidos: form.apellidos,
+      email: form.correo,
+      telefono: form.telefono,
+      ci: form.ci,
+      asignaciones: [asignacion],
+    });
+
+    // ✅ Axios no necesita response.ok — si no es 2xx, lanza error automáticamente
+    const data = response.data;
+
+ 
+    return { ok: true, data };
+
+  } catch (err) {
+    console.error("❌ Error en submit:", err);
+
+    // 🧾 3. Errores de validación del backend (422)
+    if (err.response?.status === 422 && err.response.data?.errors) {
+      const backendErrors = {};
+      Object.entries(err.response.data.errors).forEach(([key, messages]) => {
+        backendErrors[key] = messages[0];
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (response.status === 422 && data.errors) {
-          const backendErrors = {};
-          Object.keys(data.errors).forEach(key => {
-            backendErrors[key] = data.errors[key][0];
-          });
-          setErrors(backendErrors);
-          return { ok: false, error: 'Algunos datos ya están registrados. Revisa los campos marcados.' };
-        }
-        throw new Error(data.message || 'Error al registrar');
-      }
-
-      return { ok: true, data };
-    } catch (err) {
-      console.error('Error en submit:', err);
-      return { ok: false, error: 'No se pudo conectar con el servidor. Inténtalo más tarde.' };
-    } finally {
-      setSubmitting(false);
+      setErrors(backendErrors);
+    
+      return { ok: false, error: "Errores de validación detectados." };
     }
-  }, [form, takenAreas, validate]);
+
+    // ⚠️ 4. Otros errores (conexión, 500, etc.)
+
+    return { ok: false, error: "Error inesperado al registrar responsable académico." };
+
+  } finally {
+    // 🔁 5. Restablecer estado de envío
+    setSubmitting(false);
+  }
+}, [form, takenAreas, validate]);
 
   return {
     form,

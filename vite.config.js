@@ -13,10 +13,14 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://nebulasoft.tis.cs.umss.edu.bo/', // tu backend Laravel
+        target: 'http://localhost:8000/', 
         changeOrigin: true,
         secure: false,
       },
     },
+  },
+   build: {
+    outDir: 'build',
+    assetsDir: 'static',
   },
 })
