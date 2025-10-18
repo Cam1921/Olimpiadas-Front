@@ -7,7 +7,7 @@ import {
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { AREAS } from "../services/areas";
-import { isAreaCompleta } from "../utils/areaUtils";
+import { isAreaCompleta, getNivelesByArea } from "../utils/areaUtils"; // 👈 Importa getNivelesByArea
 
 export default function RegisterEvaluadorModal({
   open,
@@ -21,7 +21,7 @@ export default function RegisterEvaluadorModal({
 }) {
   const [showAreas, setShowAreas] = useState(false);
   const [showNiveles, setShowNiveles] = useState(false);
-  const [availableNiveles, setAvailableNiveles] = useState(["Primaria", "Secundaria"]); // Inicialmente ambos
+  const [availableNiveles, setAvailableNiveles] = useState([]); // 👈 Inicialmente vacío
 
   useEffect(() => {
     if (!open) {
@@ -30,16 +30,17 @@ export default function RegisterEvaluadorModal({
     }
   }, [open]);
 
-  // Actualiza los niveles disponibles cuando cambia el área
+  // ✅ Actualiza los niveles disponibles cuando cambia el área (usando niveles específicos)
   useEffect(() => {
     if (form.area) {
+      const nivelesPorArea = getNivelesByArea(form.area);
       const takenForArea = takenAreas.filter(a => a.area === form.area);
-      const available = ["Primaria", "Secundaria"].filter(n => 
+      const available = nivelesPorArea.filter(n => 
         !takenForArea.some(t => t.nivel === n)
       );
       setAvailableNiveles(available);
     } else {
-      setAvailableNiveles(["Primaria", "Secundaria"]);
+      setAvailableNiveles([]); // Vacío si no hay área seleccionada
     }
   }, [form.area, takenAreas]);
 
@@ -158,7 +159,6 @@ export default function RegisterEvaluadorModal({
               className={`input ${errClass("ci")}`}
               value={form.ci}
               onChange={(e) => {
-                
                 const cleaned = e.target.value.replace(/\D/g, '').slice(0, 10);
                 setField("ci", cleaned);
               }}

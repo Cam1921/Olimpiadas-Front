@@ -1,7 +1,7 @@
 // src/application/evaluadores/useRegisterEvaluador.js
-
 import { useState, useCallback, useEffect } from 'react';
 import { AREAS } from '../../services/areas';
+import { getNivelesByArea } from '../../utils/areaUtils'; // 👈 Importa la función
 
 export function useRegisterEvaluador(takenAreas = []) {
   const [form, setForm] = useState({
@@ -54,9 +54,15 @@ export function useRegisterEvaluador(takenAreas = []) {
     if (form.ci && !/^\d{6,10}$/.test(form.ci.replace(/\D/g, ''))) {
       newErrors.ci = 'El CI debe tener entre 6 y 10 dígitos. Ej: 1234567';
     }
-    if (form.nivel && !['Primaria', 'Secundaria'].includes(form.nivel)) {
-      newErrors.nivel = 'El nivel debe ser "Primaria" o "Secundaria".';
+
+    // ✅ Validación flexible del nivel basada en el área
+    if (form.nivel) {
+      const nivelesValidos = getNivelesByArea(form.area);
+      if (!nivelesValidos.includes(form.nivel)) {
+        newErrors.nivel = `El nivel "${form.nivel}" no es válido para el área "${form.area}".`;
+      }
     }
+
     setErrors(prev => ({ ...prev, ...newErrors }));
   }, [form]);
 
@@ -73,14 +79,24 @@ export function useRegisterEvaluador(takenAreas = []) {
     if (!data.ci?.trim()) newErrors.ci = 'El CI es obligatorio.';
     else if (!/^\d{6,10}$/.test(data.ci.replace(/\D/g, ''))) newErrors.ci = 'El CI debe tener entre 6 y 10 dígitos.';
     if (!data.area) newErrors.area = 'Selecciona un área.';
-    if (!data.nivel) newErrors.nivel = 'Selecciona un nivel.';
-    else if (!['Primaria', 'Secundaria'].includes(data.nivel)) newErrors.nivel = 'El nivel debe ser "Primaria" o "Secundaria".';
+    if (!data.nivel) {
+      newErrors.nivel = 'Selecciona un nivel.';
+    } else {
+      // ✅ Validación flexible del nivel basada en el área
+      const nivelesValidos = getNivelesByArea(data.area);
+      if (!nivelesValidos.includes(data.nivel)) {
+        newErrors.nivel = `El nivel "${data.nivel}" no es válido para el área "${data.area}".`;
+      }
+    }
+
+    // Verifica combinación única (área + nivel)
     if (data.area && data.nivel) {
       const combinationExists = takenAreas.some(a => a.area === data.area && a.nivel === data.nivel);
       if (combinationExists) {
         newErrors.area = 'Ya existe un evaluador para esta combinación de área y nivel.';
       }
     }
+
     return newErrors;
   }, []);
 
@@ -105,7 +121,7 @@ export function useRegisterEvaluador(takenAreas = []) {
           nivel: form.nivel,
         }),
       });
-      const data = await response.json(); // ✅ 'data' está definida aquí
+      const data = await response.json();
       if (!response.ok) {
         if (response.status === 422 && data.errors) {
           const backendErrors = {};

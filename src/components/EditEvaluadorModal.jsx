@@ -1,5 +1,4 @@
 // src/components/EditEvaluadorModal.jsx
-
 import { useEffect, useState } from "react";
 import {
   XMarkIcon,
@@ -8,7 +7,7 @@ import {
   LockClosedIcon,
 } from "@heroicons/react/24/outline";
 import { AREAS } from "../services/areas";
-import { isAreaCompleta } from "../utils/areaUtils";
+import { getNivelesByArea, isAreaCompleta } from "../utils/areaUtils";
 
 export default function EditEvaluadorModal({
   open,
@@ -28,7 +27,7 @@ export default function EditEvaluadorModal({
   });
   const [showAreas, setShowAreas] = useState(false);
   const [showNiveles, setShowNiveles] = useState(false);
-  const [availableNiveles, setAvailableNiveles] = useState(["Primaria", "Secundaria"]);
+  const [availableNiveles, setAvailableNiveles] = useState([]);
   const [errors, setErrors] = useState({}); // ✅ Errores del backend + validación local
   const [submitting, setSubmitting] = useState(false);
 
@@ -49,15 +48,17 @@ export default function EditEvaluadorModal({
     }
   }, [open, initial]);
 
+  // ✅ Actualiza los niveles disponibles cuando cambia el área
   useEffect(() => {
     if (form.area) {
+      const nivelesPorArea = getNivelesByArea(form.area);
       const takenForArea = takenAreas.filter(a => a.area === form.area);
-      const available = ["Primaria", "Secundaria"].filter(n => 
+      const available = nivelesPorArea.filter(n => 
         !takenForArea.some(t => t.nivel === n)
       );
       setAvailableNiveles(available);
     } else {
-      setAvailableNiveles(["Primaria", "Secundaria"]);
+      setAvailableNiveles([]);
     }
   }, [form.area, takenAreas]);
 
@@ -90,7 +91,7 @@ export default function EditEvaluadorModal({
         return null;
       case 'nivel':
         if (!value) return 'Selecciona un nivel.';
-        if (!['Primaria', 'Secundaria'].includes(value)) return 'Nivel inválido.';
+        if (!getNivelesByArea(form.area).includes(value)) return 'Nivel inválido para esta área.';
         return null;
       default:
         return null;

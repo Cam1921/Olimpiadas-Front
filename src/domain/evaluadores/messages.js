@@ -1,7 +1,7 @@
 // src/domain/evaluadores/messages.js
 export const MSG = {
   required: "Completa este campo",
-  min4: "Mínimo 4 caracteres",
+  min4: "Mínimo 3 caracteres",
   lettersOnly: "Solo letras y espacios permitidos",
   emailFormat: "El correo debe tener un formato válido (ej. nombre@dominio.com)",
   emailExists: "Este correo ya está registrado",
@@ -14,5 +14,5 @@ export const MSG = {
   areaTaken: "Esta área ya está asignada",
   // Nivel (no estaba en el original de responsable, lo agregamos aquí)
   nivelRequired: "Selecciona un nivel",
-  nivelInvalid: "El nivel debe ser 'Primaria' o 'Secundaria'",
+
 };

@@ -79,13 +79,25 @@ export default function Evaluadores() {
     setDeleteOpen(true);
   };
 
-  const confirmDelete = () => {
-    setRows(prev => prev.filter((_, i) => i !== deletingIndex));
-    setDeleteOpen(false);
+  const confirmDelete = async () => {
+  try {
+    const response = await fetch(`/api/evaluador/${deletingRow.id}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) throw new Error('No se pudo eliminar el evaluador');
+    
+    // ✅ Eliminado del backend: ahora actualiza el estado local
+    await fetchEvaluadores(); // Recarga la lista completa desde el backend
     setSuccessMsg("El evaluador fue eliminado correctamente.");
     setSuccessOpen(true);
-  };
-
+  } catch (err) {
+    console.error('Error al eliminar:', err);
+    setSuccessMsg("No se pudo eliminar el evaluador. Inténtalo más tarde.");
+    setSuccessOpen(true);
+  } finally {
+    setDeleteOpen(false);
+  }
+};
   return (
     <div className="p-6 md:p-8">
       <div className="flex items-center gap-8 border-b border-slate-200">
