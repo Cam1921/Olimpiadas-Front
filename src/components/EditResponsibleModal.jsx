@@ -96,22 +96,31 @@ export default function EditResponsibleModal({
             )}
           </div>
           {/* Correo */}
-          <div className="col-span-2">
-            <label className="label">Correo electrónico *</label>
-            <input
-              className={`input ${errClass("correo")}`}
-              value={form.correo}
-              onChange={(e) => setField("correo", e.target.value)}
-              placeholder="ej: maria@gmail.com"
-            />
-            {getErrorMsg("correo") ? (
-              <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-                <ExclamationTriangleIcon className="w-4 h-4" /> {getErrorMsg("correo")}
-              </p>
-            ) : (
-              <p className="text-xs text-slate-400 mt-1">Ejemplo: nombre@dominio.com</p>
-            )}
-          </div>
+<div className="col-span-2">
+  <label className="label">Correo electrónico *</label>
+  <input
+    className={`input ${errClass("correo")}`}
+    value={form.correo}
+    onChange={(e) => {
+      const value = e.target.value;
+      if (value.length <= 70) {
+        setField("correo", value);
+      }
+    }}
+    placeholder="ej: maria@gmail.com"
+    maxLength={70}
+  />
+  {getErrorMsg("correo") ? (
+    <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
+      <ExclamationTriangleIcon className="w-4 h-4" />
+      {getErrorMsg("correo")}
+    </p>
+  ) : (
+    <p className="text-xs text-slate-400 mt-1">
+      Debe contener "@" y ".com". Máximo 70 caracteres.
+    </p>
+  )}
+</div>
           {/* Teléfono */}
           <div>
             <label className="label">Teléfono *</label>

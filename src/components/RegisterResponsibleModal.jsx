@@ -1,5 +1,4 @@
-// src/components/RegisterEvaluadorModal.jsx
-
+// src/components/RegisterResponsibleModal.jsx
 import { useState, useEffect } from "react";
 import {
   XMarkIcon,
@@ -7,9 +6,8 @@ import {
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { AREAS } from "../services/areas";
-import { isAreaCompleta, getNivelesByArea } from "../utils/areaUtils"; // 👈 Importa getNivelesByArea
-
-export default function RegisterEvaluadorModal({
+import { isAreaCompleta, getNivelesByArea } from "../utils/areaUtils";
+export default function RegisterResponsibleModal({
   open,
   onClose,
   form,
@@ -17,32 +15,13 @@ export default function RegisterEvaluadorModal({
   errors,
   submitting,
   onSubmit,
-  takenAreas = [], // 👈 Ahora es un array de objetos { area, nivel }
+  takenAreas = [],
 }) {
   const [showAreas, setShowAreas] = useState(false);
-  const [showNiveles, setShowNiveles] = useState(false);
-  const [availableNiveles, setAvailableNiveles] = useState([]); // 👈 Inicialmente vacío
 
   useEffect(() => {
-    if (!open) {
-      setShowAreas(false);
-      setShowNiveles(false);
-    }
+    if (!open) setShowAreas(false);
   }, [open]);
-
-  // ✅ Actualiza los niveles disponibles cuando cambia el área (usando niveles específicos)
-  useEffect(() => {
-    if (form.area) {
-      const nivelesPorArea = getNivelesByArea(form.area);
-      const takenForArea = takenAreas.filter(a => a.area === form.area);
-      const available = nivelesPorArea.filter(n => 
-        !takenForArea.some(t => t.nivel === n)
-      );
-      setAvailableNiveles(available);
-    } else {
-      setAvailableNiveles([]); // Vacío si no hay área seleccionada
-    }
-  }, [form.area, takenAreas]);
 
   if (!open) return null;
 
@@ -56,10 +35,11 @@ export default function RegisterEvaluadorModal({
         <button className="absolute right-4 top-4 text-slate-400 hover:text-slate-600" onClick={onClose}>
           <XMarkIcon className="w-6 h-6" />
         </button>
+        {/* ✅ Título correcto para el modal de registro */}
         <h2 className="text-4xl md:text-5xl font-semibold text-primary leading-tight">
-          Registrar Nuevo <br /> Evaluador
+          Registrar Nuevo <br /> Responsable Académico
         </h2>
-        <p className="text-slate-500 mt-2">Completa los datos del evaluador</p>
+        <p className="text-slate-500 mt-2">Completa los datos del responsable académico</p>
         {Object.keys(errors).length > 0 && (
           <div className="bg-red-50 border-l-4 border-red-500 p-3 mb-4 rounded">
             <p className="text-red-700 text-sm font-medium">
@@ -74,11 +54,7 @@ export default function RegisterEvaluadorModal({
             <input
               className={`input ${errClass("nombre")}`}
               value={form.nombre}
-              onChange={(e) => {
-                // ✅ Solo letras, espacios, tildes y ñ
-                const cleaned = e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
-                setField("nombre", cleaned);
-              }}
+              onChange={(e) => setField("nombre", e.target.value)}
               placeholder="ej: María"
             />
             {getErrorMsg("nombre") ? (
@@ -96,11 +72,7 @@ export default function RegisterEvaluadorModal({
             <input
               className={`input ${errClass("apellidos")}`}
               value={form.apellidos}
-              onChange={(e) => {
-                // ✅ Solo letras, espacios, tildes y ñ
-                const cleaned = e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
-                setField("apellidos", cleaned);
-              }}
+              onChange={(e) => setField("apellidos", e.target.value)}
               placeholder="ej: González Pérez"
             />
             {getErrorMsg("apellidos") ? (
@@ -113,34 +85,38 @@ export default function RegisterEvaluadorModal({
             )}
           </div>
           {/* Correo */}
-          <div className="col-span-2">
-            <label className="label">Correo electrónico *</label>
-            <input
-              className={`input ${errClass("correo")}`}
-              value={form.correo}
-              onChange={(e) => setField("correo", e.target.value)}
-              placeholder="ej: maria@gmail.com"
-            />
-            {getErrorMsg("correo") ? (
-              <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
-                <ExclamationTriangleIcon className="w-4 h-4" />
-                {getErrorMsg("correo")}
-              </p>
-            ) : (
-              <p className="text-xs text-slate-400 mt-1">Debe contener "@" y ".com".</p>
-            )}
-          </div>
+<div className="col-span-2">
+  <label className="label">Correo electrónico *</label>
+  <input
+    className={`input ${errClass("correo")}`}
+    value={form.correo}
+    onChange={(e) => {
+      const value = e.target.value;
+      if (value.length <= 70) {
+        setField("correo", value);
+      }
+    }}
+    placeholder="ej: maria@gmail.com"
+    maxLength={70}
+  />
+  {getErrorMsg("correo") ? (
+    <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
+      <ExclamationTriangleIcon className="w-4 h-4" />
+      {getErrorMsg("correo")}
+    </p>
+  ) : (
+    <p className="text-xs text-slate-400 mt-1">
+      Debe contener "@" y ".com". Máximo 70 caracteres.
+    </p>
+  )}
+</div>
           {/* Teléfono */}
           <div>
             <label className="label">Teléfono *</label>
             <input
               className={`input ${errClass("telefono")}`}
               value={form.telefono}
-              onChange={(e) => {
-                // ✅ Solo dígitos y máximo 8 caracteres
-                const cleaned = e.target.value.replace(/\D/g, '').slice(0, 8);
-                setField("telefono", cleaned);
-              }}
+              onChange={(e) => setField("telefono", e.target.value.replace(/\D/g, ""))}
               placeholder="ej: 71234567"
             />
             {getErrorMsg("telefono") ? (
@@ -158,11 +134,8 @@ export default function RegisterEvaluadorModal({
             <input
               className={`input ${errClass("ci")}`}
               value={form.ci}
-              onChange={(e) => {
-                const cleaned = e.target.value.replace(/\D/g, '').slice(0, 10);
-                setField("ci", cleaned);
-              }}
-              placeholder="ej: 12345678"
+              onChange={(e) => setField("ci", e.target.value.replace(/\D/g, ""))}
+              placeholder="ej: 1234567"
             />
             {getErrorMsg("ci") ? (
               <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
@@ -189,7 +162,7 @@ export default function RegisterEvaluadorModal({
             {showAreas && (
               <div className="absolute z-10 mt-1 w-full card p-0 overflow-hidden">
                 <ul className="max-h-56 overflow-auto">
-                  {AREAS.filter(area => !isAreaCompleta(area, takenAreas)).map(a => (
+                  {AREAS.filter(a => !takenAreas.includes(a)).map(a => (
                     <li key={a}>
                       <button
                         className="w-full text-left px-4 py-3 hover:bg-slate-50"
@@ -213,56 +186,10 @@ export default function RegisterEvaluadorModal({
               </p>
             )}
           </div>
-          {/* Nivel */}
-          <div className="relative">
-            <label className="label">Nivel *</label>
-            <button
-              type="button"
-              onClick={() => setShowNiveles(v => !v)}
-              className={`input flex items-center justify-between ${errClass("nivel")}`}
-              disabled={!form.area} // ✅ Deshabilita si no hay área seleccionada
-            >
-              <span className={form.nivel ? "text-slate-900" : "text-slate-400"}>
-                {form.nivel || (form.area ? "Selecciona un nivel" : "Primero selecciona un área")}
-              </span>
-              <ChevronDownIcon className="w-5 h-5 text-slate-400" />
-            </button>
-            {showNiveles && (
-              <div className="absolute z-10 mt-1 w-full card p-0 overflow-hidden">
-                <ul className="max-h-56 overflow-auto">
-                  {availableNiveles.length > 0 ? (
-                    availableNiveles.map(n => (
-                      <li key={n}>
-                        <button
-                          className="w-full text-left px-4 py-3 hover:bg-slate-50"
-                          onMouseDown={e => e.preventDefault()}
-                          onClick={() => {
-                            setField("nivel", n);
-                            setShowNiveles(false);
-                          }}
-                        >
-                          {n}
-                        </button>
-                      </li>
-                    ))
-                  ) : (
-                    <li>
-                      <p className="px-4 py-3 text-slate-400">Todos los niveles para esta área ya están asignados.</p>
-                    </li>
-                  )}
-                </ul>
-              </div>
-            )}
-            {getErrorMsg("nivel") && (
-              <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
-                <ExclamationTriangleIcon className="w-4 h-4" />
-                {getErrorMsg("nivel")}
-              </p>
-            )}
-          </div>
         </div>
         <div className="flex items-center justify-end gap-3 mt-7">
           <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
+          {/* ✅ Botón que dice "Registrar" */}
           <button
             className="btn btn-cta"
             onClick={onSubmit}

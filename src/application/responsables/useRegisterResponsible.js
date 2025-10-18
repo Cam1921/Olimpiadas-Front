@@ -63,8 +63,14 @@ export function useRegisterResponsable(takenAreas = []) {
     else if (data.nombre.trim().length < 3) newErrors.nombre = 'Mínimo 3 caracteres.';
     if (!data.apellidos.trim()) newErrors.apellidos = 'Los apellidos son obligatorios.';
     else if (data.apellidos.trim().length < 3) newErrors.apellidos = 'Mínimo 3 caracteres.';
-    if (!data.correo.trim()) newErrors.correo = 'El correo es obligatorio.';
-    else if (!EMAIL_REGEX.test(data.correo)) newErrors.correo = 'El correo debe tener un formato válido (ej: paulin@example.com).';
+   
+if (!data.correo.trim()) {
+  newErrors.correo = 'El correo es obligatorio.';
+} else if (data.correo.length > 70) {
+  newErrors.correo = 'El correo no debe exceder los 70 caracteres.';
+} else if (!EMAIL_REGEX.test(data.correo)) {
+  newErrors.correo = 'El correo debe tener un formato válido (ej: nombre@dominio.com).';
+}
     if (!data.telefono) newErrors.telefono = 'El teléfono es obligatorio.';
     else if (!/^[67]\d{7}$/.test(data.telefono)) newErrors.telefono = '8 dígitos, inicia con 6 o 7.';
     if (!data.ci) newErrors.ci = 'El CI es obligatorio.';

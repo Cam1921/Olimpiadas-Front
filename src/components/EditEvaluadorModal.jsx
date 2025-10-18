@@ -72,10 +72,11 @@ export default function EditEvaluadorModal({
         if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(value.trim())) return 'Solo letras, espacios, tildes y ñ.';
         return null;
       case 'correo':
-        if (!value.trim()) return 'El correo es obligatorio.';
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Formato de correo inválido.';
-        if (!value.endsWith('.com')) return 'El dominio debe terminar en ".com".';
-        return null;
+  if (!value.trim()) return 'El correo es obligatorio.';
+  if (value.length > 70) return 'El correo no debe exceder los 70 caracteres.';
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Formato de correo inválido.';
+  if (!value.endsWith('.com')) return 'El dominio debe terminar en ".com".';
+  return null;
       case 'telefono':
         const cleanTel = value.replace(/\D/g, '');
         if (!value.trim()) return 'El teléfono es obligatorio.';
@@ -244,23 +245,29 @@ export default function EditEvaluadorModal({
             )}
           </div>
           {/* Correo */}
-          <div className="col-span-2">
-            <label className="label">Correo electrónico *</label>
-            <div className="relative">
-              <input
-                className={`input pr-10 ${errClass("correo")}`}
-                value={form.correo}
-                onChange={(e) => handleFieldChange("correo", e.target.value)}
-              />
-              <LockClosedIcon className="w-5 h-5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
-            </div>
-            {errors.correo && (
-              <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
-                <ExclamationTriangleIcon className="w-4 h-4" />
-                {errors.correo}
-              </p>
-            )}
-          </div>
+<div className="col-span-2">
+  <label className="label">Correo electrónico *</label>
+  <div className="relative">
+    <input
+      className={`input pr-10 ${errClass("correo")}`}
+      value={form.correo}
+      onChange={(e) => {
+        const value = e.target.value;
+        if (value.length <= 70) {
+          handleFieldChange("correo", value);
+        }
+      }}
+      maxLength={70}
+    />
+    <LockClosedIcon className="w-5 h-5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
+  </div>
+  {errors.correo && (
+    <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
+      <ExclamationTriangleIcon className="w-4 h-4" />
+      {errors.correo}
+    </p>
+  )}
+</div>
           {/* Teléfono */}
           <div>
             <label className="label">Teléfono *</label>
