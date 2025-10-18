@@ -35,11 +35,11 @@ export default function RegisterResponsibleModal({
         <button className="absolute right-4 top-4 text-slate-400 hover:text-slate-600" onClick={onClose}>
           <XMarkIcon className="w-6 h-6" />
         </button>
+        {/* ✅ Título correcto para el modal de registro */}
         <h2 className="text-4xl md:text-5xl font-semibold text-primary leading-tight">
           Registrar Nuevo <br /> Responsable Académico
         </h2>
         <p className="text-slate-500 mt-2">Completa los datos del responsable académico</p>
-
         {Object.keys(errors).length > 0 && (
           <div className="bg-red-50 border-l-4 border-red-500 p-3 mb-4 rounded">
             <p className="text-red-700 text-sm font-medium">
@@ -47,7 +47,6 @@ export default function RegisterResponsibleModal({
             </p>
           </div>
         )}
-
         <div className="grid grid-cols-2 gap-5 mt-6">
           {/* Nombre */}
           <div>
@@ -64,10 +63,9 @@ export default function RegisterResponsibleModal({
                 {getErrorMsg("nombre")}
               </p>
             ) : (
-              <p className="text-xs text-slate-400 mt-1">Debe tener al menos 4 letras.</p>
+              <p className="text-xs text-slate-400 mt-1">Debe tener al menos 2 letras.</p>
             )}
           </div>
-
           {/* Apellidos */}
           <div>
             <label className="label">Apellidos *</label>
@@ -83,10 +81,9 @@ export default function RegisterResponsibleModal({
                 {getErrorMsg("apellidos")}
               </p>
             ) : (
-              <p className="text-xs text-slate-400 mt-1">Debe tener al menos 4 letras.</p>
+              <p className="text-xs text-slate-400 mt-1">Debe tener al menos 2 letras.</p>
             )}
           </div>
-
           {/* Correo */}
           <div className="col-span-2">
             <label className="label">Correo electrónico *</label>
@@ -105,7 +102,6 @@ export default function RegisterResponsibleModal({
               <p className="text-xs text-slate-400 mt-1">Debe contener "@" y ".com".</p>
             )}
           </div>
-
           {/* Teléfono */}
           <div>
             <label className="label">Teléfono *</label>
@@ -124,7 +120,6 @@ export default function RegisterResponsibleModal({
               <p className="text-xs text-slate-400 mt-1">8 dígitos, empieza con 6 o 7.</p>
             )}
           </div>
-
           {/* CI */}
           <div>
             <label className="label">CI *</label>
@@ -140,10 +135,9 @@ export default function RegisterResponsibleModal({
                 {getErrorMsg("ci")}
               </p>
             ) : (
-              <p className="text-xs text-slate-400 mt-1">Entre 7 y 10 dígitos.</p>
+              <p className="text-xs text-slate-400 mt-1">Entre 6 y 10 dígitos.</p>
             )}
           </div>
-
           {/* Área */}
           <div className="relative">
             <label className="label">Área *</label>
@@ -160,7 +154,7 @@ export default function RegisterResponsibleModal({
             {showAreas && (
               <div className="absolute z-10 mt-1 w-full card p-0 overflow-hidden">
                 <ul className="max-h-56 overflow-auto">
-                  {AREAS.filter(a => !takenAreas.includes(a) || a === form.area).map(a => (
+                  {AREAS.filter(a => !takenAreas.includes(a)).map(a => (
                     <li key={a}>
                       <button
                         className="w-full text-left px-4 py-3 hover:bg-slate-50"
@@ -185,9 +179,9 @@ export default function RegisterResponsibleModal({
             )}
           </div>
         </div>
-
         <div className="flex items-center justify-end gap-3 mt-7">
           <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
+          {/* ✅ Botón que dice "Registrar" */}
           <button
             className="btn btn-cta"
             onClick={onSubmit}

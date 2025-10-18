@@ -1,4 +1,5 @@
 // src/components/RegisterEvaluadorModal.jsx
+
 import { useState, useEffect } from "react";
 import {
   XMarkIcon,
@@ -45,7 +46,6 @@ export default function RegisterEvaluadorModal({
   if (!open) return null;
 
   const errClass = (field) => errors[field] ? "border-2 border-red-500 focus:border-red-500 focus:ring-red-300" : "";
-
   const getErrorMsg = (field) => errors[field] || null;
 
   return (
@@ -73,7 +73,11 @@ export default function RegisterEvaluadorModal({
             <input
               className={`input ${errClass("nombre")}`}
               value={form.nombre}
-              onChange={(e) => setField("nombre", e.target.value)}
+              onChange={(e) => {
+                // ✅ Solo letras, espacios, tildes y ñ
+                const cleaned = e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+                setField("nombre", cleaned);
+              }}
               placeholder="ej: María"
             />
             {getErrorMsg("nombre") ? (
@@ -82,7 +86,7 @@ export default function RegisterEvaluadorModal({
                 {getErrorMsg("nombre")}
               </p>
             ) : (
-              <p className="text-xs text-slate-400 mt-1">Debe tener al menos 4 letras.</p>
+              <p className="text-xs text-slate-400 mt-1">Debe tener al menos 2 letras.</p>
             )}
           </div>
           {/* Apellidos */}
@@ -91,7 +95,11 @@ export default function RegisterEvaluadorModal({
             <input
               className={`input ${errClass("apellidos")}`}
               value={form.apellidos}
-              onChange={(e) => setField("apellidos", e.target.value)}
+              onChange={(e) => {
+                // ✅ Solo letras, espacios, tildes y ñ
+                const cleaned = e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+                setField("apellidos", cleaned);
+              }}
               placeholder="ej: González Pérez"
             />
             {getErrorMsg("apellidos") ? (
@@ -100,7 +108,7 @@ export default function RegisterEvaluadorModal({
                 {getErrorMsg("apellidos")}
               </p>
             ) : (
-              <p className="text-xs text-slate-400 mt-1">Debe tener al menos 4 letras.</p>
+              <p className="text-xs text-slate-400 mt-1">Debe tener al menos 2 letras.</p>
             )}
           </div>
           {/* Correo */}
@@ -127,7 +135,11 @@ export default function RegisterEvaluadorModal({
             <input
               className={`input ${errClass("telefono")}`}
               value={form.telefono}
-              onChange={(e) => setField("telefono", e.target.value.replace(/\D/g, ""))}
+              onChange={(e) => {
+                // ✅ Solo dígitos y máximo 8 caracteres
+                const cleaned = e.target.value.replace(/\D/g, '').slice(0, 8);
+                setField("telefono", cleaned);
+              }}
               placeholder="ej: 71234567"
             />
             {getErrorMsg("telefono") ? (
@@ -145,8 +157,12 @@ export default function RegisterEvaluadorModal({
             <input
               className={`input ${errClass("ci")}`}
               value={form.ci}
-              onChange={(e) => setField("ci", e.target.value.replace(/\D/g, ""))}
-              placeholder="ej: 1234567"
+              onChange={(e) => {
+                
+                const cleaned = e.target.value.replace(/\D/g, '').slice(0, 10);
+                setField("ci", cleaned);
+              }}
+              placeholder="ej: 12345678"
             />
             {getErrorMsg("ci") ? (
               <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
@@ -154,7 +170,7 @@ export default function RegisterEvaluadorModal({
                 {getErrorMsg("ci")}
               </p>
             ) : (
-              <p className="text-xs text-slate-400 mt-1">Entre 7 y 10 dígitos.</p>
+              <p className="text-xs text-slate-400 mt-1">Entre 6 y 10 dígitos.</p>
             )}
           </div>
           {/* Área */}
@@ -174,20 +190,19 @@ export default function RegisterEvaluadorModal({
               <div className="absolute z-10 mt-1 w-full card p-0 overflow-hidden">
                 <ul className="max-h-56 overflow-auto">
                   {AREAS.filter(area => !isAreaCompleta(area, takenAreas)).map(a => (
-  <li key={a}>
-    <button
-      className="w-full text-left px-4 py-3 hover:bg-slate-50"
-      onMouseDown={e => e.preventDefault()}
-      onClick={() => {
-        setField("area", a);
-        setShowAreas(false);
-      }}
-    >
-      {a}
-    </button>
-  </li>
-))}
-                
+                    <li key={a}>
+                      <button
+                        className="w-full text-left px-4 py-3 hover:bg-slate-50"
+                        onMouseDown={e => e.preventDefault()}
+                        onClick={() => {
+                          setField("area", a);
+                          setShowAreas(false);
+                        }}
+                      >
+                        {a}
+                      </button>
+                    </li>
+                  ))}
                 </ul>
               </div>
             )}

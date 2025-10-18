@@ -1,4 +1,5 @@
 // src/application/evaluadores/useRegisterEvaluador.js
+
 import { useState, useCallback, useEffect } from 'react';
 import { AREAS } from '../../services/areas';
 
@@ -10,13 +11,11 @@ export function useRegisterEvaluador(takenAreas = []) {
     telefono: '',
     ci: '',
     area: '',
-    nivel: '', // ✅ Campo nuevo
+    nivel: '',
   });
-
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
 
-  // Al editar un campo, limpia su error
   const setField = useCallback((name, value) => {
     setForm(prev => ({ ...prev, [name]: value }));
     setErrors(prev => {
@@ -33,12 +32,11 @@ export function useRegisterEvaluador(takenAreas = []) {
       telefono: '',
       ci: '',
       area: '',
-      nivel: '', // ✅ Reinicia nivel
+      nivel: '',
     });
     setErrors({});
   }, []);
 
-  // Validación en tiempo real (solo si el campo tiene valor)
   useEffect(() => {
     const newErrors = {};
     if (form.nombre && form.nombre.trim().length < 2) {
@@ -53,16 +51,13 @@ export function useRegisterEvaluador(takenAreas = []) {
     if (form.telefono && !/^[67]\d{7}$/.test(form.telefono.replace(/\D/g, ''))) {
       newErrors.telefono = 'El teléfono debe tener 8 dígitos y comenzar con 6 o 7. Ej: 71234567';
     }
-    if (form.ci && !/^\d{7,10}$/.test(form.ci.replace(/\D/g, ''))) {
-      newErrors.ci = 'El CI debe tener entre 7 y 10 dígitos. Ej: 1234567';
+    if (form.ci && !/^\d{6,10}$/.test(form.ci.replace(/\D/g, ''))) {
+      newErrors.ci = 'El CI debe tener entre 6 y 10 dígitos. Ej: 1234567';
     }
     if (form.nivel && !['Primaria', 'Secundaria'].includes(form.nivel)) {
       newErrors.nivel = 'El nivel debe ser "Primaria" o "Secundaria".';
     }
-    setErrors(prev => {
-      const updated = { ...prev, ...newErrors };
-      return updated;
-    });
+    setErrors(prev => ({ ...prev, ...newErrors }));
   }, [form]);
 
   const validate = useCallback((data, takenAreas) => {
@@ -76,19 +71,16 @@ export function useRegisterEvaluador(takenAreas = []) {
     if (!data.telefono.trim()) newErrors.telefono = 'El teléfono es obligatorio.';
     else if (!/^[67]\d{7}$/.test(data.telefono.replace(/\D/g, ''))) newErrors.telefono = 'El teléfono debe tener 8 dígitos y comenzar con 6 o 7.';
     if (!data.ci?.trim()) newErrors.ci = 'El CI es obligatorio.';
-    else if (!/^\d{7,10}$/.test(data.ci.replace(/\D/g, ''))) newErrors.ci = 'El CI debe tener entre 7 y 10 dígitos.';
+    else if (!/^\d{6,10}$/.test(data.ci.replace(/\D/g, ''))) newErrors.ci = 'El CI debe tener entre 6 y 10 dígitos.';
     if (!data.area) newErrors.area = 'Selecciona un área.';
     if (!data.nivel) newErrors.nivel = 'Selecciona un nivel.';
     else if (!['Primaria', 'Secundaria'].includes(data.nivel)) newErrors.nivel = 'El nivel debe ser "Primaria" o "Secundaria".';
-
-    // ✅ Validación de combinación area + nivel
     if (data.area && data.nivel) {
       const combinationExists = takenAreas.some(a => a.area === data.area && a.nivel === data.nivel);
       if (combinationExists) {
         newErrors.area = 'Ya existe un evaluador para esta combinación de área y nivel.';
       }
     }
-
     return newErrors;
   }, []);
 
@@ -110,10 +102,10 @@ export function useRegisterEvaluador(takenAreas = []) {
           telefono: form.telefono,
           ci: form.ci,
           area: form.area,
-          nivel: form.nivel, // ✅ Enviar nivel
+          nivel: form.nivel,
         }),
       });
-      const data = await response.json();
+      const data = await response.json(); // ✅ 'data' está definida aquí
       if (!response.ok) {
         if (response.status === 422 && data.errors) {
           const backendErrors = {};

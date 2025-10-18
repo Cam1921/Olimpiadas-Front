@@ -15,7 +15,10 @@ export const validateApellidos = validateNombre;
 
 export const validateCorreo = async (v, repo) => {
   if (isEmpty(v)) return { ok: false, msg: MSG.required };
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return { ok: false, msg: MSG.emailFormat };
+  
+  const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.com$/i;
+  if (!EMAIL_REGEX.test(v)) return { ok: false, msg: MSG.emailFormat };
+  
   const exists = await repo.isEmailRegistered(v);
   if (exists) return { ok: false, msg: MSG.emailExists };
   return { ok: true };

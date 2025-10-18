@@ -1,5 +1,5 @@
 // src/pages/ResponsablesAcademicos.jsx
-import { useMemo, useState, useEffect } from "react"; // 👈 Agregado useEffect
+import { useMemo, useState, useEffect } from "react";
 import { UserPlusIcon } from "@heroicons/react/24/outline";
 import StatsCard from "../components/StatsCard";
 import ResponsablesTable from "../components/ResponsablesTable";
@@ -7,12 +7,11 @@ import RegisterResponsibleModal from "../components/RegisterResponsibleModal";
 import EditResponsibleModal from "../components/EditResponsibleModal";
 import SuccessDialog from "../components/SuccessDialog";
 import ConfirmDeleteModal from "../components/ConfirmDeleteModal";
-import { useRegisterResponsable } from "../application/responsables/useRegisterResponsible"; // 👈 Corregido nombre (a)
+import { useRegisterResponsable } from "../application/responsables/useRegisterResponsible";
 import { AREAS } from "../services/areas";
 
 export default function ResponsablesAcademicos() {
   const [rows, setRows] = useState([]);
-
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editingRow, setEditingRow] = useState(null);
@@ -29,25 +28,21 @@ export default function ResponsablesAcademicos() {
 
   const { form, setField, errors, submitting, submit, resetForm, setErrors } = useRegisterResponsable(takenAreas);
 
-  // 👇 Función para cargar responsables desde el backend
   const fetchResponsables = async () => {
     try {
       const response = await fetch('/api/responsable-academico');
       if (!response.ok) throw new Error('Error al cargar responsables');
       const data = await response.json();
-      setRows(data); // ✅ Actualiza con datos reales del backend
+      setRows(data);
     } catch (err) {
       console.error('Error al cargar responsables:', err);
-      // Opcional: mostrar mensaje de error al usuario
     }
   };
 
-  // 👇 Cargar datos al montar el componente
   useEffect(() => {
     fetchResponsables();
   }, []);
 
-  // 👇 Función para cerrar el modal Y limpiar el formulario
   const handleCloseModal = () => {
     setOpen(false);
     resetForm();
@@ -56,14 +51,13 @@ export default function ResponsablesAcademicos() {
   const handleCreate = async () => {
     const result = await submit();
     if (result.ok) {
-      await fetchResponsables(); // ✅ Recarga los datos reales del backend
+      await fetchResponsables();
       setSuccessMsg("Responsable académico registrado correctamente.");
       setSuccessOpen(true);
       handleCloseModal();
     }
   };
 
-  // === Handlers de edición y eliminación ===
   const handleOpenEdit = (row, idx) => {
     setEditingRow(row);
     setEditingIndex(idx);
@@ -76,23 +70,23 @@ export default function ResponsablesAcademicos() {
     setDeleteOpen(true);
   };
 
- const confirmDelete = async () => {
-  try {
-    const response = await fetch(`/api/responsable-academico/${deletingRow.id}`, {
-      method: 'DELETE',
-    });
-    if (!response.ok) throw new Error('No se pudo eliminar el registro');
-    await fetchResponsables(); // Recarga la lista real desde el backend
-    setSuccessMsg("El responsable fue eliminado correctamente.");
-    setSuccessOpen(true);
-  } catch (err) {
-    console.error('Error al eliminar:', err);
-    setSuccessMsg("No se pudo eliminar el responsable. Inténtalo más tarde.");
-    setSuccessOpen(true);
-  } finally {
-    setDeleteOpen(false);
-  }
-};
+  const confirmDelete = async () => {
+    try {
+      const response = await fetch(`/api/responsable-academico/${deletingRow.id}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error('No se pudo eliminar el registro');
+      await fetchResponsables();
+      setSuccessMsg("El responsable fue eliminado correctamente.");
+      setSuccessOpen(true);
+    } catch (err) {
+      console.error('Error al eliminar:', err);
+      setSuccessMsg("No se pudo eliminar el responsable. Inténtalo más tarde.");
+      setSuccessOpen(true);
+    } finally {
+      setDeleteOpen(false);
+    }
+  };
 
   return (
     <div className="p-6 md:p-8">
@@ -112,9 +106,16 @@ export default function ResponsablesAcademicos() {
             Registra responsables académicos por área para garantizar la supervisión de la evaluación.
           </p>
         </div>
-        <button className="btn btn-cta text-white" onClick={() => setOpen(true)}>
+        {/* ✅ Botón actualizado: deshabilitado si no hay áreas disponibles */}
+        <button
+          className={`btn btn-cta text-white ${
+            areasDisponibles <= 0 ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
+          onClick={() => setOpen(true)}
+          disabled={areasDisponibles <= 0}
+        >
           <UserPlusIcon className="w-5 h-5" />
-          Registrar Responsable
+          {areasDisponibles > 0 ? "Registrar Responsable" : "No hay áreas disponibles"}
         </button>
       </div>
 
@@ -134,8 +135,7 @@ export default function ResponsablesAcademicos() {
         form={form}
         setField={setField}
         errors={errors}
-        setErrors={setErrors} // 👈 AÑADE ESTA LÍNEA
-
+        setErrors={setErrors}
         submitting={submitting}
         onSubmit={handleCreate}
         takenAreas={takenAreas}
@@ -145,14 +145,12 @@ export default function ResponsablesAcademicos() {
         open={editOpen}
         onClose={() => setEditOpen(false)}
         initial={editingRow}
-        takenAreas={rows.map(r => r.area)}
-        onUpdate={(updated) => {
-          setRows(prev =>
-            prev.map((r, i) => (i === editingIndex ? { ...r, ...updated, fecha: new Date().toISOString().slice(0, 10) } : r))
-          );
-          setEditOpen(false);
-          setSuccessMsg("La información se actualizó correctamente.");
+        takenAreas={takenAreas}
+        onUpdate={async (updatedData) => {
+          await fetchResponsables();
+          setSuccessMsg("Responsable actualizado correctamente.");
           setSuccessOpen(true);
+          setEditOpen(false);
         }}
       />
 

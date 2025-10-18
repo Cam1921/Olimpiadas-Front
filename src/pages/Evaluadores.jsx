@@ -1,4 +1,5 @@
 // src/pages/Evaluadores.jsx
+
 import { useMemo, useState, useEffect } from "react";
 import { UserPlusIcon } from "@heroicons/react/24/outline";
 import StatsCard from "../components/StatsCard";
@@ -7,7 +8,8 @@ import RegisterEvaluadorModal from "../components/RegisterEvaluadorModal";
 import EditEvaluadorModal from "../components/EditEvaluadorModal";
 import SuccessDialog from "../components/SuccessDialog";
 import ConfirmDeleteModal from "../components/ConfirmDeleteModal";
-import { useRegisterEvaluador } from "../application/responsables/useRegisterEvaluador"; // 👈 Hook específico
+// ✅ IMPORTA EL HOOK CORRECTO PARA EVALUADORES
+import { useRegisterEvaluador } from "../application/responsables/useRegisterEvaluador";
 import { AREAS } from "../services/areas";
 
 export default function Evaluadores() {
@@ -21,12 +23,13 @@ export default function Evaluadores() {
   const [deletingIndex, setDeletingIndex] = useState(-1);
   const [successOpen, setSuccessOpen] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
-
+  
   // ✅ Transforma rows en un array de objetos { area, nivel } para el hook
   const takenAreas = useMemo(() => rows.map(r => ({ area: r.area, nivel: r.nivel })), [rows]);
   const areasCubiertas = useMemo(() => new Set(rows.map(r => r.area)).size, [rows]);
   const areasDisponibles = AREAS.length - areasCubiertas;
-
+  
+  // ✅ Usa el hook correcto
   const { form, setField, errors, submitting, submit, resetForm, setErrors } = useRegisterEvaluador(takenAreas);
 
   // 👇 Función para cargar evaluadores desde el backend
