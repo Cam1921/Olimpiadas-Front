@@ -1,7 +1,7 @@
 // src/hooks/useEditResponsible.js
 import { useState, useEffect } from "react";
-import { responsablesRepo } from "../infrastructure/responsables/repository";
-import { validateResponsable } from "../domain/responsables/validators";
+import { responsablesRepo } from "../../infrastructure/http/responsables/repository";
+import { validateResponsable } from "../../domain/responsables/validators";
 
 export function useEditResponsible(initial, takenAreas) {
   const [form, setForm] = useState({ ...initial });
@@ -12,14 +12,21 @@ export function useEditResponsible(initial, takenAreas) {
     if (initial) setForm({ ...initial });
   }, [initial]);
 
-  const setField = (key, val) => setForm(prev => ({ ...prev, [key]: val }));
+  const setField = (key, val) => {
+    setForm(prev => ({ ...prev, [key]: val }));
+    setErrors(prev => {
+      const { [key]: _, ...rest } = prev;
+      return rest;
+    });
+  };
 
   const validateAll = async () => {
     const result = await validateResponsable(
       form,
       responsablesRepo,
       takenAreas,
-      initial?.area
+      initial?.area,
+      initial?.id // ← Clave: pasa el ID del registro actual
     );
     setErrors(result);
     return Object.values(result).every(x => x.ok);
@@ -28,8 +35,10 @@ export function useEditResponsible(initial, takenAreas) {
   const submit = async () => {
     setSubmitting(true);
     const ok = await validateAll();
-    if (!ok) { setSubmitting(false); return { ok: false }; }
-
+    if (!ok) {
+      setSubmitting(false);
+      return { ok: false };
+    }
     try {
       const payload = {
         ...form,

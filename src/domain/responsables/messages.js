@@ -1,6 +1,6 @@
 export const MSG = {
   required: "Completa este campo",
-  min4: "Mínimo 4 caracteres",
+  min4: "Mínimo 3 caracteres",
   lettersOnly: "Solo letras y espacios permitidos",
   emailFormat: "El correo debe tener un formato válido (ej. pauline@example.com)",
   emailExists: "Este correo ya está registrado",

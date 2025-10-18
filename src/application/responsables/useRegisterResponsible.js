@@ -38,11 +38,11 @@ export function useRegisterResponsable(takenAreas = []) {
   // Validación en tiempo real (solo si el campo tiene valor)
   useEffect(() => {
     const newErrors = {};
-    if (form.nombre && form.nombre.trim().length < 2) {
-      newErrors.nombre = 'El nombre debe tener al menos 2 caracteres.';
+    if (form.nombre && form.nombre.trim().length < 3) {
+      newErrors.nombre = 'El nombre debe tener al menos 3 caracteres.';
     }
-    if (form.apellidos && form.apellidos.trim().length < 2) {
-      newErrors.apellidos = 'Los apellidos deben tener al menos 2 caracteres.';
+    if (form.apellidos && form.apellidos.trim().length < 3) {
+      newErrors.apellidos = 'Los apellidos deben tener al menos 3 caracteres.';
     }
     if (form.correo && !EMAIL_REGEX.test(form.correo)) {
       newErrors.correo = 'El correo debe tener un formato válido (ej: paulin@example.com).';
@@ -60,9 +60,9 @@ export function useRegisterResponsable(takenAreas = []) {
   const validate = useCallback((data) => {
     const newErrors = {};
     if (!data.nombre.trim()) newErrors.nombre = 'El nombre es obligatorio.';
-    else if (data.nombre.trim().length < 2) newErrors.nombre = 'Mínimo 2 caracteres.';
+    else if (data.nombre.trim().length < 3) newErrors.nombre = 'Mínimo 3 caracteres.';
     if (!data.apellidos.trim()) newErrors.apellidos = 'Los apellidos son obligatorios.';
-    else if (data.apellidos.trim().length < 2) newErrors.apellidos = 'Mínimo 2 caracteres.';
+    else if (data.apellidos.trim().length < 3) newErrors.apellidos = 'Mínimo 3 caracteres.';
     if (!data.correo.trim()) newErrors.correo = 'El correo es obligatorio.';
     else if (!EMAIL_REGEX.test(data.correo)) newErrors.correo = 'El correo debe tener un formato válido (ej: paulin@example.com).';
     if (!data.telefono) newErrors.telefono = 'El teléfono es obligatorio.';

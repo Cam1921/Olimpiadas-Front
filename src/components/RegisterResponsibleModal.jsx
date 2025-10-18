@@ -63,7 +63,7 @@ export default function RegisterResponsibleModal({
                 {getErrorMsg("nombre")}
               </p>
             ) : (
-              <p className="text-xs text-slate-400 mt-1">Debe tener al menos 2 letras.</p>
+              <p className="text-xs text-slate-400 mt-1">Debe tener al menos 3 letras.</p>
             )}
           </div>
           {/* Apellidos */}
@@ -81,7 +81,7 @@ export default function RegisterResponsibleModal({
                 {getErrorMsg("apellidos")}
               </p>
             ) : (
-              <p className="text-xs text-slate-400 mt-1">Debe tener al menos 2 letras.</p>
+              <p className="text-xs text-slate-400 mt-1">Debe tener al menos 3 letras.</p>
             )}
           </div>
           {/* Correo */}
