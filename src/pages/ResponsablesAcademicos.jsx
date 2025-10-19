@@ -1,5 +1,5 @@
 // src/pages/ResponsablesAcademicos.jsx
-import { useMemo, useState, useEffect } from "react"; // 👈 Agregado useEffect
+import { useMemo, useState, useEffect } from "react";
 import { UserPlusIcon } from "@heroicons/react/24/outline";
 import StatsCard from "../components/StatsCard";
 import ResponsablesTable from "../components/ResponsablesTable";
@@ -7,13 +7,11 @@ import RegisterResponsibleModal from "../components/RegisterResponsibleModal";
 import EditResponsibleModal from "../components/EditResponsibleModal";
 import SuccessDialog from "../components/SuccessDialog";
 import ConfirmDeleteModal from "../components/ConfirmDeleteModal";
-import { useRegisterResponsable } from "../application/responsables/useRegisterResponsible"; // 👈 Corregido nombre (a)
-import { getAreasConNiveles } from "../infrastructure/http/areas/areaRepostory";
-import { responsablesRepo } from "../infrastructure/http/responsables/repository";
-import api from "@/lib/api";
+import { useRegisterResponsable } from "../application/responsables/useRegisterResponsible";
+import { AREAS } from "../services/areas";
+
 export default function ResponsablesAcademicos() {
   const [rows, setRows] = useState([]);
-
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editingRow, setEditingRow] = useState(null);
@@ -23,68 +21,28 @@ export default function ResponsablesAcademicos() {
   const [deletingIndex, setDeletingIndex] = useState(-1);
   const [successOpen, setSuccessOpen] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
-  const [allAreas, setAllAreas] = useState([]);
 
-  const takenAreas = useMemo(() => rows.map((r) => r.area), [rows]);
-  const areasCubiertas = useMemo(
-    () => new Set(rows.map((r) => r.area)).size,
-    [rows]
-  );
-  const areasDisponibles = useMemo(() => {
-    if (!allAreas) return 0;
-    console.log(takenAreas);
-    return allAreas.length - areasCubiertas;
-  }, [allAreas, areasCubiertas]);
+  const takenAreas = useMemo(() => rows.map(r => r.area), [rows]);
+  const areasCubiertas = useMemo(() => new Set(rows.map(r => r.area)).size, [rows]);
+  const areasDisponibles = AREAS.length - areasCubiertas;
 
-  const { form, setField, errors, submitting, submit, resetForm, setErrors } =
-    useRegisterResponsable(takenAreas);
+  const { form, setField, errors, submitting, submit, resetForm, setErrors } = useRegisterResponsable(takenAreas);
 
-  // 👇 Función para cargar responsables desde el backend
   const fetchResponsables = async () => {
     try {
-      const response = await api.get("/responsable-academico");
-      const data = response.data;
-
-      const adaptedData = data.map((item) => ({
-        id: item.id,
-        nombre: item.nombre,
-        apellidos: item.apellidos,
-        ci: item.ci,
-        correo: item.correo,
-        telefono: item.telefono,
-        area: item.asignaciones?.[0] || "—",
-        nivel: "—",
-        fecha: item.fecha_registro,
-      }));
-
-      setRows(adaptedData);
+      const response = await fetch('/api/responsable-academico');
+      if (!response.ok) throw new Error('Error al cargar responsables');
+      const data = await response.json();
+      setRows(data);
     } catch (err) {
-      console.error("Error al cargar responsables:", err);
+      console.error('Error al cargar responsables:', err);
     }
   };
 
-  // 👇 Cargar datos al montar el componente
   useEffect(() => {
     fetchResponsables();
-    async function fetchAreas() {
-      const areas = await getAreasConNiveles();
-      setAllAreas(areas);
-      console.log(areas);
-    }
-    fetchAreas();
   }, []);
 
-  const handleDelete = async (id) => {
-    try {
-      await responsablesRepo.remove(id); // 🔥 Aquí usas el método remove
-      fetchResponsables();
-    } catch (err) {
-      console.error("Error al eliminar evaluador:", err);
-      alert("No se pudo eliminar el evaluador");
-    } finally {
-    }
-  };
-  // 👇 Función para cerrar el modal Y limpiar el formulario
   const handleCloseModal = () => {
     setOpen(false);
     resetForm();
@@ -93,14 +51,13 @@ export default function ResponsablesAcademicos() {
   const handleCreate = async () => {
     const result = await submit();
     if (result.ok) {
-      await fetchResponsables(); // ✅ Recarga los datos reales del backend
+      await fetchResponsables();
       setSuccessMsg("Responsable académico registrado correctamente.");
       setSuccessOpen(true);
       handleCloseModal();
     }
   };
 
-  // === Handlers de edición y eliminación ===
   const handleOpenEdit = (row, idx) => {
     setEditingRow(row);
     setEditingIndex(idx);
@@ -113,17 +70,22 @@ export default function ResponsablesAcademicos() {
     setDeleteOpen(true);
   };
 
-  const confirmDelete = () => {
-    // 👇 Opcional: también podrías llamar a fetchResponsables() aquí
-    console.log(deletingIndex);
-    handleDelete(deletingIndex);
-    setRows((prev) => prev.filter((_, i) => i !== deletingIndex));
-    setDeleteOpen(false);
-    setSuccessMsg("El responsable fue eliminado correctamente.");
-    setSuccessOpen(true);
-  };
-  const handleNavigate = () => {
-    window.location.href = "evaluadores"; // Navega a la página de Evaluadores
+  const confirmDelete = async () => {
+    try {
+      const response = await fetch(`/api/responsable-academico/${deletingRow.id}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error('No se pudo eliminar el registro');
+      await fetchResponsables();
+      setSuccessMsg("El responsable fue eliminado correctamente.");
+      setSuccessOpen(true);
+    } catch (err) {
+      console.error('Error al eliminar:', err);
+      setSuccessMsg("No se pudo eliminar el responsable. Inténtalo más tarde.");
+      setSuccessOpen(true);
+    } finally {
+      setDeleteOpen(false);
+    }
   };
 
   return (
@@ -132,12 +94,7 @@ export default function ResponsablesAcademicos() {
         <button className="py-3 border-b-2 border-cta text-cta font-semibold">
           Responsables Académicos
         </button>
-        <button
-          onClick={handleNavigate}
-          className="py-3 text-slate-400 hover:text-slate-600"
-        >
-          Evaluadores
-        </button>
+        <button className="py-3 text-slate-400 hover:text-slate-600">Evaluadores</button>
       </div>
 
       <div className="mt-6 flex items-center justify-between">
@@ -146,46 +103,30 @@ export default function ResponsablesAcademicos() {
             Registro de Responsables Académicos
           </h1>
           <p className="text-slate-500 mt-2">
-            Registra responsables académicos por área para garantizar la
-            supervisión de la evaluación.
+            Registra responsables académicos por área para garantizar la supervisión de la evaluación.
           </p>
         </div>
+        {/* ✅ Botón actualizado: deshabilitado si no hay áreas disponibles */}
         <button
-          className="btn btn-cta text-white"
+          className={`btn btn-cta text-white ${
+            areasDisponibles <= 0 ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
           onClick={() => setOpen(true)}
+          disabled={areasDisponibles <= 0}
         >
           <UserPlusIcon className="w-5 h-5" />
-          Registrar Responsable
+          {areasDisponibles > 0 ? "Registrar Responsable" : "No hay áreas disponibles"}
         </button>
       </div>
 
       <div className="grid md:grid-cols-3 gap-6 mt-8">
-        <StatsCard
-          title="Total Responsables"
-          value={rows.length}
-          variant="cta"
-          icon="userplus"
-        />
-        <StatsCard
-          title="Áreas Cubiertas"
-          value={areasCubiertas}
-          variant="accent"
-          icon="check"
-        />
-        <StatsCard
-          title="Áreas Disponibles"
-          value={areasDisponibles}
-          variant="cta"
-          icon="check"
-        />
+        <StatsCard title="Total Responsables" value={rows.length} variant="cta" icon="userplus" />
+        <StatsCard title="Áreas Cubiertas" value={areasCubiertas} variant="accent" icon="check" />
+        <StatsCard title="Áreas Disponibles" value={areasDisponibles} variant="cta" icon="check" />
       </div>
 
       <div className="mt-8">
-        <ResponsablesTable
-          data={rows}
-          onEdit={handleOpenEdit}
-          onDelete={handleOpenDelete}
-        />
+        <ResponsablesTable data={rows} onEdit={handleOpenEdit} onDelete={handleOpenDelete} />
       </div>
 
       <RegisterResponsibleModal
@@ -194,7 +135,7 @@ export default function ResponsablesAcademicos() {
         form={form}
         setField={setField}
         errors={errors}
-        setErrors={setErrors} // 👈 AÑADE ESTA LÍNEA
+        setErrors={setErrors}
         submitting={submitting}
         onSubmit={handleCreate}
         takenAreas={takenAreas}
@@ -204,22 +145,12 @@ export default function ResponsablesAcademicos() {
         open={editOpen}
         onClose={() => setEditOpen(false)}
         initial={editingRow}
-        takenAreas={rows.map((r) => r.area)}
-        onUpdate={(updated) => {
-          setRows((prev) =>
-            prev.map((r, i) =>
-              i === editingIndex
-                ? {
-                    ...r,
-                    ...updated,
-                    fecha: new Date().toISOString().slice(0, 10),
-                  }
-                : r
-            )
-          );
-          setEditOpen(false);
-          setSuccessMsg("La información se actualizó correctamente.");
+        takenAreas={takenAreas}
+        onUpdate={async (updatedData) => {
+          await fetchResponsables();
+          setSuccessMsg("Responsable actualizado correctamente.");
           setSuccessOpen(true);
+          setEditOpen(false);
         }}
       />
 
