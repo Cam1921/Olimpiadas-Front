@@ -15,15 +15,24 @@ function normalizar1Decimal(n) {
 /* Íconos */
 const Lapis = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-    <path d="M16.862 3.487a1.75 1.75 0 0 1 2.476 2.475L7.81 17.49a4 4 0 0 1-1.697 1.01l-3.042.9.9-3.042a4 4 0 0 1 1.01-1.697L16.862 3.487Z" stroke="currentColor" strokeWidth="1.5"/>
+    <path
+      d="M16.862 3.487a1.75 1.75 0 0 1 2.476 2.475L7.81 17.49a4 4 0 0 1-1.697 1.01l-3.042.9.9-3.042a4 4 0 0 1 1.01-1.697L16.862 3.487Z"
+      stroke="currentColor"
+      strokeWidth="1.5"
+    />
     <path d="M15 5l4 4" stroke="currentColor" strokeWidth="1.5" />
   </svg>
 );
 const ErrorBadge = () => (
   <span className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-red-400 text-red-500 bg-white">
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-      <path d="M12 7v7" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-      <circle cx="12" cy="17" r="1.2" fill="currentColor"/>
+      <path
+        d="M12 7v7"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <circle cx="12" cy="17" r="1.2" fill="currentColor" />
     </svg>
   </span>
 );
@@ -31,9 +40,11 @@ const ErrorBadge = () => (
 /* Draft validator (mientras escribe)
    Acepta: "", 0..99, 0..99 con 1 decimal (coma o punto), 100, 100,0 / 100.0 */
 const notaDraftRegex = /^(?:|0|[1-9]\d?|(?:\d{1,2}[.,]\d?)|100|100[.,]0?)$/;
-function allowNotaDraft(s) { return notaDraftRegex.test(s); }
+function allowNotaDraft(s) {
+  return notaDraftRegex.test(s);
+}
 
-export default function FilaEvaluacion({ item, onSaved }) {
+export default function FilaEvaluacion({ item, onSaved, esClasificados }) {
   const [nota, setNota] = useState(item.nota ?? "");
   const [descripcion, setDescripcion] = useState(item.descripcion ?? "");
   const [cond, setCond] = useState(
@@ -51,7 +62,7 @@ export default function FilaEvaluacion({ item, onSaved }) {
   // NUEVO: mensaje cuando el usuario intenta teclear algo no permitido
   const [notaDraftMsg, setNotaDraftMsg] = useState("");
   const [notaDraftKey, setNotaDraftKey] = useState(0);
-
+  const [esClasificado, setEsClasificado] = useState(false);
   /* Validaciones */
   const nnum = useMemo(() => toNumber100(nota), [nota]);
   const esVacio = String(nota).trim() === "";
@@ -59,7 +70,8 @@ export default function FilaEvaluacion({ item, onSaved }) {
   const rangoValido = numValido && nnum >= 0 && nnum <= 100;
   const notaValida = !esVacio && rangoValido;
 
-  const descValida = descripcion.trim().length >= 5 && descripcion.trim().length <= 60;
+  const descValida =
+    descripcion.trim().length >= 5 && descripcion.trim().length <= 60;
 
   const cambios = useMemo(() => {
     return (
@@ -72,7 +84,10 @@ export default function FilaEvaluacion({ item, onSaved }) {
   }, [nota, descripcion, cond, item]);
 
   useEffect(() => setToastOk(false), [nota, descripcion, cond]);
-
+  useEffect(() => {
+    setEsClasificado(esClasificados);
+    console.log(esClasificado);
+  }, [esClasificados]);
   /* Nota (restricción + toasts) */
   const onNotaChange = (e) => {
     let next = e.target.value.replace(/[^\d.,]/g, "");
@@ -82,7 +97,9 @@ export default function FilaEvaluacion({ item, onSaved }) {
       // ❗ Intento inválido: no cambiamos el valor y mostramos el mensaje
       if (next !== "") {
         setNotaTouched(true);
-        setNotaDraftMsg("La nota debe estar entre 0 y 100 (se admite 1 decimal)");
+        setNotaDraftMsg(
+          "La nota debe estar entre 0 y 100 (se admite 1 decimal)"
+        );
         setNotaDraftKey((k) => k + 1); // fuerza remount del toast (5s)
       }
     }
@@ -102,20 +119,33 @@ export default function FilaEvaluacion({ item, onSaved }) {
 
   /* Guardado */
   const onGuardar = async () => {
-    if (esVacio || !numValido) { setNotaTouched(true); setToastErr("Debe ingresar una nota válida"); return; }
-    if (!rangoValido) { setNotaTouched(true); setToastErr("La nota debe estar entre 0 y 100 (se admite 1 decimal)"); return; }
-    if (!descValida) { setDescTouched(true); setToastErr("La observación debe ser mayor a 5 y menor a 60 caracteres"); return; }
+    if (esVacio || !numValido) {
+      setNotaTouched(true);
+      setToastErr("Debe ingresar una nota válida");
+      return;
+    }
+    if (!rangoValido) {
+      setNotaTouched(true);
+      setToastErr("La nota debe estar entre 0 y 100 (se admite 1 decimal)");
+      return;
+    }
+    if (!descValida) {
+      setDescTouched(true);
+      setToastErr("La observación debe ser mayor a 5 y menor a 60 caracteres");
+      return;
+    }
 
     setSaving(true);
     setToastErr("");
     try {
       const notaNorm = normalizar1Decimal(nnum);
       const payload = {
-        id: item.id,
+        id: item.id_evaluacion,
         nota: notaNorm,
         conducta: cond,
         descripcion: descripcion.trim(),
       };
+      console.log(payload);
       await new Promise((r) => setTimeout(r, 350)); // MOCK
       onSaved?.(payload);
       setNota(String(notaNorm));
@@ -127,15 +157,20 @@ export default function FilaEvaluacion({ item, onSaved }) {
     }
   };
 
-  const showErrorNota = (notaTouched && (esVacio || !numValido || !rangoValido));
-  const showErrorDesc = (descTouched && descripcion !== "" && !descValida);
+  const showErrorNota = notaTouched && (esVacio || !numValido || !rangoValido);
+  const showErrorDesc = descTouched && descripcion !== "" && !descValida;
 
   return (
-    <tr className="bg-white">
+    <tr className={`bg-white ${esClasificado ? " pointer-events-none" : ""}`}>
       {/* Informativos */}
       <td className="px-4 py-3 align-top">
-        <div className="text-gray-800 font-medium leading-tight">{item.nombre}</div>
-        <div className="text-gray-400 text-xs mt-1">{item.codigo}</div>
+        <div className="text-gray-800 font-medium leading-tight">
+          {item.nombre}
+        </div>
+        <div className="text-gray-400 text-xs mt-1">
+          {" "}
+          <span>ID:COMP-</span> {item.id_inscrito}
+        </div>
       </td>
       <td className="px-4 py-3 align-top text-gray-700">{item.area}</td>
       <td className="px-4 py-3 align-top text-gray-700">{item.nivel}</td>
@@ -152,9 +187,11 @@ export default function FilaEvaluacion({ item, onSaved }) {
             placeholder="0–100"
             inputMode="decimal"
           />
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 opacity-80">
-            {showErrorNota ? <ErrorBadge /> : <Lapis />}
-          </span>
+          {!esClasificado && (
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 opacity-80">
+              {showErrorNota ? <ErrorBadge /> : <Lapis />}
+            </span>
+          )}
         </div>
 
         {/* Error por intento inválido de digitación */}
@@ -177,7 +214,9 @@ export default function FilaEvaluacion({ item, onSaved }) {
                 ? "Debe ingresar una nota válida"
                 : "La nota debe estar entre 0 y 100 (se admite 1 decimal)"
             }
-            onHide={() => { /* autohide 5s */ }}
+            onHide={() => {
+              /* autohide 5s */
+            }}
           />
         )}
       </td>
@@ -189,7 +228,9 @@ export default function FilaEvaluacion({ item, onSaved }) {
             <input
               type="checkbox"
               checked={cond.respeto}
-              onChange={(e) => setCond((c) => ({ ...c, respeto: e.target.checked }))}
+              onChange={(e) =>
+                setCond((c) => ({ ...c, respeto: e.target.checked }))
+              }
             />
             <span className="text-gray-700">Respeto</span>
           </label>
@@ -197,7 +238,9 @@ export default function FilaEvaluacion({ item, onSaved }) {
             <input
               type="checkbox"
               checked={cond.integridad}
-              onChange={(e) => setCond((c) => ({ ...c, integridad: e.target.checked }))}
+              onChange={(e) =>
+                setCond((c) => ({ ...c, integridad: e.target.checked }))
+              }
             />
             <span className="text-gray-700">Integridad</span>
           </label>
@@ -205,7 +248,9 @@ export default function FilaEvaluacion({ item, onSaved }) {
             <input
               type="checkbox"
               checked={cond.puntualidad}
-              onChange={(e) => setCond((c) => ({ ...c, puntualidad: e.target.checked }))}
+              onChange={(e) =>
+                setCond((c) => ({ ...c, puntualidad: e.target.checked }))
+              }
             />
             <span className="text-gray-700">Puntualidad</span>
           </label>
@@ -219,53 +264,69 @@ export default function FilaEvaluacion({ item, onSaved }) {
             className={`bg-white rounded-2xl border px-4 py-3 pr-12 w-full min-h-[76px] shadow-[inset_0_0_0_1px_rgba(0,0,0,0.02)] focus:outline-none
             ${showErrorDesc ? "border-red-400" : "border-gray-300"}`}
             value={descripcion}
-            onChange={(e) => { setDescripcion(e.target.value); if (!descTouched) setDescTouched(true); }}
+            disabled={esClasificado}
+            onChange={(e) => {
+              setDescripcion(e.target.value);
+              if (!descTouched) setDescTouched(true);
+            }}
             onBlur={() => setDescTouched(true)}
             placeholder="Observación (5–60 caracteres)"
           />
-          <span className="absolute right-3 top-3 opacity-80">
-            {showErrorDesc ? <ErrorBadge /> : <Lapis />}
-          </span>
+          {!esClasificado && (
+            <span className="absolute right-3 top-3 opacity-80">
+              {showErrorDesc ? <ErrorBadge /> : <Lapis />}
+            </span>
+          )}
         </div>
         {showErrorDesc && (
           <ToastInline
-            key={`desc-${item.id}-${descripcion.length}`}
+            key={`desc-${item.id_evaluacion}-${descripcion.length}`}
             show
             text="La observación debe ser mayor a 5 y menor a 60 caracteres"
-            onHide={() => { /* autohide 5s */ }}
+            onHide={() => {
+              /* autohide 5s */
+            }}
           />
         )}
       </td>
-
+      <td className="px-4 py-3 align-top text-gray-700">
+        {item.estado_clasificado}
+      </td>
       {/* Acción */}
-      <td className="px-4 py-3 align-top w-[150px]">
-        <button
-          onClick={onGuardar}
-          disabled={!(cambios && notaValida && descValida) || saving}
-          className={`rounded-2xl px-4 py-2.5 w-full text-white transition
-            ${cambios && notaValida && descValida && !saving ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-400/50 cursor-not-allowed"}`}
-        >
-          {saving ? "Guardando…" : "Registrar"}
-        </button>
+      {!esClasificado && (
+        <td className="px-4 py-3 align-top w-[150px]">
+          <button
+            onClick={onGuardar}
+            disabled={!(cambios && notaValida && descValida) || saving}
+            className={`rounded-2xl px-4 py-2.5 w-full text-white transition
+      ${
+        cambios && notaValida && descValida && !saving
+          ? "bg-blue-600 hover:bg-blue-700"
+          : "bg-blue-400/50 cursor-not-allowed"
+      }`}
+          >
+            {saving ? "Guardando…" : "Registrar"}
+          </button>
 
-        {toastErr && (
-          <ToastInline
-            key={`err-${item.id}-${toastErr}`}
-            show
-            text={toastErr}
-            onHide={() => setToastErr("")}
-          />
-        )}
-        {toastOk && (
-          <ToastInline
-            key={`ok-${item.id}-${Date.now()}`}
-            show
-            type="success"
-            text="Calificación guardada"
-            onHide={() => setToastOk(false)}
-          />
-        )}
-      </td>
+          {toastErr && (
+            <ToastInline
+              key={`err-${item.id_evaluacion}-${toastErr}`}
+              show
+              text={toastErr}
+              onHide={() => setToastErr("")}
+            />
+          )}
+          {toastOk && (
+            <ToastInline
+              key={`ok-${item.id_evaluacion}-${Date.now()}`}
+              show
+              type="success"
+              text="Calificación guardada"
+              onHide={() => setToastOk(false)}
+            />
+          )}
+        </td>
+      )}
     </tr>
   );
 }

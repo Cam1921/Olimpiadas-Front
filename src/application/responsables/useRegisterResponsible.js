@@ -163,7 +163,7 @@ const submit = useCallback(async () => {
     // 🔁 5. Restablecer estado de envío
     setSubmitting(false);
   }
-}, [form, takenAreas, validate]);
+}, [form, takenAreas, validate, allAreas]);
 
   return {
     form,

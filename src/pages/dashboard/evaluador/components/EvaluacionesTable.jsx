@@ -1,55 +1,108 @@
 import { useEffect, useState } from "react";
 import FilaEvaluacion from "./FilaEvaluacion.jsx";
+import EvaluacionesRepository from "@/infrastructure/http/Evaluacion/repository.js";
+import FiltroEvaluaciones from "./FiltroEvaluaciones.jsx";
 
-const seed = [
-  {
-    id: 1,
-    codigo: "ID:COMP-001",
-    nombre: "Maria Gonzales Perez",
-    area: "Matemáticas",
-    nivel: "Primaria",
-    nota: "",
-    descripcion: "",
-    conducta: { integridad: false, puntualidad: false, respeto: false },
-  },
-  {
-    id: 2,
-    codigo: "ID:COMP-002",
-    nombre: "Fernando Siles",
-    area: "Matemáticas",
-    nivel: "Primaria",
-    nota: "",
-    descripcion: "",
-    conducta: { integridad: false, puntualidad: false, respeto: false },
-  },
-];
-
+// Clave para almacenamiento local
 const KEY = "evaluaciones_evaluador_v1";
+
+// 🔹 Utilidades para almacenamiento local
 function loadLocal() {
-  try { return JSON.parse(localStorage.getItem(KEY) || "{}"); } catch { return {}; }
+  try {
+    return JSON.parse(localStorage.getItem(KEY) || "{}");
+  } catch {
+    return {};
+  }
 }
+
 function saveLocal(mapById) {
-  try { localStorage.setItem(KEY, JSON.stringify(mapById)); } catch {}
+  try {
+    localStorage.setItem(KEY, JSON.stringify(mapById));
+  } catch {}
 }
 
-export default function EvaluacionesTable() {
+export default function EvaluacionesTable({ opcion_tabla, esClasificados }) {
   const [rows, setRows] = useState([]);
+  const [meta, setMeta] = useState(null); // Para paginación
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [filtro, setFiltro] = useState("");
+  const [inputBusqueda, setInputBusqueda] = useState("");
 
-  useEffect(() => {
-    const persisted = loadLocal();
-    const merged = seed.map((r) => (persisted[r.id] ? { ...r, ...persisted[r.id] } : r));
-    setRows(merged);
-  }, []);
-
-  const handleSaved = (fila) => {
-    setRows((prev) => prev.map((r) => (r.id === fila.id ? { ...r, ...fila } : r)));
-    const map = loadLocal();
-    map[fila.id] = { ...map[fila.id], ...fila };
-    saveLocal(map);
+  // 🔹 Cargar evaluaciones desde API
+  const fetchEvaluaciones = async (
+    page = 1,
+    busqueda = "",
+    estado_clasificado = opcion_tabla
+  ) => {
+    setLoading(true);
+    try {
+      const res = await EvaluacionesRepository.getEvaluaciones({
+        page,
+        perPage: 10,
+        busqueda,
+        estado_clasificado,
+      });
+      setRows(res.data);
+      setMeta(res.meta);
+      setPage(res.meta.current_page);
+    } catch (err) {
+      console.error("Error al cargar evaluaciones:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
+  useEffect(() => {
+    fetchEvaluaciones(1, filtro, opcion_tabla);
+  }, [filtro, opcion_tabla]);
+
+  // 🔹 Guardar localmente y sincronizar con backend
+
+  const handleSaved = async (fila) => {
+    try {
+      // Actualiza en memoria local
+      setRows((prev) =>
+        prev.map((r) =>
+          r.id_evaluacion === fila.id_evaluacion ? { ...r, ...fila } : r
+        )
+      );
+      console.log(fila);
+      // Actualiza localStorage
+      const map = loadLocal();
+      map[fila.id_evaluacion] = { ...map[fila.id_evaluacion], ...fila };
+      saveLocal(map);
+
+      // Enviar actualización al backend
+      await EvaluacionesRepository.updateEvaluacion(fila.id, {
+        nota: fila.nota,
+        descripcion: fila.descripcion,
+        conducta: fila.conducta,
+      });
+
+      console.log(
+        `✅ Evaluación ${fila.id_evaluacion} actualizada correctamente.`
+      );
+    } catch (error) {
+      console.error(
+        `❌ Error al actualizar evaluación ${fila.id_evaluacion}:`,
+        error
+      );
+    }
+  };
+  useEffect(() => {
+    const timeout = setTimeout(() => setFiltro(inputBusqueda), 500); // espera 500ms
+    return () => clearTimeout(timeout);
+  }, [inputBusqueda]);
+
   return (
-    <div className="w-full">
+    <div className="w-full py-5">
+      <div className="mb-4 px-4">
+        <FiltroEvaluaciones
+          value={inputBusqueda}
+          onChange={(v) => setInputBusqueda(v)}
+        />
+      </div>
       <table className="w-full text-sm">
         <thead>
           <tr className="bg-gray-50 text-gray-700">
@@ -59,21 +112,60 @@ export default function EvaluacionesTable() {
             <th className="text-left px-4 py-3">Nota académica</th>
             <th className="text-left px-4 py-3">Conducta</th>
             <th className="text-left px-4 py-3">Descripción</th>
-            <th className="px-4 py-3 text-left">Acción</th>
+            <th className="text-left px-4 py-3">Estado</th>
+            {!esClasificados && <th className="px-4 py-3 text-left">Acción</th>}
           </tr>
         </thead>
 
         <tbody className="divide-y">
-          {rows.map((item) => (
-            <FilaEvaluacion key={item.id} item={item} onSaved={handleSaved} />
-          ))}
-          {!rows.length && (
+          {loading ? (
             <tr>
-              <td className="px-4 py-6 text-gray-500" colSpan={7}>Sin registros</td>
+              <td className="px-4 py-6 text-gray-500 text-center" colSpan={7}>
+                Cargando evaluaciones...
+              </td>
+            </tr>
+          ) : rows.length ? (
+            rows.map((item) => (
+              <FilaEvaluacion
+                key={item.id_evaluacion}
+                item={item}
+                onSaved={handleSaved}
+                esClasificados={esClasificados}
+              />
+            ))
+          ) : (
+            <tr>
+              <td className="px-4 py-6 text-gray-500 text-center" colSpan={7}>
+                Sin registros
+              </td>
             </tr>
           )}
         </tbody>
       </table>
+
+      {/* 🔹 Paginación */}
+      {/* Paginación */}
+      {meta && (
+        <div className="flex justify-center items-center gap-4 mt-4">
+          <button
+            disabled={!meta.prev_page_url}
+            onClick={() => fetchEvaluaciones(page - 1, filtro)}
+            className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+          >
+            Anterior
+          </button>
+          <span className="text-gray-600">
+            Página {meta.current_page} de {meta.last_page}
+          </span>
+          <button
+            disabled={!meta.next_page_url}
+            onClick={() => fetchEvaluaciones(page + 1, filtro)}
+            className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+          >
+            Siguiente
+          </button>
+        </div>
+      )}
     </div>
   );
 }

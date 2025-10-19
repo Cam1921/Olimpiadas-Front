@@ -69,7 +69,7 @@ export default function InscripcionesManagement() {
         setFile(null);
         setResponseData(null);
         setIsValidated(false);
-      }, 5000);
+      }, 10000);
 
       return () => clearTimeout(timer);
     }
@@ -166,6 +166,7 @@ export default function InscripcionesManagement() {
             nivel: item["nivel"] || "—",
             contacto_tutor_legal: item["contacto tutor legal"] || "—",
             contacto_tutor_academico: item["contacto tutor academico"] || "—",
+            nombre_equipo: item["nombre equipo"] || "—",
           }))
         );
         setImportSuccess(true);
@@ -294,6 +295,13 @@ export default function InscripcionesManagement() {
         )}
         {validationError && validationError.status === "error" && (
           <div className="mt-4 bg-red-50/30 border border-red-300 rounded-xl p-4 w-full text-left">
+            <button
+              onClick={() => setValidationError(null)}
+              className="absolute top-2 right-2 text-red-600 hover:text-red-800 font-bold text-lg"
+              aria-label="Cerrar"
+            >
+              ×
+            </button>
             <h4 className="text-red-700 font-semibold mb-2 flex items-center gap-2">
               <span>
                 <FileWarning size={40} />

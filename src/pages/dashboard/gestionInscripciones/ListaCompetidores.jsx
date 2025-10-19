@@ -228,6 +228,7 @@ export default function GestionInscripciones({ importedData = [] }) {
                       <th className="px-4 py-2 text-left">
                         Contacto Tutor Académico
                       </th>
+                      <th className="px-4 py-2 text-left">Equipo</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -247,6 +248,7 @@ export default function GestionInscripciones({ importedData = [] }) {
                         <td className="px-4 py-2">
                           {c.contacto_tutor_academico || "-"}
                         </td>
+                        <td className="px-4 py-2">{c.equipo || "-"}</td>
                       </tr>
                     ))}
                   </tbody>
