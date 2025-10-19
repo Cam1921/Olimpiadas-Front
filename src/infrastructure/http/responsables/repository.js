@@ -1,3 +1,4 @@
+// src/infrastructure/http/responsables/repository.js
 import api from "../../../lib/api";
 
 export const responsablesRepo = {

@@ -11,8 +11,11 @@ export default function useLoginForm(onSuccess) {
   const [touchedEmail, setTouchedEmail] = useState(false);
   const [touchedPass, setTouchedPass] = useState(false);
   const [emailLimitMsg, setEmailLimitMsg] = useState("");
-  const [role, setRole] = useState("administrador"); // 👈 usamos este valor
+  const [role, setRole] = useState("administrador");
 
+  // -------------------------
+  // EMAIL HANDLERS
+  // -------------------------
   const onEmailChange = useCallback((v) => {
     if (v.length >= 70) {
       setEmail(v.slice(0, 70));
@@ -35,22 +38,33 @@ export default function useLoginForm(onSuccess) {
     return "";
   }, []);
 
+  // -------------------------
+  // PASSWORD VALIDATION (mínimo 8)
+  // -------------------------
   const validatePassword = useCallback((v) => {
     if (!v) return "";
-    if (v.length < 7 || v.length > 25) return "La cantidad mínima es de 8 caracteres y el máximo es de 25 caracteres";
+    if (v.length < 8) return "";
+    if (v.length > 25) return "";
     return "";
   }, []);
 
   const emailError = useMemo(() => validateEmail(email), [email, validateEmail]);
   const passwordError = useMemo(() => validatePassword(password), [password, validatePassword]);
 
-  const canSubmit = useMemo(() => !!email && !!password && !emailError && !passwordError && !loading, [email, password, emailError, passwordError, loading]);
+  // 🔒 Botón solo se habilita si password >= 8, sin mostrar error visible
+  const canSubmit = useMemo(() => {
+    const passwordValid = password.length >= 8 && password.length <= 25;
+    return !!email && passwordValid && !emailError && !loading;
+  }, [email, password, emailError, loading]);
 
   const toggleShowPassword = useCallback(() => {
     if (!password) return;
     setShowPassword((s) => !s);
   }, [password]);
 
+  // -------------------------
+  // SUBMIT HANDLER
+  // -------------------------
   const onSubmit = useCallback(async (e) => {
     e?.preventDefault?.();
     setCredError("");
@@ -60,24 +74,33 @@ export default function useLoginForm(onSuccess) {
 
     try {
       setLoading(true);
-      // 👇 pasamos el rol seleccionado al servicio
       const res = await login(email, password, role);
+
       if (res && res.token) {
-        setRole(res[0])
-        onSuccess?.();
-        console.log("Login exitoso", res);
+        setRole(res[0]);
+        onSuccess?.(); // ✅ Cierra/navega solo si fue exitoso
+        return;
       }
-      else {setCredError("Credenciales inválidas");}
-    } catch (err) {
-      console.log("Error en login:", err);
+
+      // ❌ Credenciales inválidas
       setCredError("Credenciales inválidas");
+      setPassword(""); // limpia campo
+      setShowPassword(false);
+      setTouchedPass(false);
+    } catch (err) {
+      setCredError("Credenciales inválidas");
+      setPassword("");
+      setShowPassword(false);
+      setTouchedPass(false);
     } finally {
       setLoading(false);
     }
   }, [canSubmit, email, password, role, onSuccess]);
 
+  // -------------------------
+  // RESET FORM
+  // -------------------------
   const reset = useCallback(() => {
-    // ❌ setEmailState("") no existe → remuévelo
     setEmail("");
     setPassword("");
     setShowPassword(false);
@@ -89,16 +112,29 @@ export default function useLoginForm(onSuccess) {
     setRole("administrador");
   }, []);
 
+  // -------------------------
+  // RETURN
+  // -------------------------
   return {
-    email, setEmail: onEmailChange,
-    password, setPassword,
-    showPassword, toggleShowPassword,
-    loading, credError, setCredError,
-    touchedEmail, setTouchedEmail,
-    touchedPass, setTouchedPass,
+    email,
+    setEmail: onEmailChange,
+    password,
+    setPassword,
+    showPassword,
+    toggleShowPassword,
+    loading,
+    credError,
+    setCredError,
+    touchedEmail,
+    setTouchedEmail,
+    touchedPass,
+    setTouchedPass,
     emailLimitMsg,
-    role, setRole,
-    emailError, passwordError, canSubmit,
+    role,
+    setRole,
+    emailError,
+    passwordError,
+    canSubmit,
     onSubmit,
     reset,
   };

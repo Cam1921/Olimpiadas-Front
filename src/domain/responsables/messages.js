@@ -1,3 +1,4 @@
+// src/domain/responsables/messages.js
 export const MSG = {
   required: "Completa este campo",
   min4: "Mínimo 4 caracteres",

@@ -1,3 +1,4 @@
+// src/pages/dashboard/evaluador/pages/EvaluadorHome.jsx
 import EvaluacionesTable from "../components/EvaluacionesTable.jsx";
 
 export default function EvaluadorHome() {

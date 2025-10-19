@@ -1,4 +1,4 @@
-// Cliente HTTP minimal. Luego puedes leer VITE_API_URL.
+// src/infrastructure/http/client.js
 const delay = (ms) => new Promise(r => setTimeout(r, ms));
 
 export const http = {
