@@ -1,4 +1,4 @@
-// src/hooks/useEditResponsible.js
+// src/application/responsables/EditResponsible.js
 import { useState, useEffect } from "react";
 import { responsablesRepo } from "../infrastructure/responsables/repository";
 import { validateResponsable } from "../domain/responsables/validators";

@@ -1,3 +1,4 @@
+// src/components/ResponsablesTable.jsx
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 
 export default function ResponsablesTable({ data = [], onEdit, onDelete }) {

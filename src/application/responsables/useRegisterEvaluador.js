@@ -1,4 +1,4 @@
-// src/application/evaluadores/useRegisterEvaluador.js
+// src/application/responsables/useRegisterEvaluador.js
 import { useState, useCallback, useEffect } from 'react';
 import { getAreasConNiveles } from "../../infrastructure/http/areas/areaRepostory";
 import api from "../../lib/api";
