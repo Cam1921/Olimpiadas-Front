@@ -1,3 +1,4 @@
+// src/components/StatsCard.jsx
 import { CheckCircleIcon, UserPlusIcon } from "@heroicons/react/24/outline";
 
 /**

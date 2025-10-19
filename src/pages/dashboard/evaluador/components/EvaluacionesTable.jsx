@@ -1,3 +1,4 @@
+// src/pages/dashboard/evaluador/components/EvaluacionesTable.jsx
 import { useEffect, useState } from "react";
 import FilaEvaluacion from "./FilaEvaluacion.jsx";
 import EvaluacionesRepository from "@/infrastructure/http/Evaluacion/repository.js";

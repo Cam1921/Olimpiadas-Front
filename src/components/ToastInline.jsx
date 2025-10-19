@@ -1,3 +1,4 @@
+// src/components/ToastInline.jsx
 import { useEffect, useState } from "react";
 
 export default function ToastInline({ text = "", type = "error", show = false, onHide }) {

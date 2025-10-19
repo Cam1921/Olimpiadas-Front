@@ -153,7 +153,7 @@ export default function InscripcionesManagement() {
       console.log("📦 Confirm Import Result:", result);
 
       if (result.status === "success") {
-        toast.success("Inscritos importados correctamente");
+        toast.success("Competidores importados correctamente");
         setConfirmedData(
           result.data.map((item, index) => ({
             id: index + 1,
@@ -225,12 +225,12 @@ export default function InscripcionesManagement() {
           Gestión de Inscripciones
         </h2>
         <p className="text-gray-600">
-          Importa inscritos desde CSV y genera listas por área y nivel.
+          Importa competidores desde CSV y genera listas por área y nivel.
         </p>
       </div>
 
       <div className="bg-white shadow rounded-xl p-6 space-y-6 border">
-        <h2 className=" font-medium">Importar inscritos (CSV)</h2>
+        <h2 className=" font-medium">Importar competidores (CSV)</h2>
 
         <div
           onDrop={handleDrop}
@@ -262,7 +262,7 @@ export default function InscripcionesManagement() {
           </p>
           <p className="text-sm text-gray-500 mb-3">
             Campos requeridos: Nombre Completo, CI, Contacto tutor legal, Unidad
-            educativa, Departamento, Grado, Área(s), Nivel, Tutor académico
+            educativa, Departamento, Grado, Área(s), Nivel, Tutor académico, Nombre del equipo
             (opcional).
           </p>
           <p className="text-sm text-gray-500">
@@ -288,7 +288,7 @@ export default function InscripcionesManagement() {
                 ¡Importación exitosa!
               </p>
               <p className="text-green-600 text-sm">
-                Se importaron {confirmedData.length} inscritos correctamente.
+                Se importaron {confirmedData.length} competidores correctamente.
               </p>
             </div>
           </div>
@@ -327,7 +327,7 @@ export default function InscripcionesManagement() {
                   <br />
                   <span className="font-semibold">
                     Nombre Completo, CI, Contacto tutor legal, Unidad educativa,
-                    Departamento, Grado, Área(s), Nivel, Tutor académico
+                    Departamento, Grado, Área(s), Nivel, Tutor académico, Nombre del equipo
                     (opcional)
                   </span>
                 </p>
@@ -352,7 +352,7 @@ export default function InscripcionesManagement() {
                   <br />
                   <span className="font-semibold">
                     Nombre Completo, CI, Contacto tutor legal, Unidad educativa,
-                    Departamento, Grado, Área(s), Nivel, Tutor académico
+                    Departamento, Grado, Área(s), Nivel, Tutor académico, Nombre del equipo
                     (opcional)
                   </span>
                 </p>
@@ -428,7 +428,7 @@ export default function InscripcionesManagement() {
               <CheckCircleIcon className="h-4 w-4" />
               <div className="flex flex-col gap-3">
                 <p className="font-semibold">
-                  {responseData.message} no es posible importar los competidores{" "}
+                  {responseData.message} No es posible importar los competidores{" "}
                   <span>
                     (Intente nuevamente con un archivo con los campos requeridos
                     correctos)

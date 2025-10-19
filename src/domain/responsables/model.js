@@ -1,4 +1,4 @@
-// Modelo de Responsable (dominio)
+// src/domain/responsables/model.js
 export const newResponsable = () => ({
   nombre: "",
   apellidos: "",

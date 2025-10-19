@@ -1,4 +1,3 @@
-import { useState } from "react";
 import EvaluacionesTable from "../components/EvaluacionesTable.jsx";
 
 export default function EvaluadorHome() {

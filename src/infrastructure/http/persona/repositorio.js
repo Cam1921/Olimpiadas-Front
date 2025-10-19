@@ -1,4 +1,4 @@
-// src/infrastructure/persona/repository.js
+// src/infrastructure/http/persona/repository.js
 import api from "../../../lib/api";
 
 export const personaRepo = {
