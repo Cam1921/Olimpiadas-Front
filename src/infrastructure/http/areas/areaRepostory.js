@@ -1,4 +1,4 @@
-// src/repositories/areaRepository.js
+// src/infrastructure/http/areas/areaRepostory.js
 import api from "@/lib/api";
 
 export async function getAreasConNiveles() {

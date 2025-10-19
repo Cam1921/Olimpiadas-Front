@@ -24,7 +24,7 @@ export default function Home() {
           {/* Texto */}
           <div className="space-y-5 grid grid-cols-2 gap-10">
             <div className="grid gap-4">
-              <h1 className="text-ink">
+              <h1 className="text-4xl md:text-5xl font-semibold leading-tight tracking-tight text-ink">
                 <span className="block">Bienvenidos a las</span>
                 <span className="block">Olimpiadas en</span>
                 <span className="block">Ciencia y Tecnología</span>
@@ -42,7 +42,7 @@ export default function Home() {
             <img
               src={olimpiadas}
               alt="Olimpiadas en Ciencia y Tecnología"
-              className="h-56 md:h-72 lg:h-80 rounded-2xl shadow-soft self-center -mt-4"
+              className="h-56 md:h-72 lg:h-80 rounded-2xl shadow-soft self-center "
               loading="eager"
               decoding="async"
             />
@@ -98,7 +98,9 @@ export default function Home() {
 
         {/* PRESENTACIÓN */}
         <section className="mt-20">
-          <h2 className="text-center text-ink mb-6">Presentación</h2>
+          <h2 className="text-center text-2xl md:text-3xl font-semibold text-ink mb-6">
+            Presentación
+          </h2>
           <p className="mx-auto max-w-4xl text-center text-ink/70 leading-relaxed">
             El Comité de la Olimpiadas Científica Nacional San Simón O! SANSi, a
             través de la Facultad de Ciencias y Tecnología de la Universidad
@@ -106,7 +108,9 @@ export default function Home() {
             Educación Regular a participar en las Olimpiadas O! SANSi 2025.
           </p>
 
-          <h2 className="text-center text-ink mt-14 mb-6">Participantes</h2>
+          <h2 className="text-center text-2xl md:text-3xl font-semibold text-ink mt-14 mb-6">
+            Participantes
+          </h2>
           <p className="mx-auto max-w-4xl text-center text-ink/70 leading-relaxed mb-8">
             Estudiantes del Subsistema de Educación Regular del Estado
             Plurinacional de Bolivia; en las áreas de: MATEMÁTICA, FÍSICA,
@@ -165,7 +169,7 @@ export default function Home() {
 
         {/* INFORMACIÓN (dentro del Home) */}
         <section className="mt-20">
-          <h2 className="text-center text-ink mb-8 tracking-wide">
+          <h2 className="text-center text-2xl md:text-3xl font-semibold text-ink mb-8 tracking-wide">
             INFORMACIÓN
           </h2>
 

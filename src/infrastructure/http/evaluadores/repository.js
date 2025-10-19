@@ -1,4 +1,4 @@
-// src/infrastructure/evaluadores/repository.js
+// src/infrastructure/http/evaluadores/repository.js
 import api from "../../../lib/api";
 
 export const evaluadoresRepo = {

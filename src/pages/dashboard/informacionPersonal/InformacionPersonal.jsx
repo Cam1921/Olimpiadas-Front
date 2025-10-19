@@ -1,3 +1,4 @@
+// src/pages/dashboard/informacionPersonal/InformacionPersonal.jsx
 import { useEffect, useState, useMemo } from "react";
 import EditableField from "@/components/forms/EditableField";
 import PasswordInline from "@/components/forms/PasswordInline";

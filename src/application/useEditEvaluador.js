@@ -1,4 +1,4 @@
-// src/hooks/useEditEvaluador.js
+// src/application/useEditEvaluador.js
 import { useState, useEffect } from "react";
 import { evaluadoresRepo } from "../infrastructure/evaluadores/repository";
 import { validateEvaluador } from "../domain/evaluadores/validators";

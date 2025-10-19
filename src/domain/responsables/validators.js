@@ -1,3 +1,4 @@
+// src/domain/responsables/validators.js
 import { MSG } from "./messages";
 
 const isEmpty = (v) => !v || v.trim() === "";
