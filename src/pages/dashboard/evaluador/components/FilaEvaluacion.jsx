@@ -13,6 +13,26 @@ function normalizar1Decimal(n) {
   return Math.round(n * 10) / 10;
 }
 
+function calcularEstado(nota, conducta) {
+  if (
+    nota >= 51 &&
+    conducta.integridad &&
+    conducta.puntualidad &&
+    conducta.respeto
+  ) {
+    return "Clasificado";
+  } else if (
+    nota < 51 &&
+    conducta.integridad &&
+    conducta.puntualidad &&
+    conducta.respeto
+  ) {
+    return "No clasificado";
+  } else {
+    return "Descalificado";
+  }
+}
+
 /* Íconos */
 const Lapis = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -38,8 +58,7 @@ const ErrorBadge = () => (
   </span>
 );
 
-/* Draft validator (mientras escribe)
-   Acepta: "", 0..99, 0..99 con 1 decimal (coma o punto), 100, 100,0 / 100.0 */
+/* Draft validator */
 const notaDraftRegex = /^(?:|0|[1-9]\d?|(?:\d{1,2}[.,]\d?)|100|100[.,]0?)$/;
 function allowNotaDraft(s) {
   return notaDraftRegex.test(s);
@@ -51,26 +70,23 @@ export default function FilaEvaluacion({ item, onSaved, esClasificados }) {
   const [cond, setCond] = useState(
     item.conducta ?? { integridad: false, puntualidad: false, respeto: false }
   );
-
+  const [estadoClasificado, setEstadoClasificado] = useState(
+    item.estado_clasificado ?? ""
+  );
   const [saving, setSaving] = useState(false);
   const [toastErr, setToastErr] = useState("");
   const [toastOk, setToastOk] = useState(false);
-
-  // para mostrar toasts de campo “como antes”
   const [notaTouched, setNotaTouched] = useState(false);
   const [descTouched, setDescTouched] = useState(false);
-
-  // NUEVO: mensaje cuando el usuario intenta teclear algo no permitido
   const [notaDraftMsg, setNotaDraftMsg] = useState("");
   const [notaDraftKey, setNotaDraftKey] = useState(0);
   const [esClasificado, setEsClasificado] = useState(false);
-  /* Validaciones */
+
   const nnum = useMemo(() => toNumber100(nota), [nota]);
   const esVacio = String(nota).trim() === "";
   const numValido = !Number.isNaN(nnum);
   const rangoValido = numValido && nnum >= 0 && nnum <= 100;
   const notaValida = !esVacio && rangoValido;
-
   const descValida =
     descripcion.trim().length >= 5 && descripcion.trim().length <= 60;
 
@@ -85,40 +101,31 @@ export default function FilaEvaluacion({ item, onSaved, esClasificados }) {
   }, [nota, descripcion, cond, item]);
 
   useEffect(() => setToastOk(false), [nota, descripcion, cond]);
-  useEffect(() => {
-    setEsClasificado(esClasificados);
-    console.log(esClasificado);
-  }, [esClasificados]);
-  /* Nota (restricción + toasts) */
+  useEffect(() => setEsClasificado(esClasificados), [esClasificados]);
+
   const onNotaChange = (e) => {
     let next = e.target.value.replace(/[^\d.,]/g, "");
     if (allowNotaDraft(next)) {
       setNota(next);
-    } else {
-      // ❗ Intento inválido: no cambiamos el valor y mostramos el mensaje
-      if (next !== "") {
-        setNotaTouched(true);
-        setNotaDraftMsg(
-          "La nota debe estar entre 0 y 100 (se admite 1 decimal)"
-        );
-        setNotaDraftKey((k) => k + 1); // fuerza remount del toast (5s)
-      }
+      if (!notaTouched) setNotaTouched(true);
+    } else if (next !== nota) {
+      setNotaDraftMsg("La nota debe estar entre 0 y 100 (se admite 1 decimal)");
+      setNotaDraftKey((k) => k + 1);
+      if (!notaTouched) setNotaTouched(true);
     }
-    if (!notaTouched) setNotaTouched(true);
   };
 
   const onNotaBlur = () => {
-    setNotaTouched(true);
-    // "10," -> "10"
-    if (/^[0-9]{1,2}[.,]$/.test(nota)) {
-      setNota(nota.slice(0, -1));
-      return;
-    }
-    // "100,0" -> "100"
+    if (/^[0-9]{1,2}[.,]$/.test(nota)) setNota(nota.slice(0, -1));
     if (/^100[.,]0$/.test(nota)) setNota("100");
   };
 
-  /* Guardado */
+  const estadoColor = {
+    Clasificado: "bg-green-100 text-green-700 border border-green-300",
+    "No clasificado": "bg-rose-100 text-rose-700 border border-rose-300",
+    Descalificado: "bg-gray-200 text-gray-700 border border-gray-300",
+  };
+
   const onGuardar = async () => {
     if (esVacio || !numValido) {
       setNotaTouched(true);
@@ -140,14 +147,15 @@ export default function FilaEvaluacion({ item, onSaved, esClasificados }) {
     setToastErr("");
     try {
       const notaNorm = normalizar1Decimal(nnum);
+      const estadoNuevo = calcularEstado(notaNorm, cond);
       const payload = {
-        id: item.id_evaluacion,
+        id_evaluacion: item.id_evaluacion,
         nota: notaNorm,
         conducta: cond,
         descripcion: descripcion.trim(),
       };
-      console.log(payload);
-      await new Promise((r) => setTimeout(r, 350)); // MOCK
+      item.estado_clasificado = estadoNuevo;
+      await new Promise((r) => setTimeout(r, 350));
       onSaved?.(payload);
       setNota(String(notaNorm));
       setToastOk(true);
@@ -158,30 +166,38 @@ export default function FilaEvaluacion({ item, onSaved, esClasificados }) {
     }
   };
 
-  const showErrorNota = notaTouched && (esVacio || !numValido || !rangoValido);
+  const showErrorNota =
+    notaTouched && nota !== "" && (!numValido || !rangoValido);
   const showErrorDesc = descTouched && descripcion !== "" && !descValida;
 
+  // ✨ Responsive: tabla en desktop, card en mobile
   return (
-    <tr className={`bg-white ${esClasificado ? " pointer-events-none" : ""}`}>
-      {/* Informativos */}
-      <td className="px-4 py-3 align-top">
-        <div className="text-gray-800 font-medium leading-tight">
-          {item.nombre}
-        </div>
+    <tr className="bg-white sm:table-row block sm:table-row my-2 sm:my-0 p-2 sm:p-0 rounded shadow sm:shadow-none">
+      {/* Nombre e ID */}
+      <td className="px-4 py-3 sm:table-cell block">
+        <div className="font-medium text-gray-800">{item.nombre}</div>
         <div className="text-gray-400 text-xs mt-1">
-          {" "}
-          <span>ID:COMP-</span> {item.id_inscrito}
+          <span>CI:</span> {item.ci}
+        </div>
+        <div className="text-xs text-gray-400 sm:hidden mt-1">
+          ID: {item.id_inscrito} <br />
+          Área: {item.area} <br />
+          Nivel: {item.nivel} <br />
+          Nota: {item.nota}
         </div>
       </td>
-      <td className="px-4 py-3 align-top text-gray-700">{item.area}</td>
-      <td className="px-4 py-3 align-top text-gray-700">{item.nivel}</td>
+
+      {/* Área y Nivel */}
+      <td className="px-4 py-3 hidden sm:table-cell">{item.area}</td>
+      <td className="px-4 py-3 hidden sm:table-cell">{item.nivel}</td>
 
       {/* Nota */}
-      <td className="px-4 py-3 align-top w-[180px]">
+      <td className="px-4 py-3   w-[150px] sm:table-cell">
         <div className="relative">
           <input
-            className={`bg-white rounded-2xl border px-4 py-3 pr-12 w-full shadow-[inset_0_0_0_1px_rgba(0,0,0,0.02)] focus:outline-none
-            ${showErrorNota ? "border-red-400" : "border-gray-300"}`}
+            className={`bg-white rounded-2xl border px-4 py-3 pr-12 w-full shadow-[inset_0_0_0_1px_rgba(0,0,0,0.02)] focus:outline-none ${
+              showErrorNota ? "border-red-400" : "border-gray-300"
+            }`}
             value={nota}
             onChange={onNotaChange}
             onBlur={onNotaBlur}
@@ -194,8 +210,6 @@ export default function FilaEvaluacion({ item, onSaved, esClasificados }) {
             </span>
           )}
         </div>
-
-        {/* Error por intento inválido de digitación */}
         {notaDraftMsg && (
           <ToastInline
             key={`nota-draft-${item.id}-${notaDraftKey}`}
@@ -204,8 +218,6 @@ export default function FilaEvaluacion({ item, onSaved, esClasificados }) {
             onHide={() => setNotaDraftMsg("")}
           />
         )}
-
-        {/* Error por valor actual inválido */}
         {showErrorNota && (
           <ToastInline
             key={`nota-${item.id}-${nota}`}
@@ -215,55 +227,38 @@ export default function FilaEvaluacion({ item, onSaved, esClasificados }) {
                 ? "Debe ingresar una nota válida"
                 : "La nota debe estar entre 0 y 100 (se admite 1 decimal)"
             }
-            onHide={() => {
-              /* autohide 5s */
-            }}
+            onHide={() => {}}
           />
         )}
       </td>
 
       {/* Conducta */}
-      <td className="px-4 py-3 align-top w-[210px]">
-        <div className="space-y-1">
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={cond.respeto}
-              onChange={(e) =>
-                setCond((c) => ({ ...c, respeto: e.target.checked }))
-              }
-            />
-            <span className="text-gray-700">Respeto</span>
-          </label>
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={cond.integridad}
-              onChange={(e) =>
-                setCond((c) => ({ ...c, integridad: e.target.checked }))
-              }
-            />
-            <span className="text-gray-700">Integridad</span>
-          </label>
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={cond.puntualidad}
-              onChange={(e) =>
-                setCond((c) => ({ ...c, puntualidad: e.target.checked }))
-              }
-            />
-            <span className="text-gray-700">Puntualidad</span>
-          </label>
+      <td className="px-4 py-3 w-[210px] sm:w-auto">
+        <div className="space-y-1 flex flex-col sm:flex sm:space-y-0 sm:gap-2 sm:flex-wrap">
+          {["respeto", "integridad", "puntualidad"].map((c) => (
+            <label key={c} className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={cond[c]}
+                onChange={(e) =>
+                  setCond((prev) => ({ ...prev, [c]: e.target.checked }))
+                }
+                className="accent-[var(--primary)] w-4 h-4"
+                disabled={esClasificado}
+              />
+              <span className="text-gray-700 capitalize">{c}</span>
+            </label>
+          ))}
         </div>
       </td>
 
       {/* Descripción */}
-      <td className="px-4 py-3 align-top w-[320px]">
+      <td className="px-4 py-3 w-[320px] sm:w-auto">
         <div className="relative">
           <textarea
-            className={`bg-white rounded-2xl border px-4 py-3 pr-12 w-full min-h-[76px] shadow-[inset_0_0_0_1px_rgba(0,0,0,0.02)] focus:outline-none
-            ${showErrorDesc ? "border-red-400" : "border-gray-300"}`}
+            className={`bg-white rounded-2xl border px-4 py-3 resize-none pr-12 w-full min-h-[76px] shadow-[inset_0_0_0_1px_rgba(0,0,0,0.02)] focus:outline-none ${
+              showErrorDesc ? "border-red-400" : "border-gray-300"
+            }`}
             value={descripcion}
             disabled={esClasificado}
             onChange={(e) => {
@@ -284,30 +279,46 @@ export default function FilaEvaluacion({ item, onSaved, esClasificados }) {
             key={`desc-${item.id_evaluacion}-${descripcion.length}`}
             show
             text="La observación debe ser mayor a 5 y menor a 60 caracteres"
-            onHide={() => {
-              /* autohide 5s */
-            }}
+            onHide={() => {}}
           />
         )}
       </td>
-      <td className="px-4 py-3 align-top text-gray-700">
-        {item.estado_clasificado}
+
+      {/* Estado */}
+      <td className="px-4 py-3 align-top text-start sm:table-cell block mt-2 sm:mt-0">
+        {item.estado_clasificado ? (
+          <span
+            className={`inline-block px-3 py-1 rounded-2xl text-xs ${
+              estadoColor[item.estado_clasificado] ||
+              "bg-gray-100 text-gray-600"
+            }`}
+          >
+            {item.estado_clasificado}
+          </span>
+        ) : (
+          <span className="text-gray-400 italic">Sin estado</span>
+        )}
       </td>
+
       {/* Acción */}
       {!esClasificado && (
-        <td className="px-4 py-3 align-top w-[150px]">
+        <td className="px-4 py-3 align-top w-[150px] sm:w-auto block sm:table-cell mt-2 sm:mt-0">
           <button
             onClick={onGuardar}
             disabled={!(cambios && notaValida && descValida) || saving}
-            className={`rounded-2xl px-4 py-2.5 w-full text-white transition
-      ${
-        cambios && notaValida && descValida && !saving
-          ? "bg-blue-600 hover:bg-blue-700"
-          : "bg-blue-400/50 cursor-not-allowed"
-      }`}
+            className={`rounded-2xl px-4 py-2.5 w-full text-white transition ${
+              cambios && notaValida && descValida && !saving
+                ? "hover:bg-[var(--primary)] bg-[var(--primary)]"
+                : "bg-[color:rgb(var(--primary-rgb)/0.5)] cursor-not-allowed"
+            }`}
           >
             {saving ? "Guardando…" : "Registrar"}
           </button>
+          {cambios && !saving && (
+            <span className="text-center text-orange-500 block mt-2">
+              Pendiente
+            </span>
+          )}
 
           {toastErr && (
             <ToastInline

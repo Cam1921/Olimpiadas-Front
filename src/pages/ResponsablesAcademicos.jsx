@@ -1,5 +1,5 @@
 // src/pages/ResponsablesAcademicos.jsx
-import { useMemo, useState, useEffect } from "react"; // 👈 Agregado useEffect
+import { useMemo, useState, useEffect } from "react";
 import { UserPlusIcon } from "@heroicons/react/24/outline";
 import StatsCard from "../components/StatsCard";
 import ResponsablesTable from "../components/ResponsablesTable";
@@ -13,7 +13,6 @@ import { responsablesRepo } from "../infrastructure/http/responsables/repository
 import api from "@/lib/api";
 export default function ResponsablesAcademicos() {
   const [rows, setRows] = useState([]);
-
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editingRow, setEditingRow] = useState(null);
@@ -39,7 +38,6 @@ export default function ResponsablesAcademicos() {
   const { form, setField, errors, submitting, submit, resetForm, setErrors } =
     useRegisterResponsable(takenAreas);
 
-  // 👇 Función para cargar responsables desde el backend
   const fetchResponsables = async () => {
     try {
       const response = await api.get("/responsable-academico");
@@ -63,7 +61,6 @@ export default function ResponsablesAcademicos() {
     }
   };
 
-  // 👇 Cargar datos al montar el componente
   useEffect(() => {
     fetchResponsables();
     async function fetchAreas() {
@@ -93,14 +90,13 @@ export default function ResponsablesAcademicos() {
   const handleCreate = async () => {
     const result = await submit();
     if (result.ok) {
-      await fetchResponsables(); // ✅ Recarga los datos reales del backend
+      await fetchResponsables();
       setSuccessMsg("Responsable académico registrado correctamente.");
       setSuccessOpen(true);
       handleCloseModal();
     }
   };
 
-  // === Handlers de edición y eliminación ===
   const handleOpenEdit = (row, idx) => {
     setEditingRow(row);
     setEditingIndex(idx);
@@ -113,14 +109,19 @@ export default function ResponsablesAcademicos() {
     setDeleteOpen(true);
   };
 
-  const confirmDelete = () => {
-    // 👇 Opcional: también podrías llamar a fetchResponsables() aquí
-    console.log(deletingIndex);
-    handleDelete(deletingIndex);
-    setRows((prev) => prev.filter((_, i) => i !== deletingIndex));
-    setDeleteOpen(false);
-    setSuccessMsg("El responsable fue eliminado correctamente.");
-    setSuccessOpen(true);
+  const confirmDelete = async () => {
+    try {
+      handleDelete(deletingIndex);
+      setRows((prev) => prev.filter((_, i) => i !== deletingIndex));
+      setSuccessMsg("El responsable fue eliminado correctamente.");
+      setSuccessOpen(true);
+    } catch (err) {
+      console.error("Error al eliminar:", err);
+      setSuccessMsg("No se pudo eliminar el responsable. Inténtalo más tarde.");
+      setSuccessOpen(true);
+    } finally {
+      setDeleteOpen(false);
+    }
   };
   const handleNavigate = () => {
     window.location.href = "evaluadores"; // Navega a la página de Evaluadores
@@ -151,11 +152,16 @@ export default function ResponsablesAcademicos() {
           </p>
         </div>
         <button
-          className="btn btn-cta text-white"
+          className={`btn btn-cta text-white ${
+            areasDisponibles <= 0 ? "opacity-50 cursor-not-allowed" : ""
+          }`}
           onClick={() => setOpen(true)}
+          disabled={areasDisponibles <= 0}
         >
           <UserPlusIcon className="w-5 h-5" />
-          Registrar Responsable
+          {areasDisponibles > 0
+            ? "Registrar Responsable"
+            : "No hay áreas disponibles"}
         </button>
       </div>
 
@@ -204,22 +210,12 @@ export default function ResponsablesAcademicos() {
         open={editOpen}
         onClose={() => setEditOpen(false)}
         initial={editingRow}
-        takenAreas={rows.map((r) => r.area)}
-        onUpdate={(updated) => {
-          setRows((prev) =>
-            prev.map((r, i) =>
-              i === editingIndex
-                ? {
-                    ...r,
-                    ...updated,
-                    fecha: new Date().toISOString().slice(0, 10),
-                  }
-                : r
-            )
-          );
-          setEditOpen(false);
-          setSuccessMsg("La información se actualizó correctamente.");
+        takenAreas={takenAreas}
+        onUpdate={async (updatedData) => {
+          await fetchResponsables();
+          setSuccessMsg("Responsable actualizado correctamente.");
           setSuccessOpen(true);
+          setEditOpen(false);
         }}
       />
 

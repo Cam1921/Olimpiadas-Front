@@ -94,10 +94,21 @@ export default function InformacionPersonal() {
 
   // 🧩 funciones para guardar cambios
   const saveNombre = async (nuevo) => {
-    const next = { ...persona, nombre: nuevo };
-    await personaRepo.update({ nombre: nuevo }); // 👈 actualiza backend
+    const next = { ...persona, nombre: nuevo, nombres: nuevo };
+    await personaRepo.update({ nombre: nuevo }); // actualiza backend
     setPersona(next);
-    sessionStorage.setItem("user", JSON.stringify({ ...user, persona: next }));
+
+    sessionStorage.setItem(
+      "user",
+      JSON.stringify({
+        ...user,
+        user: {
+          ...user.user,
+          personas: [{ ...(user.user.personas?.[0] || {}), ...next }],
+        },
+      })
+    );
+    window.dispatchEvent(new Event("user:updated"));
   };
 
   const saveTelefono = async (nuevo) => {
@@ -111,7 +122,18 @@ export default function InformacionPersonal() {
     const next = { ...persona, apellidos: nuevo };
     await personaRepo.update({ apellidos: nuevo });
     setPersona(next);
-    sessionStorage.setItem("user", JSON.stringify({ ...user, persona: next }));
+
+    sessionStorage.setItem(
+      "user",
+      JSON.stringify({
+        ...user,
+        user: {
+          ...user.user,
+          personas: [{ ...(user.user.personas?.[0] || {}), ...next }],
+        },
+      })
+    );
+    window.dispatchEvent(new Event("user:updated"));
   };
   const savePassword = async (nuevo) => {
     try {

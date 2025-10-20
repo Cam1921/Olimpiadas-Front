@@ -12,6 +12,7 @@
 :root {
   /* Paleta */
   --primary: #0284C7;
+  --primary-rgb: 2 132 199;
   --surface: #F8FAFB;
   --bg: #FFFFFF;
   --ink: #23263D;

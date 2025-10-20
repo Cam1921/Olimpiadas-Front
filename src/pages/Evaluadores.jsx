@@ -1,4 +1,5 @@
 // src/pages/Evaluadores.jsx
+
 import { useMemo, useState, useEffect } from "react";
 import { UserPlusIcon } from "@heroicons/react/24/outline";
 import StatsCard from "../components/StatsCard";
@@ -115,15 +116,21 @@ export default function Evaluadores() {
     setDeleteOpen(true);
   };
 
-  const confirmDelete = () => {
-    console.log(deletingIndex);
-    handleDelete(deletingIndex);
-    setRows((prev) => prev.filter((_, i) => i !== deletingIndex));
-    setDeleteOpen(false);
-    setSuccessMsg("El evaluador fue eliminado correctamente.");
-    setSuccessOpen(true);
+  const confirmDelete = async () => {
+    try {
+      handleDelete(deletingIndex);
+      // ✅ Eliminado del backend: ahora actualiza el estado local
+      await fetchEvaluadores(); // Recarga la lista completa desde el backend
+      setSuccessMsg("El evaluador fue eliminado correctamente.");
+      setSuccessOpen(true);
+    } catch (err) {
+      console.error("Error al eliminar:", err);
+      setSuccessMsg("No se pudo eliminar el evaluador. Inténtalo más tarde.");
+      setSuccessOpen(true);
+    } finally {
+      setDeleteOpen(false);
+    }
   };
-
   return (
     <div className="p-6 md:p-8">
       <div className="flex items-center gap-8 border-b border-slate-200">
@@ -150,8 +157,11 @@ export default function Evaluadores() {
           </p>
         </div>
         <button
-          className="btn btn-cta text-white"
+          className={`btn btn-cta text-white ${
+            areasDisponibles <= 0 ? "opacity-50 cursor-not-allowed" : ""
+          }`}
           onClick={() => setOpen(true)}
+          disabled={areasDisponibles <= 0}
         >
           <UserPlusIcon className="w-5 h-5" />
           Registrar Evaluador
@@ -201,17 +211,7 @@ export default function Evaluadores() {
         initial={editingRow}
         takenAreas={rows.map((r) => ({ area: r.area, nivel: r.nivel }))} // ✅ Pasa el array de objetos
         onUpdate={(updated) => {
-          setRows((prev) =>
-            prev.map((r, i) =>
-              i === editingIndex
-                ? {
-                    ...r,
-                    ...updated,
-                    fecha: new Date().toISOString().slice(0, 10),
-                  }
-                : r
-            )
-          );
+          fetchEvaluadores();
           setEditOpen(false);
           setSuccessMsg("La información se actualizó correctamente.");
           setSuccessOpen(true);

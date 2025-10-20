@@ -1,26 +1,47 @@
 // src/components/ui/Header.jsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { FiSidebar, FiChevronDown, FiLogOut, FiUser, FiSearch } from "react-icons/fi";
+import {
+  FiSidebar,
+  FiChevronDown,
+  FiLogOut,
+  FiUser,
+  FiSearch,
+} from "react-icons/fi";
 import { Link } from "react-router-dom";
-import sansi from "@/assets/sansi.png"; 
+import sansi from "@/assets/sansi.png";
 
-export default function Header({
-  title,
-  subtitle,
-  breadcrumbs = [],
-  showMenu = true,
-  onToggleMenu,
-  showSearch = false,
-  searchPlaceholder = "Buscar…",
-  onSearchChange,
-  right,
-  showUser = true,
-  onLogout,
-  className = "",
-}) {
+// helper para leer user desde sessionStorage
+function readSessionUser() {
+  try {
+    const raw = sessionStorage.getItem("user");
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+export default function Header(props) {
+  const {
+    title,
+    subtitle,
+    breadcrumbs = [],
+    showMenu = true,
+    onToggleMenu,
+    showSearch = false,
+    searchPlaceholder = "Buscar…",
+    onSearchChange,
+    right,
+    showUser = true,
+    onLogout,
+    className = "",
+  } = props;
+
   const [scrolled, setScrolled] = useState(false);
   const [openUser, setOpenUser] = useState(false);
   const dropdownRef = useRef(null);
+
+  // Estado reactivo del usuario
+  const [userData, setUserData] = useState(() => readSessionUser());
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 4);
@@ -39,17 +60,37 @@ export default function Header({
     return () => window.removeEventListener("click", onClick);
   }, [openUser]);
 
-  const user = useMemo(() => {
-    try {
-      const raw = sessionStorage.getItem("user");
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
+  // Escucha cambios del usuario guardado
+  useEffect(() => {
+    const refresh = () => setUserData(readSessionUser());
+    window.addEventListener("storage", refresh); // otros tabs
+    window.addEventListener("user:updated", refresh); // mismo tab
+    return () => {
+      window.removeEventListener("storage", refresh);
+      window.removeEventListener("user:updated", refresh);
+    };
   }, []);
 
-  const roleName =
-    user?.role?.nombre || user?.rol?.nombre || user?.role || user?.rol || "—";
+  // Extraer info de la nueva estructura
+  const persona = userData?.user?.personas?.[0];
+  const rolPersona =
+    persona?.rols?.[0]?.nombre?.toLowerCase() ||
+    userData?.rol?.[0]?.toLowerCase() ||
+    "";
+
+  const isAdmin = rolPersona.includes("admin");
+
+  const displayName = useMemo(() => {
+    if (!persona) return userData?.user?.name || "—";
+
+    const nombre = persona.nombre ?? persona.nombres ?? "";
+    const apellido = persona.apellido ?? persona.apellidos ?? "";
+
+    const fullName = [nombre, apellido].filter(Boolean).join(" ").trim();
+    return fullName || userData?.user?.name || "Usuario";
+  }, [persona, userData]);
+
+  const roleName = persona?.rols?.[0]?.nombre || userData?.rol?.[0] || "—";
 
   return (
     <header
@@ -77,24 +118,26 @@ export default function Header({
           <div className="h-9 w-9" aria-hidden />
         )}
 
-        {/* Título + breadcrumbs */}
         <div className="flex-1 min-w-0">
           {breadcrumbs?.length > 0 && (
             <nav className="mb-1 text-xs text-[var(--grisOscuro)] flex items-center gap-1 flex-wrap">
               {breadcrumbs.map((b, i) => (
                 <span key={i} className="flex items-center gap-1">
                   {b.to ? (
-                    <Link className="hover:underline" to={b.to}>{b.label}</Link>
+                    <Link className="hover:underline" to={b.to}>
+                      {b.label}
+                    </Link>
                   ) : (
                     <span>{b.label}</span>
                   )}
-                  {i < breadcrumbs.length - 1 && <span className="opacity-60">/</span>}
+                  {i < breadcrumbs.length - 1 && (
+                    <span className="opacity-60">/</span>
+                  )}
                 </span>
               ))}
             </nav>
           )}
           <div className="flex items-end gap-3">
-            {/* ← añadido: logo al lado del título */}
             <img src={sansi} alt="Sansi" className="h-9 w-auto" />
             <h1 className="text-base sm:text-lg font-semibold leading-5 text-[var(--negro)] truncate">
               {title}
@@ -107,7 +150,6 @@ export default function Header({
           </div>
         </div>
 
-        {/* Buscador opcional */}
         {showSearch && (
           <div className="hidden md:flex items-center mr-2">
             <div className="relative">
@@ -122,9 +164,10 @@ export default function Header({
           </div>
         )}
 
-        {/* Slot derecho, si lo mandas desde fuera tiene prioridad */}
         {right ? (
-          <div className="min-h-9 min-w-9 flex items-center justify-center">{right}</div>
+          <div className="min-h-9 min-w-9 flex items-center justify-center">
+            {right}
+          </div>
         ) : showUser ? (
           <div className="relative" ref={dropdownRef}>
             <button
@@ -136,10 +179,10 @@ export default function Header({
                 <FiUser className="text-white" />
               </div>
               <div className="hidden sm:flex flex-col items-start leading-4">
-                <span className="text-xs font-semibold text-gray-900 max-w-[140px] truncate">
-                  {user?.nombre || "Administrador"}
+                <span className="text-xs font-semibold text-gray-900 max-w-[180px] truncate">
+                  {displayName}
                 </span>
-                <span className="text-[10px] uppercase tracking-wide text-gray-500 max-w-[140px] truncate">
+                <span className="text-[10px] uppercase tracking-wide text-gray-500 max-w-[180px] truncate">
                   {roleName}
                 </span>
               </div>

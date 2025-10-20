@@ -54,13 +54,13 @@ export default function RegisterResponsibleModal({
         >
           <XMarkIcon className="w-6 h-6" />
         </button>
+        {/* ✅ Título correcto para el modal de registro */}
         <h2 className="text-4xl md:text-5xl font-semibold text-primary leading-tight">
           Registrar Nuevo <br /> Responsable Académico
         </h2>
         <p className="text-slate-500 mt-2">
           Completa los datos del responsable académico
         </p>
-
         {Object.keys(errors).length > 0 && (
           <div className="bg-red-50 border-l-4 border-red-500 p-3 mb-4 rounded">
             <p className="text-red-700 text-sm font-medium">
@@ -69,7 +69,6 @@ export default function RegisterResponsibleModal({
             </p>
           </div>
         )}
-
         <div className="grid grid-cols-2 gap-5 mt-6">
           {/* Nombre */}
           <div>
@@ -87,11 +86,10 @@ export default function RegisterResponsibleModal({
               </p>
             ) : (
               <p className="text-xs text-slate-400 mt-1">
-                Debe tener al menos 4 letras.
+                Debe tener al menos 3 letras.
               </p>
             )}
           </div>
-
           {/* Apellidos */}
           <div>
             <label className="label">Apellidos *</label>
@@ -108,19 +106,24 @@ export default function RegisterResponsibleModal({
               </p>
             ) : (
               <p className="text-xs text-slate-400 mt-1">
-                Debe tener al menos 4 letras.
+                Debe tener al menos 3 letras.
               </p>
             )}
           </div>
-
           {/* Correo */}
           <div className="col-span-2">
             <label className="label">Correo electrónico *</label>
             <input
               className={`input ${errClass("correo")}`}
               value={form.correo}
-              onChange={(e) => setField("correo", e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value.length <= 70) {
+                  setField("correo", value);
+                }
+              }}
               placeholder="ej: maria@gmail.com"
+              maxLength={70}
             />
             {getErrorMsg("correo") ? (
               <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
@@ -129,11 +132,10 @@ export default function RegisterResponsibleModal({
               </p>
             ) : (
               <p className="text-xs text-slate-400 mt-1">
-                Debe contener "@" y ".com".
+                Debe contener "@" y ".com". Máximo 70 caracteres.
               </p>
             )}
           </div>
-
           {/* Teléfono */}
           <div>
             <label className="label">Teléfono *</label>
@@ -156,7 +158,6 @@ export default function RegisterResponsibleModal({
               </p>
             )}
           </div>
-
           {/* CI */}
           <div>
             <label className="label">CI *</label>
@@ -175,11 +176,10 @@ export default function RegisterResponsibleModal({
               </p>
             ) : (
               <p className="text-xs text-slate-400 mt-1">
-                Entre 7 y 10 dígitos.
+                Entre 6 y 10 dígitos.
               </p>
             )}
           </div>
-
           {/* Área */}
           <div className="relative">
             <label className="label">Área *</label>
@@ -226,11 +226,11 @@ export default function RegisterResponsibleModal({
             )}
           </div>
         </div>
-
         <div className="flex items-center justify-end gap-3 mt-7">
           <button className="btn btn-ghost" onClick={onClose}>
             Cancelar
           </button>
+          {/* ✅ Botón que dice "Registrar" */}
           <button
             className="btn btn-cta"
             onClick={onSubmit}

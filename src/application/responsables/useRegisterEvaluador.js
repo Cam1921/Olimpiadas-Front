@@ -11,14 +11,12 @@ export function useRegisterEvaluador(takenAreas = []) {
     telefono: '',
     ci: '',
     area: '',
-    nivel: '', // ✅ Campo nuevo
+    nivel: '',
   });
-
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
    const [allAreas, setAllAreas] = useState([]);
 
-  // Al editar un campo, limpia su error
   const setField = useCallback((name, value) => {
     setForm(prev => ({ ...prev, [name]: value }));
     setErrors(prev => {
@@ -65,8 +63,8 @@ export function useRegisterEvaluador(takenAreas = []) {
     if (form.telefono && !/^[67]\d{7}$/.test(form.telefono.replace(/\D/g, ''))) {
       newErrors.telefono = 'El teléfono debe tener 8 dígitos y comenzar con 6 o 7. Ej: 71234567';
     }
-    if (form.ci && !/^\d{7,10}$/.test(form.ci.replace(/\D/g, ''))) {
-      newErrors.ci = 'El CI debe tener entre 7 y 10 dígitos. Ej: 1234567';
+    if (form.ci && !/^\d{6,10}$/.test(form.ci.replace(/\D/g, ''))) {
+      newErrors.ci = 'El CI debe tener entre 6 y 10 dígitos. Ej: 1234567';
     }
   /*   if (form.nivel && !['Primaria', 'Secundaria'].includes(form.nivel)) {
       newErrors.nivel = 'El nivel debe ser "Primaria" o "Secundaria".';
@@ -108,12 +106,12 @@ export function useRegisterEvaluador(takenAreas = []) {
     if (!data.telefono.trim()) newErrors.telefono = 'El teléfono es obligatorio.';
     else if (!/^[67]\d{7}$/.test(data.telefono.replace(/\D/g, ''))) newErrors.telefono = 'El teléfono debe tener 8 dígitos y comenzar con 6 o 7.';
     if (!data.ci?.trim()) newErrors.ci = 'El CI es obligatorio.';
-    else if (!/^\d{7,10}$/.test(data.ci.replace(/\D/g, ''))) newErrors.ci = 'El CI debe tener entre 7 y 10 dígitos.';
+    else if (!/^\d{6,10}$/.test(data.ci.replace(/\D/g, ''))) newErrors.ci = 'El CI debe tener entre 6 y 10 dígitos.';
     if (!data.area) newErrors.area = 'Selecciona un área.';
     if (!data.nivel) newErrors.nivel = 'Selecciona un nivel.';
     /* else if (!['Primaria', 'Secundaria'].includes(data.nivel)) newErrors.nivel = 'El nivel debe ser "Primaria" o "Secundaria".'; */
 
-    // ✅ Validación de combinación area + nivel
+    // Verifica combinación única (área + nivel)
     if (data.area && data.nivel) {
       const combinationExists = takenAreas.some(a => a.area === data.area && a.nivel === data.nivel);
       if (combinationExists) {
@@ -153,14 +151,14 @@ const submit = useCallback(async () => {
     return { ok: true, data };
 
   } catch (err) {
-    console.error("Error en submit:", err);
-
+    
     // ⚙️ Si el backend devolvió errores de validación (422)
     if (err.response?.status === 422 && err.response.data?.errors) {
       const backendErrors = {};
       Object.entries(err.response.data.errors).forEach(([key, messages]) => {
-        backendErrors[key] = messages[0];
-      });
+    if (key === "email") key = "correo"; // mapear a frontend
+    backendErrors[key] = messages[0];
+  });
       setErrors(backendErrors);
       
       return { ok: false, error: "Errores de validación detectados." };

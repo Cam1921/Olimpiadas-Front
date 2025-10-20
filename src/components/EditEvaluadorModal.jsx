@@ -1,5 +1,5 @@
 // src/components/EditEvaluadorModal.jsx
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   XMarkIcon,
   ChevronDownIcon,
@@ -7,169 +7,239 @@ import {
   LockClosedIcon,
 } from "@heroicons/react/24/outline";
 import { AREAS } from "../services/areas";
-import { isAreaCompleta } from "../utils/areaUtils";
+import { getNivelesByArea, isAreaCompleta } from "../utils/areaUtils";
+import { getAreasConNiveles } from "../infrastructure/http/areas/areaRepostory";
+import { evaluadoresRepo } from "../infrastructure/http/evaluadores/repository";
 
 export default function EditEvaluadorModal({
   open,
   onClose,
   onUpdate,
-  initial = null, // { nombre, apellidos, correo, telefono, area, fecha, nivel }
-  takenAreas = [], // TODAS las áreas asignadas en la tabla
+  initial = null,
+  takenAreas = [],
 }) {
   const [form, setForm] = useState({
     nombre: "",
     apellidos: "",
     correo: "",
     telefono: "",
+    ci: "",
     area: "",
-    nivel: "", // ✅ Campo nuevo
+    nivel: "",
   });
   const [showAreas, setShowAreas] = useState(false);
   const [showNiveles, setShowNiveles] = useState(false);
-  const [availableNiveles, setAvailableNiveles] = useState([
-    "Primaria",
-    "Secundaria",
-  ]); // Inicialmente ambos
-  const [touched, setTouched] = useState({});
-  const [submitted, setSubmitted] = useState(false);
+  const [availableNiveles, setAvailableNiveles] = useState([]);
+  const [errors, setErrors] = useState({}); // ✅ Errores del backend + validación local
+  const [submitting, setSubmitting] = useState(false);
+  const [areasConNiveles, setAreasConNiveles] = useState({});
 
-  const isEmpty = (v) => !v || v.trim() === "";
-
-  // Carga inicial
   useEffect(() => {
     if (open && initial) {
+      console.log(initial);
       setForm({
         nombre: initial.nombre || "",
         apellidos: initial.apellidos || "",
         correo: initial.correo || "",
         telefono: (initial.telefono || "").replace(/\+591\s?/, ""),
+        ci: initial.ci || "",
         area: initial.area || "",
-        nivel: initial.nivel || "", // ✅ Cargar nivel
+        nivel: initial.nivel || "",
       });
-      setTouched({});
-      setSubmitted(false);
+      setErrors({});
       setShowAreas(false);
       setShowNiveles(false);
     }
   }, [open, initial]);
 
-  // Actualiza los niveles disponibles cuando cambia el área
+  useEffect(() => {
+    const fetchAreas = async () => {
+      try {
+        const data = await getAreasConNiveles(); // devuelve tu JSON
+        setAreasConNiveles(data);
+      } catch (err) {
+        console.error("Error al cargar áreas con niveles:", err);
+      }
+    };
+    fetchAreas();
+  }, []);
+
+  // ✅ Actualiza los niveles disponibles cuando cambia el área
   useEffect(() => {
     if (form.area) {
-      const takenForArea = takenAreas.filter((a) => a.area === form.area);
-      const available = ["Primaria", "Secundaria"].filter(
-        (n) => !takenForArea.some((t) => t.nivel === n)
-      );
-      setAvailableNiveles(available);
+      const selectedArea = areasConNiveles.find((a) => a.nombre === form.area);
+      if (selectedArea) {
+        const takenForArea = takenAreas.filter((a) => a.area === form.area);
+        const available = selectedArea.niveles.filter(
+          (n) => !takenForArea.some((t) => t.nivel === n.nombre_nivel)
+        );
+        setAvailableNiveles(available);
+      } else {
+        setAvailableNiveles([]);
+      }
     } else {
-      setAvailableNiveles(["Primaria", "Secundaria"]);
+      setAvailableNiveles([]);
     }
-  }, [form.area, takenAreas]);
+  }, [form.area, takenAreas, areasConNiveles]);
 
-  // === Validaciones (mismas reglas que registro) ===
-  const hasAt = useMemo(() => form.correo.includes("@"), [form.correo]);
-  const [userPart, domainPart] = useMemo(
-    () => (hasAt ? form.correo.split("@") : ["", ""]),
-    [form.correo, hasAt]
-  );
-  const emailLenOk = form.correo.length <= 70;
-  const emailSyntaxOk =
-    hasAt && userPart.trim() !== "" && domainPart.trim() !== "";
-  const telOk = useMemo(
-    () => /^(6|7)\d{7}$/.test(form.telefono),
-    [form.telefono]
-  );
-  const nomOk = form.nombre.trim().length >= 2;
-  const apeOk = form.apellidos.trim().length >= 2;
-  const nivelOk = ["Primaria", "Secundaria"].includes(form.nivel);
+  // ✅ Validación en tiempo real (solo para formato, no para unicidad)
+  const validateField = (name, value) => {
+    switch (name) {
+      case "nombre":
+      case "apellidos":
+        if (!value.trim()) return "Este campo es obligatorio.";
+        if (value.trim().length < 2) return "Mínimo 2 caracteres.";
+        if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(value.trim()))
+          return "Solo letras, espacios, tildes y ñ.";
+        return null;
+      case "correo":
+        if (!value.trim()) return "El correo es obligatorio.";
+        if (value.length > 70)
+          return "El correo no debe exceder los 70 caracteres.";
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))
+          return "Formato de correo inválido.";
+        if (!value.endsWith(".com"))
+          return 'El dominio debe terminar en ".com".';
+        return null;
+      case "telefono":
+        const cleanTel = value.replace(/\D/g, "");
+        if (!value.trim()) return "El teléfono es obligatorio.";
+        if (!/^[67]\d{7}$/.test(cleanTel))
+          return "8 dígitos, debe comenzar con 6 o 7.";
+        return null;
+      case "ci":
+        const cleanCI = value.replace(/\D/g, "");
+        if (!value.trim()) return "El CI es obligatorio.";
+        if (!/^\d{6,10}$/.test(cleanCI))
+          return "El CI debe tener entre 6 y 10 dígitos.";
+        return null;
 
-  // === Área: requerido + única (permitiendo su área original) ===
-  const areaEmpty = isEmpty(form.area);
-  const areaTakenByOther =
-    form.area &&
-    form.area !== (initial?.area || "") && // ⬅️ permite su misma área
-    takenAreas.some((a) => a.area === form.area && a.nivel === form.nivel); // ✅ Combinación area+nivel
-  const areaOk = !areaEmpty && !areaTakenByOther;
-
-  const canSubmit =
-    nomOk &&
-    apeOk &&
-    !isEmpty(form.correo) &&
-    emailLenOk &&
-    emailSyntaxOk &&
-    telOk &&
-    areaOk &&
-    nivelOk;
-
-  const shouldShow = (key) => submitted || touched[key];
-
-  const emailErrMsg = () => {
-    if (!shouldShow("correo")) return null;
-    if (isEmpty(form.correo)) return "El correo es obligatorio";
-    if (!hasAt)
-      return "Incluye un signo de @ en la dirección de correo electrónico";
-    if (userPart.trim() === "")
-      return "Ingrese nombre de usuario antes del signo @";
-    if (domainPart.trim() === "")
-      return "Ingrese un dominio después del signo @";
-    if (!emailLenOk) return "Cantidad máxima 70 caracteres";
-    return null;
+      default:
+        return null;
+    }
   };
 
-  const nameErrMsg = () => {
-    if (!shouldShow("nombre")) return null;
-    if (isEmpty(form.nombre)) return "Completa este campo";
-    if (!nomOk) return "Mínimo 2 caracteres";
-    return null;
+  const handleFieldChange = (name, value) => {
+    setForm((prev) => ({ ...prev, [name]: value }));
+    // Limpiar error del campo al editar
+    if (errors[name]) {
+      setErrors((prev) => {
+        const { [name]: _, ...rest } = prev;
+        return rest;
+      });
+    }
   };
 
-  const lastErrMsg = () => {
-    if (!shouldShow("apellidos")) return null;
-    if (isEmpty(form.apellidos)) return "Completa este campo";
-    if (!apeOk) return "Mínimo 2 caracteres";
-    return null;
-  };
+  function obtenerIds(areas, nombreArea, nombreNivel) {
+    const area = areas.find(
+      (a) => a.nombre.toLowerCase() === nombreArea.toLowerCase()
+    );
 
-  const phoneErrMsg = () => {
-    if (!shouldShow("telefono")) return null;
-    if (isEmpty(form.telefono)) return "Completa este campo";
-    if (!telOk) return "Formato: 8 dígitos, inicia con 6 o 7";
-    return null;
-  };
+    if (!area) {
+      return { error: `No se encontró el área "${nombreArea}".` };
+    }
 
-  const areaErrMsg = () => {
-    if (!shouldShow("area")) return null;
-    if (areaEmpty) return "Completa este campo";
-    if (areaTakenByOther)
-      return "Ya existe un evaluador asignado a esta área y nivel";
-    return null;
-  };
+    const nivel = area.niveles.find(
+      (n) => n.nombre_nivel.toLowerCase() === nombreNivel.toLowerCase()
+    );
 
-  const nivelErrMsg = () => {
-    if (!shouldShow("nivel")) return null;
-    if (isEmpty(form.nivel)) return "Completa este campo";
-    if (!nivelOk) return "El nivel debe ser 'Primaria' o 'Secundaria'";
-    return null;
-  };
+    if (!nivel) {
+      return {
+        error: `No se encontró el nivel "${nombreNivel}" en el área "${nombreArea}".`,
+      };
+    }
 
-  const errClass = (hasError) =>
-    hasError
+    return { id_area: area.id, id_nivel: nivel.id };
+  }
+
+  const errClass = (field) =>
+    errors[field]
       ? "border-2 border-red-500 focus:border-red-500 focus:ring-red-300"
       : "";
 
-  if (!open) return null;
+  const onSubmit = async () => {
+    setSubmitting(true);
 
-  const onSubmit = () => {
-    setSubmitted(true);
-    if (!canSubmit) return;
-    const payload = {
-      ...form,
-      telefono: `+591 ${form.telefono}`,
-      fecha: initial?.fecha || new Date().toISOString().slice(0, 10),
-    };
-    onUpdate?.(payload); // <- el padre reemplaza la fila
-    onClose?.();
+    // Validación local de formato
+    const localErrors = {};
+    for (const [key, value] of Object.entries(form)) {
+      const err = validateField(key, value);
+      if (err) localErrors[key] = err;
+    }
+
+    if (!form.area) localErrors.area = "Selecciona un área.";
+    if (!form.nivel) localErrors.nivel = "Selecciona un nivel.";
+    // Validación de combinación área+nivel
+    /*  const combinationExists = takenAreas.some(
+      (a) =>
+        a.area === form.area &&
+        a.nivel === form.nivel &&
+        (initial?.area === form.area && initial?.nivel === form.nivel)
+    ); */
+    /*  if (combinationExists) {
+      localErrors.area =
+        "Ya existe un evaluador para esta combinación de área y nivel.";
+    } */
+
+    if (Object.keys(localErrors).length > 0) {
+      setErrors(localErrors);
+      setSubmitting(false);
+      return;
+    }
+
+    try {
+      const asignaciones = obtenerIds(areasConNiveles, form.area, form.nivel);
+      const payload = {
+        nombre: form.nombre,
+        apellidos: form.apellidos,
+        email: form.correo,
+        telefono: form.telefono.replace(/\D/g, ""),
+        ci: form.ci.replace(/\D/g, ""),
+        asignaciones: [asignaciones],
+      };
+      console.log(payload);
+      console.log(initial.id);
+
+      console.log("Enviando datos a /api/evaluador/", initial.id, payload);
+
+      const response = await evaluadoresRepo.update(initial.id, payload);
+
+      console.log(
+        "Respuesta del servidor:",
+        response.status,
+        response.statusText
+      );
+
+      const data = response.data;
+      console.log("Datos recibidos:", data);
+      if (onUpdate) onUpdate(data);
+      onClose();
+
+      setSubmitting(false);
+    } catch (err) {
+      console.error("Error de red o servidor:", err);
+
+      // ✅ Manejo de errores de validación del backend
+      if (err.response && err.response.data?.errors) {
+        const backendErrors = {};
+        for (const [key, messages] of Object.entries(
+          err.response.data.errors
+        )) {
+          // Mapear 'email' a 'correo' en tu formulario
+          const fieldMap = { email: "correo", telefono: "telefono", ci: "ci" };
+          const formField = fieldMap[key] || key;
+          backendErrors[formField] = messages.join(" ");
+        }
+        setErrors(backendErrors);
+      } else {
+        setErrors({ general: "Error de conexión. Inténtalo más tarde." });
+      }
+
+      setSubmitting(false);
+    }
   };
+
+  if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -178,7 +248,6 @@ export default function EditEvaluadorModal({
         <button
           className="absolute right-4 top-4 text-slate-400 hover:text-slate-600"
           onClick={onClose}
-          aria-label="Cerrar"
         >
           <XMarkIcon className="w-6 h-6" />
         </button>
@@ -186,20 +255,40 @@ export default function EditEvaluadorModal({
           Editar Evaluador
         </h2>
         <p className="text-slate-500 mt-2">Actualiza los datos del evaluador</p>
+
+        {/* ✅ Mensaje de error general */}
+        {errors.general && (
+          <div className="bg-red-50 border-l-4 border-red-500 p-3 mb-4 rounded">
+            <p className="text-red-700 text-sm font-medium">
+              ⚠️ {errors.general}
+            </p>
+          </div>
+        )}
+
+        {/* ✅ Mensaje de error de campos específicos */}
+        {Object.keys(errors).some((k) => k !== "general") &&
+          !errors.general && (
+            <div className="bg-red-50 border-l-4 border-red-500 p-3 mb-4 rounded">
+              <p className="text-red-700 text-sm font-medium">
+                ⚠️ Algunos datos ya están registrados o son inválidos. Revisa
+                los campos marcados en rojo.
+              </p>
+            </div>
+          )}
+
         <div className="grid grid-cols-2 gap-5 mt-6">
           {/* Nombre */}
           <div>
             <label className="label">Nombre *</label>
             <input
-              className={`input ${errClass(!!nameErrMsg())}`}
+              className={`input ${errClass("nombre")}`}
               value={form.nombre}
-              onBlur={() => setTouched((t) => ({ ...t, nombre: true }))}
-              onChange={(e) => setForm({ ...form, nombre: e.target.value })}
+              onChange={(e) => handleFieldChange("nombre", e.target.value)}
             />
-            {nameErrMsg() && (
+            {errors.nombre && (
               <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
                 <ExclamationTriangleIcon className="w-4 h-4" />
-                {nameErrMsg()}
+                {errors.nombre}
               </p>
             )}
           </div>
@@ -207,15 +296,14 @@ export default function EditEvaluadorModal({
           <div>
             <label className="label">Apellidos *</label>
             <input
-              className={`input ${errClass(!!lastErrMsg())}`}
+              className={`input ${errClass("apellidos")}`}
               value={form.apellidos}
-              onBlur={() => setTouched((t) => ({ ...t, apellidos: true }))}
-              onChange={(e) => setForm({ ...form, apellidos: e.target.value })}
+              onChange={(e) => handleFieldChange("apellidos", e.target.value)}
             />
-            {lastErrMsg() && (
+            {errors.apellidos && (
               <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
                 <ExclamationTriangleIcon className="w-4 h-4" />
-                {lastErrMsg()}
+                {errors.apellidos}
               </p>
             )}
           </div>
@@ -224,19 +312,22 @@ export default function EditEvaluadorModal({
             <label className="label">Correo electrónico *</label>
             <div className="relative">
               <input
-                className={`input pr-10 ${errClass(!!emailErrMsg())}`}
+                className={`input pr-10 ${errClass("correo")}`}
                 value={form.correo}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value.length <= 70) {
+                    handleFieldChange("correo", value);
+                  }
+                }}
                 maxLength={70}
-                onBlur={() => setTouched((t) => ({ ...t, correo: true }))}
-                onChange={(e) => setForm({ ...form, correo: e.target.value })}
-                // readOnly // si quieres bloquear edición del correo, descomenta
               />
               <LockClosedIcon className="w-5 h-5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
             </div>
-            {emailErrMsg() && (
+            {errors.correo && (
               <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
                 <ExclamationTriangleIcon className="w-4 h-4" />
-                {emailErrMsg()}
+                {errors.correo}
               </p>
             )}
           </div>
@@ -244,21 +335,36 @@ export default function EditEvaluadorModal({
           <div>
             <label className="label">Teléfono *</label>
             <input
-              className={`input ${errClass(!!phoneErrMsg())}`}
-              placeholder="+591 7 XXXXXXX (8 dígitos)"
+              className={`input ${errClass("telefono")}`}
               value={form.telefono}
-              onBlur={() => setTouched((t) => ({ ...t, telefono: true }))}
               onChange={(e) =>
-                setForm({
-                  ...form,
-                  telefono: e.target.value.replace(/\D/g, ""),
-                })
+                handleFieldChange("telefono", e.target.value.replace(/\D/g, ""))
               }
             />
-            {phoneErrMsg() && (
+            {errors.telefono && (
               <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
                 <ExclamationTriangleIcon className="w-4 h-4" />
-                {phoneErrMsg()}
+                {errors.telefono}
+              </p>
+            )}
+          </div>
+          {/* CI */}
+          <div>
+            <label className="label">CI *</label>
+            <input
+              className={`input ${errClass("ci")}`}
+              value={form.ci}
+              onChange={(e) =>
+                handleFieldChange(
+                  "ci",
+                  e.target.value.replace(/\D/g, "").slice(0, 12)
+                )
+              }
+            />
+            {errors.ci && (
+              <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
+                <ExclamationTriangleIcon className="w-4 h-4" />
+                {errors.ci}
               </p>
             )}
           </div>
@@ -268,9 +374,8 @@ export default function EditEvaluadorModal({
             <button
               type="button"
               onClick={() => setShowAreas((v) => !v)}
-              onBlur={() => setTouched((t) => ({ ...t, area: true }))}
               className={`input flex items-center justify-between ${errClass(
-                !!areaErrMsg()
+                "area"
               )}`}
             >
               <span className={form.area ? "text-slate-900" : "text-slate-400"}>
@@ -278,11 +383,10 @@ export default function EditEvaluadorModal({
               </span>
               <ChevronDownIcon className="w-5 h-5 text-slate-400" />
             </button>
-            {showAreas && (
+            {/* {showAreas && (
               <div className="absolute z-10 mt-1 w-full card p-0 overflow-hidden">
                 <ul className="max-h-56 overflow-auto">
                   {AREAS.filter((area) => {
-                    // Si el usuario está editando, permitir su área actual aunque esté completa
                     if (initial?.area === area) return true;
                     return !isAreaCompleta(area, takenAreas);
                   }).map((a) => (
@@ -291,7 +395,7 @@ export default function EditEvaluadorModal({
                         className="w-full text-left px-4 py-3 hover:bg-slate-50"
                         onMouseDown={(e) => e.preventDefault()}
                         onClick={() => {
-                          setForm({ ...form, area: a });
+                          handleFieldChange("area", a);
                           setShowAreas(false);
                         }}
                       >
@@ -301,11 +405,32 @@ export default function EditEvaluadorModal({
                   ))}
                 </ul>
               </div>
+            )} */}
+            {showAreas && (
+              <div className="absolute z-10 mt-1 w-full card p-0 overflow-hidden">
+                <ul className="max-h-56 overflow-auto">
+                  {areasConNiveles.map((a) => (
+                    <li key={a.id}>
+                      <button
+                        className="w-full text-left px-4 py-3 hover:bg-slate-50"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          handleFieldChange("area", a.nombre);
+                          handleFieldChange("nivel", "");
+                          setShowAreas(false);
+                        }}
+                      >
+                        {a.nombre}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
-            {areaErrMsg() && (
+            {errors.area && (
               <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
                 <ExclamationTriangleIcon className="w-4 h-4" />
-                {areaErrMsg()}
+                {errors.area}
               </p>
             )}
           </div>
@@ -315,11 +440,10 @@ export default function EditEvaluadorModal({
             <button
               type="button"
               onClick={() => setShowNiveles((v) => !v)}
-              onBlur={() => setTouched((t) => ({ ...t, nivel: true }))}
               className={`input flex items-center justify-between ${errClass(
-                !!nivelErrMsg()
+                "nivel"
               )}`}
-              disabled={!form.area} // ✅ Deshabilita si no hay área seleccionada
+              disabled={!form.area}
             >
               <span
                 className={form.nivel ? "text-slate-900" : "text-slate-400"}
@@ -331,21 +455,41 @@ export default function EditEvaluadorModal({
               </span>
               <ChevronDownIcon className="w-5 h-5 text-slate-400" />
             </button>
+            {/*  {showNiveles && (
+              <div className="absolute z-10 mt-1 w-full card p-0 overflow-hidden">
+                <ul className="max-h-56 overflow-auto">
+                  {availableNiveles.map((n) => (
+                    <li key={n}>
+                      <button
+                        className="w-full text-left px-4 py-3 hover:bg-slate-50"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          handleFieldChange("nivel", n);
+                          setShowNiveles(false);
+                        }}
+                      >
+                        {n}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )} */}
             {showNiveles && (
               <div className="absolute z-10 mt-1 w-full card p-0 overflow-hidden">
                 <ul className="max-h-56 overflow-auto">
                   {availableNiveles.length > 0 ? (
                     availableNiveles.map((n) => (
-                      <li key={n}>
+                      <li key={n.id}>
                         <button
                           className="w-full text-left px-4 py-3 hover:bg-slate-50"
                           onMouseDown={(e) => e.preventDefault()}
                           onClick={() => {
-                            setForm({ ...form, nivel: n });
+                            handleFieldChange("nivel", n.nombre_nivel);
                             setShowNiveles(false);
                           }}
                         >
-                          {n}
+                          {n.nombre_nivel}
                         </button>
                       </li>
                     ))
@@ -359,21 +503,24 @@ export default function EditEvaluadorModal({
                 </ul>
               </div>
             )}
-            {nivelErrMsg() && (
+            {errors.nivel && (
               <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
                 <ExclamationTriangleIcon className="w-4 h-4" />
-                {nivelErrMsg()}
+                {errors.nivel}
               </p>
             )}
           </div>
         </div>
-        {/* Acciones */}
         <div className="flex items-center justify-end gap-3 mt-7">
           <button className="btn btn-ghost" onClick={onClose}>
             Cancelar
           </button>
-          <button className="btn btn-cta" onClick={onSubmit}>
-            Actualizar
+          <button
+            className="btn btn-cta"
+            onClick={onSubmit}
+            disabled={submitting}
+          >
+            {submitting ? "Actualizando..." : "Actualizar"}
           </button>
         </div>
       </div>

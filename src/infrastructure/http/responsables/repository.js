@@ -1,4 +1,4 @@
-// src/infrastructure/http/responsables/repository.js
+// src/infrastructure/responsables/repository.js
 import api from "../../../lib/api";
 
 export const responsablesRepo = {
@@ -21,39 +21,29 @@ export const responsablesRepo = {
     await api.delete(`/responsable-academico/${id}`);
   },
 
-  async isEmailRegistered(email) {
-    if (!email) return false;
-    const res = await api.get(`/responsable-academico/check?field=correo&value=${encodeURIComponent(email)}`);
+  async isEmailRegistered(email, originalId = null) {
+  if (!email) return false;
+  try {
+    const url = `/responsable-academico/check?field=email&value=${encodeURIComponent(email)}${originalId ? `&excludeId=${originalId}` : ''}`;
+    const res = await api.get(url);
     return res.data.exists;
-  },
+  } catch (error) {
+    console.error("Error al verificar el correo:", error.response?.data || error.message);
+    return false; // o podrías devolver null si quieres diferenciar un error real de "no existe"
+  }
+},
 
-  async isPhoneRegistered(phone) {
+  async isPhoneRegistered(phone, originalId = null) {
     if (!phone) return false;
-    const res = await api.get(`/responsable-academico/check?field=telefono&value=${phone}`);
+    const url = `/responsable-academico/check?field=telefono&value=${phone}${originalId ? `&excludeId=${originalId}` : ''}`;
+    const res = await api.get(url);
     return res.data.exists;
   },
 
-  async isCIRegistered(ci) {
+  async isCIRegistered(ci, originalId = null) {
     if (!ci) return false;
-    const res = await api.get(`/responsable-academico/check?field=ci&value=${ci}`);
-    return res.data.exists;
-  },
-
- async isCIRegistered(ci) {
-    if (!ci) return false;
-    const res = await api.get(`/responsable-academico/check?field=ci&value=${ci}`);
-    return res.data.exists;
-  },
-
-  async isPhoneRegistered(phone) {
-    if (!phone) return false;
-    const res = await api.get(`/responsable-academico/check?field=telefono&value=${phone}`);
-    return res.data.exists;
-  },
-
-  async isEmailRegistered(email) {
-    if (!email) return false;
-    const res = await api.get(`/responsable-academico/check?field=correo&value=${encodeURIComponent(email)}`);
+    const url = `/responsable-academico/check?field=ci&value=${ci}${originalId ? `&excludeId=${originalId}` : ''}`;
+    const res = await api.get(url);
     return res.data.exists;
   },
 };

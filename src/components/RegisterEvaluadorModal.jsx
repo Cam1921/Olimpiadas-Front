@@ -1,4 +1,5 @@
 // src/components/RegisterEvaluadorModal.jsx
+
 import { useState, useEffect } from "react";
 import {
   XMarkIcon,
@@ -66,7 +67,6 @@ export default function RegisterEvaluadorModal({
     errors[field]
       ? "border-2 border-red-500 focus:border-red-500 focus:ring-red-300"
       : "";
-
   const getErrorMsg = (field) => errors[field] || null;
 
   return (
@@ -98,7 +98,14 @@ export default function RegisterEvaluadorModal({
             <input
               className={`input ${errClass("nombre")}`}
               value={form.nombre}
-              onChange={(e) => setField("nombre", e.target.value)}
+              onChange={(e) => {
+                // ✅ Solo letras, espacios, tildes y ñ
+                const cleaned = e.target.value.replace(
+                  /[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g,
+                  ""
+                );
+                setField("nombre", cleaned);
+              }}
               placeholder="ej: María"
             />
             {getErrorMsg("nombre") ? (
@@ -108,7 +115,7 @@ export default function RegisterEvaluadorModal({
               </p>
             ) : (
               <p className="text-xs text-slate-400 mt-1">
-                Debe tener al menos 4 letras.
+                Debe tener al menos 3 letras.
               </p>
             )}
           </div>
@@ -118,7 +125,14 @@ export default function RegisterEvaluadorModal({
             <input
               className={`input ${errClass("apellidos")}`}
               value={form.apellidos}
-              onChange={(e) => setField("apellidos", e.target.value)}
+              onChange={(e) => {
+                // ✅ Solo letras, espacios, tildes y ñ
+                const cleaned = e.target.value.replace(
+                  /[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g,
+                  ""
+                );
+                setField("apellidos", cleaned);
+              }}
               placeholder="ej: González Pérez"
             />
             {getErrorMsg("apellidos") ? (
@@ -128,7 +142,7 @@ export default function RegisterEvaluadorModal({
               </p>
             ) : (
               <p className="text-xs text-slate-400 mt-1">
-                Debe tener al menos 4 letras.
+                Debe tener al menos 3 letras.
               </p>
             )}
           </div>
@@ -138,8 +152,14 @@ export default function RegisterEvaluadorModal({
             <input
               className={`input ${errClass("correo")}`}
               value={form.correo}
-              onChange={(e) => setField("correo", e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value.length <= 70) {
+                  setField("correo", value);
+                }
+              }}
               placeholder="ej: maria@gmail.com"
+              maxLength={70} // Refuerzo visual
             />
             {getErrorMsg("correo") ? (
               <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
@@ -148,7 +168,7 @@ export default function RegisterEvaluadorModal({
               </p>
             ) : (
               <p className="text-xs text-slate-400 mt-1">
-                Debe contener "@" y ".com".
+                Debe contener "@" y ".com". Máximo 70 caracteres.
               </p>
             )}
           </div>
@@ -158,9 +178,11 @@ export default function RegisterEvaluadorModal({
             <input
               className={`input ${errClass("telefono")}`}
               value={form.telefono}
-              onChange={(e) =>
-                setField("telefono", e.target.value.replace(/\D/g, ""))
-              }
+              onChange={(e) => {
+                // ✅ Solo dígitos y máximo 8 caracteres
+                const cleaned = e.target.value.replace(/\D/g, "").slice(0, 8);
+                setField("telefono", cleaned);
+              }}
               placeholder="ej: 71234567"
             />
             {getErrorMsg("telefono") ? (
@@ -180,10 +202,11 @@ export default function RegisterEvaluadorModal({
             <input
               className={`input ${errClass("ci")}`}
               value={form.ci}
-              onChange={(e) =>
-                setField("ci", e.target.value.replace(/\D/g, ""))
-              }
-              placeholder="ej: 1234567"
+              onChange={(e) => {
+                const cleaned = e.target.value.replace(/\D/g, "").slice(0, 10);
+                setField("ci", cleaned);
+              }}
+              placeholder="ej: 12345678"
             />
             {getErrorMsg("ci") ? (
               <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
@@ -192,7 +215,7 @@ export default function RegisterEvaluadorModal({
               </p>
             ) : (
               <p className="text-xs text-slate-400 mt-1">
-                Entre 7 y 10 dígitos.
+                Entre 6 y 10 dígitos.
               </p>
             )}
           </div>

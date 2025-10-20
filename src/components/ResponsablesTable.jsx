@@ -29,7 +29,7 @@ export default function ResponsablesTable({ data = [], onEdit, onDelete }) {
           </thead>
 
           <tbody className="divide-y divide-slate-100">
-            {data.map((r, idx) => (
+            {data.map((r) => (
               <tr key={r.id} className="hover:bg-slate-50">
                 <td className="px-6 py-4">
                   {r.nombre} {r.apellidos}
@@ -45,7 +45,7 @@ export default function ResponsablesTable({ data = [], onEdit, onDelete }) {
                       className="text-cta hover:opacity-80"
                       title="Editar"
                       aria-label="Editar responsable"
-                      onClick={() => onEdit?.(r, idx)} // <-- IMPORTANTE: pasamos idx
+                      onClick={() => onEdit?.(r, r.id)} // <-- IMPORTANTE: pasamos idx
                     >
                       <PencilSquareIcon className="w-5 h-5" />
                     </button>

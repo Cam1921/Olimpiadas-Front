@@ -1,10 +1,10 @@
 // src/services/areas.js
 export const AREAS = [
-  "Química",
+  "Astronomía - Astrofísica",
   "Biología",
-  "Informática",
-  "Astronomía-Astrofísica",
   "Física",
-  "Robótica",
+  "Informática",
   "Matemáticas",
+  "Química",
+  "Robótica",
 ];
