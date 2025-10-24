@@ -31,7 +31,7 @@ export default function EvaluadorHome() {
       if (estado && estado !== "todos") params.estado_clasificado = estado;
 
       // Llamada al backend usando Axios
-      const response = await api.get("/evaluaciones/exportar", {
+      const response = await api.get("evaluador/evaluaciones/exportar", {
         params,
         responseType: "blob", // 👈 clave para que descargue binario (Excel)
       });
