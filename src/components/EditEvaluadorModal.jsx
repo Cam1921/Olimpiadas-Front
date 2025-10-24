@@ -270,16 +270,15 @@ export default function EditEvaluadorModal({
           {/* Correo */}
           <div className="md:col-span-2">
             <label className="label text-sm">Correo electrónico *</label>
-            <div className="relative">
-              <input
-                className={`input text-sm pr-9 ${errClass("correo")}`}
-                value={form.correo}
-                onChange={(e) => handleFieldChange("correo", e.target.value)}
-                placeholder="ej: maria@gmail.com"
-                maxLength={70}
-              />
-              <LockClosedIcon className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
-            </div>
+               <div className="relative">
+                <input
+                  className={`input text-sm ${errClass("correo")}`}
+                  value={form.correo}
+                  onChange={(e) => handleFieldChange("correo", e.target.value)}
+                  placeholder="ej: maria@gmail.com"
+                  maxLength={70}
+                />
+              </div>
             {errors.correo ? (
               <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
                 <ExclamationTriangleIcon className="w-4 h-4" />
