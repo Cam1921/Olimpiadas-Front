@@ -28,7 +28,7 @@ export default function EditEvaluadorModal({
   const [showAreas, setShowAreas] = useState(false);
   const [showNiveles, setShowNiveles] = useState(false);
   const [availableNiveles, setAvailableNiveles] = useState([]);
-  const [errors, setErrors] = useState({}); // ✅ Errores del backend + validación local
+  const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -48,7 +48,6 @@ export default function EditEvaluadorModal({
     }
   }, [open, initial]);
 
-  // ✅ Actualiza los niveles disponibles cuando cambia el área
   useEffect(() => {
     if (form.area) {
       const nivelesPorArea = getNivelesByArea(form.area);
@@ -62,21 +61,20 @@ export default function EditEvaluadorModal({
     }
   }, [form.area, takenAreas]);
 
-  // ✅ Validación en tiempo real (solo para formato, no para unicidad)
   const validateField = (name, value) => {
     switch (name) {
       case 'nombre':
       case 'apellidos':
         if (!value.trim()) return 'Este campo es obligatorio.';
-        if (value.trim().length < 2) return 'Mínimo 2 caracteres.';
+        if (value.trim().length < 3) return 'Debe tener al menos 3 caracteres.';
         if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(value.trim())) return 'Solo letras, espacios, tildes y ñ.';
         return null;
       case 'correo':
-  if (!value.trim()) return 'El correo es obligatorio.';
-  if (value.length > 70) return 'El correo no debe exceder los 70 caracteres.';
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Formato de correo inválido.';
-  if (!value.endsWith('.com')) return 'El dominio debe terminar en ".com".';
-  return null;
+        if (!value.trim()) return 'El correo es obligatorio.';
+        if (value.length > 70) return 'El correo no debe exceder los 70 caracteres.';
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Formato de correo inválido.';
+        if (!value.endsWith('.com')) return 'El dominio debe terminar en ".com".';
+        return null;
       case 'telefono':
         const cleanTel = value.replace(/\D/g, '');
         if (!value.trim()) return 'El teléfono es obligatorio.';
@@ -99,30 +97,48 @@ export default function EditEvaluadorModal({
     }
   };
 
-  const handleFieldChange = (name, value) => {
-    setForm(prev => ({ ...prev, [name]: value }));
-    // Limpiar error del campo al editar
-    if (errors[name]) {
-      setErrors(prev => {
-        const { [name]: _, ...rest } = prev;
-        return rest;
-      });
+  const handleFieldChange = (name, rawValue) => {
+    let value = rawValue;
+
+    // Aplicar limpieza según el campo
+    if (name === 'nombre' || name === 'apellidos') {
+      value = rawValue.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+    } else if (name === 'telefono') {
+      value = rawValue.replace(/\D/g, '').slice(0, 8);
+    } else if (name === 'ci') {
+      value = rawValue.replace(/\D/g, '').slice(0, 10);
+    } else if (name === 'correo') {
+      if (rawValue.length > 70) return; // no permitir más de 70
+      value = rawValue;
     }
+
+    setForm(prev => ({ ...prev, [name]: value }));
+
+    // Validar en tiempo real
+    const err = validateField(name, value);
+    setErrors(prev => {
+      const { [name]: _, ...rest } = prev;
+      if (err) {
+        return { ...rest, [name]: err };
+      }
+      return rest;
+    });
   };
 
-  const errClass = (field) => errors[field] ? "border-2 border-red-500 focus:border-red-500 focus:ring-red-300" : "";
+  const errClass = (field) =>
+    errors[field]
+      ? "border-2 border-red-500 focus:border-red-500 focus:ring-red-300"
+      : "";
 
   const onSubmit = async () => {
     setSubmitting(true);
 
-    // Validación local de formato
     const localErrors = {};
     for (const [key, value] of Object.entries(form)) {
       const err = validateField(key, value);
       if (err) localErrors[key] = err;
     }
 
-    // Validación de combinación área+nivel
     const combinationExists = takenAreas.some(a => 
       a.area === form.area && a.nivel === form.nivel && 
       !(initial?.area === form.area && initial?.nivel === form.nivel)
@@ -148,22 +164,16 @@ export default function EditEvaluadorModal({
         nivel: form.nivel,
       };
 
-      console.log('Enviando datos a /api/evaluador/', initial.id, payload);
-
       const response = await fetch(`/api/evaluador/${initial.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
 
-      console.log('Respuesta del servidor:', response.status, response.statusText);
-
       const data = await response.json();
-      console.log('Datos recibidos:', data);
 
       if (!response.ok) {
         if (response.status === 422 && data.errors) {
-          // ✅ Mostrar errores del backend EXACTAMENTE como en el registro
           setErrors(data.errors);
         } else {
           setErrors({ general: data.message || 'Error al actualizar el evaluador.' });
@@ -172,12 +182,9 @@ export default function EditEvaluadorModal({
         return;
       }
 
-      // Éxito
       if (onUpdate) onUpdate(data.data);
       onClose();
-
     } catch (err) {
-      console.error('Error de red o servidor:', err);
       setErrors({ general: 'Error de conexión. Inténtalo más tarde.' });
       setSubmitting(false);
     }
@@ -186,25 +193,29 @@ export default function EditEvaluadorModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
-      <div className="relative card w-[720px] p-8">
-        <button className="absolute right-4 top-4 text-slate-400 hover:text-slate-600" onClick={onClose}>
-          <XMarkIcon className="w-6 h-6" />
+      <div className="relative card w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6">
+        <button
+          className="absolute right-4 top-4 text-slate-400 hover:text-slate-600 z-10"
+          onClick={onClose}
+        >
+          <XMarkIcon className="w-5 h-5" />
         </button>
-        <h2 className="text-4xl md:text-5xl font-semibold text-primary leading-tight">
+
+        <h2 className="text-2xl md:text-3xl font-semibold text-primary leading-tight">
           Editar Evaluador
         </h2>
-        <p className="text-slate-500 mt-2">Actualiza los datos del evaluador</p>
+        <p className="text-slate-500 mt-1 text-sm">
+          Actualiza los datos del evaluador
+        </p>
 
-        {/* ✅ Mensaje de error general */}
         {errors.general && (
           <div className="bg-red-50 border-l-4 border-red-500 p-3 mb-4 rounded">
             <p className="text-red-700 text-sm font-medium">⚠️ {errors.general}</p>
           </div>
         )}
 
-        {/* ✅ Mensaje de error de campos específicos */}
         {Object.keys(errors).some(k => k !== 'general') && !errors.general && (
           <div className="bg-red-50 border-l-4 border-red-500 p-3 mb-4 rounded">
             <p className="text-red-700 text-sm font-medium">
@@ -213,114 +224,139 @@ export default function EditEvaluadorModal({
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-5 mt-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
           {/* Nombre */}
           <div>
-            <label className="label">Nombre *</label>
+            <label className="label text-sm">Nombre *</label>
             <input
-              className={`input ${errClass("nombre")}`}
+              className={`input text-sm ${errClass("nombre")}`}
               value={form.nombre}
               onChange={(e) => handleFieldChange("nombre", e.target.value)}
+              placeholder="ej: María"
             />
-            {errors.nombre && (
+            {errors.nombre ? (
               <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
                 <ExclamationTriangleIcon className="w-4 h-4" />
                 {errors.nombre}
               </p>
+            ) : (
+              <p className="text-xs text-slate-400 mt-1">
+                Debe tener al menos 3 caracteres. Solo letras, espacios, tildes y ñ.
+              </p>
             )}
           </div>
+
           {/* Apellidos */}
           <div>
-            <label className="label">Apellidos *</label>
+            <label className="label text-sm">Apellidos *</label>
             <input
-              className={`input ${errClass("apellidos")}`}
+              className={`input text-sm ${errClass("apellidos")}`}
               value={form.apellidos}
               onChange={(e) => handleFieldChange("apellidos", e.target.value)}
+              placeholder="ej: González Pérez"
             />
-            {errors.apellidos && (
+            {errors.apellidos ? (
               <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
                 <ExclamationTriangleIcon className="w-4 h-4" />
                 {errors.apellidos}
               </p>
+            ) : (
+              <p className="text-xs text-slate-400 mt-1">
+                Debe tener al menos 3 caracteres. Solo letras, espacios, tildes y ñ.
+              </p>
             )}
           </div>
+
           {/* Correo */}
-<div className="col-span-2">
-  <label className="label">Correo electrónico *</label>
-  <div className="relative">
-    <input
-      className={`input pr-10 ${errClass("correo")}`}
-      value={form.correo}
-      onChange={(e) => {
-        const value = e.target.value;
-        if (value.length <= 70) {
-          handleFieldChange("correo", value);
-        }
-      }}
-      maxLength={70}
-    />
-    <LockClosedIcon className="w-5 h-5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
-  </div>
-  {errors.correo && (
-    <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
-      <ExclamationTriangleIcon className="w-4 h-4" />
-      {errors.correo}
-    </p>
-  )}
-</div>
+          <div className="md:col-span-2">
+            <label className="label text-sm">Correo electrónico *</label>
+            <div className="relative">
+              <input
+                className={`input text-sm pr-9 ${errClass("correo")}`}
+                value={form.correo}
+                onChange={(e) => handleFieldChange("correo", e.target.value)}
+                placeholder="ej: maria@gmail.com"
+                maxLength={70}
+              />
+              <LockClosedIcon className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
+            </div>
+            {errors.correo ? (
+              <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
+                <ExclamationTriangleIcon className="w-4 h-4" />
+                {errors.correo}
+              </p>
+            ) : (
+              <p className="text-xs text-slate-400 mt-1">
+                Debe contener "@" y ".com". Máximo 70 caracteres.
+              </p>
+            )}
+          </div>
+
           {/* Teléfono */}
           <div>
-            <label className="label">Teléfono *</label>
+            <label className="label text-sm">Teléfono *</label>
             <input
-              className={`input ${errClass("telefono")}`}
+              className={`input text-sm ${errClass("telefono")}`}
               value={form.telefono}
-              onChange={(e) => handleFieldChange("telefono", e.target.value.replace(/\D/g, ''))}
+              onChange={(e) => handleFieldChange("telefono", e.target.value)}
+              placeholder="ej: 71234567"
             />
-            {errors.telefono && (
+            {errors.telefono ? (
               <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
                 <ExclamationTriangleIcon className="w-4 h-4" />
                 {errors.telefono}
               </p>
+            ) : (
+              <p className="text-xs text-slate-400 mt-1">
+                8 dígitos, empieza con 6 o 7.
+              </p>
             )}
           </div>
+
           {/* CI */}
           <div>
-            <label className="label">CI *</label>
+            <label className="label text-sm">CI *</label>
             <input
-              className={`input ${errClass("ci")}`}
+              className={`input text-sm ${errClass("ci")}`}
               value={form.ci}
-              onChange={(e) => handleFieldChange("ci", e.target.value.replace(/\D/g, '').slice(0, 12))}
+              onChange={(e) => handleFieldChange("ci", e.target.value)}
+              placeholder="ej: 1234567"
             />
-            {errors.ci && (
+            {errors.ci ? (
               <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
                 <ExclamationTriangleIcon className="w-4 h-4" />
                 {errors.ci}
               </p>
+            ) : (
+              <p className="text-xs text-slate-400 mt-1">
+                Entre 6 y 10 dígitos.
+              </p>
             )}
           </div>
+
           {/* Área */}
-          <div className="relative">
-            <label className="label">Área *</label>
+          <div className="relative md:col-span-2">
+            <label className="label text-sm">Área *</label>
             <button
               type="button"
               onClick={() => setShowAreas(v => !v)}
-              className={`input flex items-center justify-between ${errClass("area")}`}
+              className={`input text-sm flex items-center justify-between ${errClass("area")}`}
             >
               <span className={form.area ? "text-slate-900" : "text-slate-400"}>
                 {form.area || "Selecciona un área"}
               </span>
-              <ChevronDownIcon className="w-5 h-5 text-slate-400" />
+              <ChevronDownIcon className="w-4 h-4 text-slate-400" />
             </button>
             {showAreas && (
-              <div className="absolute z-10 mt-1 w-full card p-0 overflow-hidden">
-                <ul className="max-h-56 overflow-auto">
+              <div className="absolute z-10 mt-1 w-full max-h-48 overflow-auto card p-0 shadow-lg">
+                <ul>
                   {AREAS.filter(area => {
                     if (initial?.area === area) return true;
                     return !isAreaCompleta(area, takenAreas);
                   }).map(a => (
                     <li key={a}>
                       <button
-                        className="w-full text-left px-4 py-3 hover:bg-slate-50"
+                        className="w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50"
                         onMouseDown={e => e.preventDefault()}
                         onClick={() => {
                           handleFieldChange("area", a);
@@ -341,27 +377,28 @@ export default function EditEvaluadorModal({
               </p>
             )}
           </div>
+
           {/* Nivel */}
-          <div className="relative">
-            <label className="label">Nivel *</label>
+          <div className="relative md:col-span-2">
+            <label className="label text-sm">Nivel *</label>
             <button
               type="button"
               onClick={() => setShowNiveles(v => !v)}
-              className={`input flex items-center justify-between ${errClass("nivel")}`}
+              className={`input text-sm flex items-center justify-between ${errClass("nivel")}`}
               disabled={!form.area}
             >
               <span className={form.nivel ? "text-slate-900" : "text-slate-400"}>
                 {form.nivel || (form.area ? "Selecciona un nivel" : "Primero selecciona un área")}
               </span>
-              <ChevronDownIcon className="w-5 h-5 text-slate-400" />
+              <ChevronDownIcon className="w-4 h-4 text-slate-400" />
             </button>
             {showNiveles && (
-              <div className="absolute z-10 mt-1 w-full card p-0 overflow-hidden">
-                <ul className="max-h-56 overflow-auto">
+              <div className="absolute z-10 mt-1 w-full max-h-48 overflow-auto card p-0 shadow-lg">
+                <ul>
                   {availableNiveles.map(n => (
                     <li key={n}>
                       <button
-                        className="w-full text-left px-4 py-3 hover:bg-slate-50"
+                        className="w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50"
                         onMouseDown={e => e.preventDefault()}
                         onClick={() => {
                           handleFieldChange("nivel", n);
@@ -383,9 +420,16 @@ export default function EditEvaluadorModal({
             )}
           </div>
         </div>
-        <div className="flex items-center justify-end gap-3 mt-7">
-          <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
-          <button className="btn btn-cta" onClick={onSubmit} disabled={submitting}>
+
+        <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 mt-6">
+          <button className="btn btn-ghost w-full sm:w-auto" onClick={onClose}>
+            Cancelar
+          </button>
+          <button
+            className="btn btn-cta w-full sm:w-auto"
+            onClick={onSubmit}
+            disabled={submitting}
+          >
             {submitting ? "Actualizando..." : "Actualizar"}
           </button>
         </div>
@@ -393,4 +437,3 @@ export default function EditEvaluadorModal({
     </div>
   );
 }
-
