@@ -9,6 +9,9 @@ import GestionInscripciones from "./pages/dashboard/gestionInscripciones/Gestion
 import RoleIndexRedirect from "@/pages/dashboard/RoleIndexRedirect";
 import InformacionPersonal from "@/pages/dashboard/informacionPersonal/InformacionPersonal";
 
+import TestControlFases from "./pages/TestControlFases";
+import TestFlujoPublicacion from "./pages/TestFlujoPublicacion.jsx";
+
 import ResponsablesAcademicos from "./pages/ResponsablesAcademicos";
 import Evaluadores from "./pages/Evaluadores";
 // 👇 Importa la página del evaluador en la ruta real (dentro de /pages)
@@ -58,7 +61,11 @@ export default function App() {
       <Route path="/responsables-test" element={<ResponsablesAcademicos />} />
 
       <Route path="/evaluadores-test" element={<Evaluadores />} />
+  
       <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="/test-control-fases" element={<TestControlFases />} />
+<Route path="/test-flujo-publicacion" element={<TestFlujoPublicacion />} />
+
     </Routes>
   );
 }
