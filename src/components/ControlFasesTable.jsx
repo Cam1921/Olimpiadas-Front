@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { EyeIcon } from '@heroicons/react/24/outline';
 import ConfirmationModal from './ConfirmationModal';
 import SuccessDialog from './SuccessDialog';
-import VistaPreviaFase from './VistaPreviaFase'; // 👈 nuevo
+import VistaPreviaFase from './VistaPreviaFase';
 
 async function verificarCalificacionesCompletas(areaId) {
   console.log("Verificando calificaciones para el área:", areaId);
@@ -18,7 +18,7 @@ export default function ControlFasesTable({ areas = [], rolUsuario, onEstadoActu
   const [mensajeModal, setMensajeModal] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
-  const [vistaPreviaFase, setVistaPreviaFase] = useState(null); // 👈 nuevo estado
+  const [vistaPreviaFase, setVistaPreviaFase] = useState(null);
 
   const esAdmin = rolUsuario === 'Administrador';
 
@@ -122,122 +122,133 @@ export default function ControlFasesTable({ areas = [], rolUsuario, onEstadoActu
   };
 
   return (
-    <div className="overflow-x-auto">
+    <div className="space-y-4">
+      {/* 👇 Título y subtítulo según tu mockup */}
+      <div>
+        <h1 className="text-2xl font-bold text-slate-800 leading-tight">
+          Estado de Fases por Área
+        </h1>
+        <p className="text-sm text-slate-500 mt-1">
+          Gestión de confirmaciones y exportación de certificados por área y nivel
+        </p>
+      </div>
+
       {error && (
         <div className="bg-red-50 border-l-4 border-red-500 p-3 mb-4 rounded text-sm text-red-700">
           {error}
         </div>
       )}
 
-      <table className="min-w-full divide-y divide-slate-200">
-        <thead className="bg-slate-50">
-          <tr>
-            <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Área / Nivel</th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Fase actual</th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Progreso</th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Clasificación</th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Responsable</th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Estado</th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Acciones</th>
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-slate-200">
-          {areas.map(area => (
-            <tr key={area.id} className="hover:bg-slate-50">
-              <td className="px-4 py-3">
-                <div className="font-medium">{area.nombre}</div>
-                <div className="text-sm text-slate-500">{area.nivel}</div>
-              </td>
-              <td className="px-4 py-3">
-                <span className="px-2 py-0.5 text-xs bg-indigo-100 text-indigo-800 rounded">
-                  {area.faseActual}
-                </span>
-              </td>
-              <td className="px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-16 bg-slate-200 rounded-full h-2">
-                    <div
-                      className="bg-blue-600 h-2 rounded-full"
-                      style={{ width: `${area.progreso}%` }}
-                    ></div>
-                  </div>
-                  <span className="text-xs">{area.progreso}%</span>
-                </div>
-              </td>
-              <td className="px-4 py-3 text-xs">
-                <div>✅ {area.clasificados}</div>
-                <div>❌ {area.noClasificados}</div>
-                <div>🚫 {area.descalificados}</div>
-              </td>
-              <td className="px-4 py-3">{area.responsable}</td>
-              <td className="px-4 py-3">
-                <span className={`px-2 py-0.5 text-xs rounded-full ${getColorChip(area.estado)}`}>
-                  {area.estado}
-                </span>
-              </td>
-              <td className="px-4 py-3">
-                <div className="flex items-center gap-1">
-                  {/* 👁️ Botón de vista previa */}
-                  <button
-                    className="btn btn-ghost btn-sm"
-                    onClick={() => setVistaPreviaFase(area)}
-                    title="Ver detalles de la fase"
-                  >
-                    <EyeIcon className="w-4 h-4" />
-                  </button>
-
-                  {esAdmin && area.estado === 'En evaluación' && (
-                    <button
-                      className="btn btn-success btn-sm"
-                      onClick={() => handleConcluir(area)}
-                      disabled={loadingArea === area.id}
-                    >
-                      {loadingArea === area.id ? '...' : 'Concluir'}
-                    </button>
-                  )}
-
-                  {esAdmin && area.estado === 'Concluido' && (
-                    <button
-                      className="btn btn-purple btn-sm"
-                      onClick={() => handleConfirmar(area)}
-                      disabled={loadingArea === area.id}
-                    >
-                      {loadingArea === area.id ? '...' : 'Confirmar'}
-                    </button>
-                  )}
-
-                  {esAdmin && area.estado === 'Confirmado' && (
-                    <>
-                      <button
-                        className="btn btn-info btn-sm"
-                        onClick={() => {
-                          alert("Vista previa de certificados en desarrollo.");
-                        }}
-                      >
-                        Certificados
-                      </button>
-                      <button
-                        className="btn btn-outline btn-sm"
-                        onClick={() => handlePublicar(area)}
-                        disabled={loadingArea === area.id}
-                      >
-                        {loadingArea === area.id ? '...' : 'Publicar'}
-                      </button>
-                      <button
-                        className="btn btn-outline btn-sm"
-                        onClick={() => handleCerrar(area)}
-                        disabled={loadingArea === area.id}
-                      >
-                        {loadingArea === area.id ? '...' : 'Cerrar'}
-                      </button>
-                    </>
-                  )}
-                </div>
-              </td>
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-slate-200">
+          <thead className="bg-slate-50">
+            <tr>
+              <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Área / Nivel</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Fase actual</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Progreso</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Clasificación</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Responsable</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Estado</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">Acciones</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="bg-white divide-y divide-slate-200">
+            {areas.map(area => (
+              <tr key={area.id} className="hover:bg-slate-50">
+                <td className="px-4 py-3">
+                  <div className="font-medium">{area.nombre}</div>
+                  <div className="text-sm text-slate-500">{area.nivel}</div>
+                </td>
+                <td className="px-4 py-3">
+                  <span className="px-2 py-0.5 text-xs bg-indigo-100 text-indigo-800 rounded">
+                    {area.faseActual}
+                  </span>
+                </td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-16 bg-slate-200 rounded-full h-2">
+                      <div
+                        className="bg-blue-600 h-2 rounded-full"
+                        style={{ width: `${area.progreso}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-xs">{area.progreso}%</span>
+                  </div>
+                </td>
+                <td className="px-4 py-3 text-xs">
+                  <div>✅ {area.clasificados}</div>
+                  <div>❌ {area.noClasificados}</div>
+                  <div>🚫 {area.descalificados}</div>
+                </td>
+                <td className="px-4 py-3">{area.responsable}</td>
+                <td className="px-4 py-3">
+                  <span className={`px-2 py-0.5 text-xs rounded-full ${getColorChip(area.estado)}`}>
+                    {area.estado}
+                  </span>
+                </td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-1">
+                    <button
+                      className="btn btn-ghost btn-sm"
+                      onClick={() => setVistaPreviaFase(area)}
+                      title="Ver detalles de la fase"
+                    >
+                      <EyeIcon className="w-4 h-4" />
+                    </button>
+
+                    {esAdmin && area.estado === 'En evaluación' && (
+                      <button
+                        className="btn btn-success btn-sm"
+                        onClick={() => handleConcluir(area)}
+                        disabled={loadingArea === area.id}
+                      >
+                        {loadingArea === area.id ? '...' : 'Concluir'}
+                      </button>
+                    )}
+
+                    {esAdmin && area.estado === 'Concluido' && (
+                      <button
+                        className="btn btn-purple btn-sm"
+                        onClick={() => handleConfirmar(area)}
+                        disabled={loadingArea === area.id}
+                      >
+                        {loadingArea === area.id ? '...' : 'Confirmar'}
+                      </button>
+                    )}
+
+                    {esAdmin && area.estado === 'Confirmado' && (
+                      <>
+                        <button
+                          className="btn btn-info btn-sm"
+                          onClick={() => {
+                            alert("Vista previa de certificados en desarrollo.");
+                          }}
+                        >
+                          Certificados
+                        </button>
+                        <button
+                          className="btn btn-outline btn-sm"
+                          onClick={() => handlePublicar(area)}
+                          disabled={loadingArea === area.id}
+                        >
+                          {loadingArea === area.id ? '...' : 'Publicar'}
+                        </button>
+                        <button
+                          className="btn btn-outline btn-sm"
+                          onClick={() => handleCerrar(area)}
+                          disabled={loadingArea === area.id}
+                        >
+                          {loadingArea === area.id ? '...' : 'Cerrar'}
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       {/* Modales */}
       <ConfirmationModal

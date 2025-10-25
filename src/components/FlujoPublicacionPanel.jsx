@@ -1,12 +1,12 @@
 // src/components/FlujoPublicacionPanel.jsx
 import { useState } from 'react';
 import { PrinterIcon, ArrowUpTrayIcon } from '@heroicons/react/24/outline';
-import VistaPreviaCertificados from './VistaPreviaCertificados'; // 👈 único componente
+import VistaPreviaCertificados from './VistaPreviaCertificados';
 import ConfirmationModal from './ConfirmationModal';
 import SuccessDialog from './SuccessDialog';
 
 export default function FlujoPublicacionPanel({ areas = [] }) {
-  const [vistaPrevia, setVistaPrevia] = useState(null); // { area, isGlobal, competidores }
+  const [vistaPrevia, setVistaPrevia] = useState(null);
   const [showConfirmPublicar, setShowConfirmPublicar] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
@@ -45,52 +45,45 @@ export default function FlujoPublicacionPanel({ areas = [] }) {
   };
 
   const handleImprimirGlobal = () => {
-    // Simula competidores de todas las áreas confirmadas
-    const competidores = [];
-    areasConfirmadas.forEach(area => {
-      competidores.push({
-        nombre: "Juan Pérez López",
-        area: area.nombre,
-      });
-      competidores.push({
-        nombre: "María González",
-        area: area.nombre,
-      });
-    });
-
-    setVistaPrevia({
-      areaNombre: 'Todos los certificados',
-      isGlobal: true,
-      competidores: competidores,
-    });
-  };
-
-  const handleImprimirArea = (area) => {
-    setVistaPrevia({
-      areaNombre: area.nombre,
-      isGlobal: false,
-      competidores: [], // o puedes pasar competidores reales si los tienes
-    });
+    // Simulamos una "área" global para imprimir todos los certificados
+    const areaGlobal = {
+      id: 'global',
+      nombre: 'Todos los certificados',
+      estado: 'Confirmado',
+    };
+    setVistaPrevia(areaGlobal);
   };
 
   return (
     <div className="space-y-4">
-      {/* Botones globales */}
-      <div className="flex gap-3">
-        <button
-          className={`btn btn-outline flex items-center gap-2 ${!hayAreasConfirmadas ? 'opacity-50 cursor-not-allowed' : ''}`}
-          onClick={handleImprimirGlobal}
-          disabled={!hayAreasConfirmadas}
-        >
-          <PrinterIcon className="w-4 h-4" /> Imprimir certificados
-        </button>
-        <button
-          className={`btn btn-primary flex items-center gap-2 ${!hayAreasConfirmadas ? 'opacity-50 cursor-not-allowed' : ''}`}
-          onClick={handlePublicar}
-          disabled={!hayAreasConfirmadas}
-        >
-          <ArrowUpTrayIcon className="w-4 h-4" /> Publicar resultados
-        </button>
+      {/* 👇 Título y subtítulo según tu mockup */}
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800 leading-tight">
+            Flujo y Publicación por Área
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">
+            Cambia el estado para habilitar impresión y publicación
+          </p>
+        </div>
+
+        {/* Botones globales en la esquina superior derecha */}
+        <div className="flex gap-3">
+          <button
+            className={`btn btn-outline flex items-center gap-2 ${!hayAreasConfirmadas ? 'opacity-50 cursor-not-allowed' : ''}`}
+            onClick={handleImprimirGlobal}
+            disabled={!hayAreasConfirmadas}
+          >
+            <PrinterIcon className="w-4 h-4" /> Imprimir certificados
+          </button>
+          <button
+            className={`btn btn-primary flex items-center gap-2 ${!hayAreasConfirmadas ? 'opacity-50 cursor-not-allowed' : ''}`}
+            onClick={handlePublicar}
+            disabled={!hayAreasConfirmadas}
+          >
+            <ArrowUpTrayIcon className="w-4 h-4" /> Publicar resultados
+          </button>
+        </div>
       </div>
 
       {/* Tarjetas por área */}
@@ -103,6 +96,7 @@ export default function FlujoPublicacionPanel({ areas = [] }) {
                 {area.estado}
               </span>
             </div>
+
             <div className="mt-3 space-y-2">
               <button
                 className={`w-full py-2 text-sm rounded-md border ${getButtonClass(area.estado, 'En evaluación')}`}
@@ -124,11 +118,11 @@ export default function FlujoPublicacionPanel({ areas = [] }) {
               </button>
             </div>
 
-            {/* Botón de imprimir por área */}
+            {/* Botón de imprimir por área (solo si está confirmado) */}
             {area.estado === 'Confirmado' && (
               <button
                 className="mt-3 w-full btn btn-outline btn-sm"
-                onClick={() => handleImprimirArea(area)}
+                onClick={() => setVistaPrevia(area)}
               >
                 🖨️ Imprimir certificados
               </button>
@@ -137,13 +131,13 @@ export default function FlujoPublicacionPanel({ areas = [] }) {
         ))}
       </div>
 
-      {/* Modal de vista previa (único componente) */}
+      {/* Modal de vista previa */}
       <VistaPreviaCertificados
         open={!!vistaPrevia}
         onClose={() => setVistaPrevia(null)}
-        areaNombre={vistaPrevia?.areaNombre || "Área"}
-        isGlobal={vistaPrevia?.isGlobal || false}
-        competidores={vistaPrevia?.competidores || []}
+        areaNombre={vistaPrevia?.nombre || "Área"}
+        isGlobal={vistaPrevia?.id === 'global'}
+        competidores={[]} // Puedes pasar competidores reales más adelante
       />
 
       {/* Modal de confirmación para publicar */}
