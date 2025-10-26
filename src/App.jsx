@@ -14,15 +14,14 @@ import TestFlujoPublicacion from "./pages/TestFlujoPublicacion.jsx";
 
 import ResponsablesAcademicos from "./pages/ResponsablesAcademicos";
 import Evaluadores from "./pages/Evaluadores";
-// 👇 Importa la página del evaluador en la ruta real (dentro de /pages)
 import EvaluadorHome from "./pages/dashboard/evaluador/pages/EvaluadorHome.jsx";
+import EntornoFinal from './components/EntornoFinal.jsx';
+import OfficialListPage from './components/OfficialListPage';
 
 export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
-
-      {/* Ruta directa para probar Evaluador SIN login */}
 
       <Route
         path="/dashboard"
@@ -32,40 +31,26 @@ export default function App() {
           </ProtectedRoute>
         }
       >
-        {/* index decide a dónde ir según rol */}
         <Route index element={<RoleIndexRedirect />} />
-        {/* Admin */}
         <Route path="panel-principal" element={<PanelPrincipal />} />
         <Route path="gestion-roles" element={<ResponsablesAcademicos />} />
         <Route path="evaluadores" element={<Evaluadores />} />
         <Route path="registrar-notas" element={<EvaluadorHome />} />
-        <Route
-          path="gestion-inscripciones"
-          element={<GestionInscripciones />}
-        />
-
-        {/* Evaluador / Responsable (comparten la misma vista) */}
+        <Route path="gestion-inscripciones" element={<GestionInscripciones />} />
         <Route path="informacion-personal" element={<InformacionPersonal />} />
-        {/* (más adelante puedes añadir:)
-            <Route path="registrar-notas" element={<RegistrarNotas />} />
-            <Route path="clasificacion" element={<Clasificacion />} />
-            <Route path="control-fases-area" element={<ControlFasesArea />} />
-            <Route path="reportes-area" element={<ReportesArea />} />
-        */}
-        <Route
-          path="gestion-inscripciones"
-          element={<GestionInscripciones />}
-        />
       </Route>
 
+      {/* Rutas de prueba (accesibles sin login) */}
       <Route path="/responsables-test" element={<ResponsablesAcademicos />} />
-
       <Route path="/evaluadores-test" element={<Evaluadores />} />
-  
-      <Route path="*" element={<Navigate to="/" replace />} />
-          <Route path="/test-control-fases" element={<TestControlFases />} />
-<Route path="/test-flujo-publicacion" element={<TestFlujoPublicacion />} />
+      <Route path="/test-control-fases" element={<TestControlFases />} />
+      <Route path="/test-flujo-publicacion" element={<TestFlujoPublicacion />} />
 
+      {/* 🔹 Rutas para Entorno Final y Lista Oficial (pruebas visuales) */}
+      <Route path="/entorno-final" element={<EntornoFinal />} />
+      <Route path="/lista-oficial" element={<OfficialListPage />} />
+
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
