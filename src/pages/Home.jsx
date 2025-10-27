@@ -102,10 +102,10 @@ export default function Home() {
             Presentación
           </h2>
           <p className="mx-auto max-w-4xl text-center text-ink/70 leading-relaxed">
-            El Comité de la Olimpiadas Científica Nacional San Simón O! SANSi, a
+            El Comité de la Olimpiadas Científica Nacional San Simón Oh! SanSi, a
             través de la Facultad de Ciencias y Tecnología de la Universidad
             Mayor de San Simón, convoca a los estudiantes del Sistema de
-            Educación Regular a participar en las Olimpiadas O! SANSi 2025.
+            Educación Regular a participar en las Olimpiadas Oh! SanSi 2025.
           </p>
 
           <h2 className="text-center text-2xl md:text-3xl font-semibold text-ink mt-14 mb-6">

@@ -1,7 +1,7 @@
 // src/components/SideMenu.jsx
 import { NavLink } from "react-router-dom";
 import { BiHome,BiCategoryAlt } from "react-icons/bi";
-import { GoPeople } from "react-icons/go";
+import { GoPeople, GoMail } from "react-icons/go";
 import {
   HiOutlineUserGroup,
   HiAcademicCap,
@@ -30,6 +30,7 @@ const ICONS = {
   LuFileCheck,
   ImSphere,
   IoTimeOutline,
+  GoMail,
 };
 
 const WIDTH_EXPANDED = 260;
