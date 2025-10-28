@@ -13,6 +13,7 @@ import ResponsablesAcademicos from "./pages/ResponsablesAcademicos";
 import Evaluadores from "./pages/Evaluadores";
 // 👇 Importa la página del evaluador en la ruta real (dentro de /pages)
 import EvaluadorHome from "./pages/dashboard/evaluador/pages/EvaluadorHome.jsx";
+import NotificacionesPage from "@/pages/dashboard/notificaciones/NotificacionesPage";
 
 export default function App() {
   return (
@@ -34,6 +35,7 @@ export default function App() {
         {/* Admin */}
         <Route path="panel-principal" element={<PanelPrincipal />} />
         <Route path="gestion-roles" element={<ResponsablesAcademicos />} />
+        <Route path="notificaciones" element={<NotificacionesPage />} />
         <Route path="evaluadores" element={<Evaluadores />} />
         <Route path="registrar-notas" element={<EvaluadorHome />} />
         <Route

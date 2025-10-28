@@ -1,0 +1,79 @@
+// src/pages/dashboard/notificaciones/components/DetailsModal.jsx
+import { X } from "lucide-react";
+import StatusBadge from "./StatusBadge";
+
+export default function DetailsModal({ open, onClose, item }) {
+  if (!open || !item) return null;
+
+  const fmt = (iso) =>
+    new Date(iso).toLocaleString([], {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+  return (
+    <div className="fixed inset-0 z-50" > 
+      {/* 🔵 Backdrop con blur (compatibilidad usando supports-variant) */}
+      <div
+        className="absolute inset-0 bg-black/30 supports-[backdrop-filter:blur(0)]:bg-black/20 backdrop-blur-sm md:backdrop-blur-md transition"
+        onClick={onClose}
+      />
+      <div className="relative mx-auto mt-16 w-[680px] rounded-2xl bg-white shadow-2xl p-6">
+        <button
+          className="absolute right-4 top-4 text-gray-500 hover:text-gray-700"
+          onClick={onClose}
+          aria-label="Cerrar"
+        >
+          <X size={18} />
+        </button>
+
+        <h3 className="text-2xl font-semibold text-gray-900">Detalles del envío</h3>
+        <p className="text-gray-500 mt-1">Información completa sobre el correo enviado</p>
+
+        <div className="grid grid-cols-2 gap-6 mt-6">
+          <div>
+            <p className="text-xs text-gray-500">Usuario</p>
+            <p className="font-medium">{item.usuario}</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500">Correo</p>
+            <p className="font-medium">{item.correo}</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500">Fecha/hora</p>
+            <p className="font-medium">{fmt(item.fechaEnvio)}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <p className="text-xs text-gray-500">Estado</p>
+            <StatusBadge value={item.estado} />
+          </div>
+        </div>
+
+        <div className="mt-6 rounded-lg border p-4">
+          <p className="text-sm text-gray-600">
+            <span className="font-medium">Respuesta del servidor:</span>{" "}
+            {item.respuesta}
+          </p>
+          {item.motivoFallo && (
+            <div className="mt-3 rounded-md bg-red-50 border border-red-200 p-3 text-red-700 text-sm">
+              <span className="font-medium">Motivo del fallo:</span>{" "}
+              {item.motivoFallo}
+            </div>
+          )}
+        </div>
+
+        <div className="mt-6 flex items-center justify-end gap-3">
+          <button className="px-4 py-2 rounded-xl border border-gray-200 hover:bg-gray-50" onClick={onClose}>
+            Cerrar
+          </button>
+          <button className="px-4 py-2 rounded-xl text-white bg-blue-600 hover:bg-blue-700">
+            Reenviar correo
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
