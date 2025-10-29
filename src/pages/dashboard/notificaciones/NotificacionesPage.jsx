@@ -14,12 +14,7 @@ import DetailsModal from "./components/DetailsModal";
 import { useNotificaciones } from "./hooks/useNotificaciones";
 
 const ROLES = ["Todos los roles", "Evaluador", "Responsable"];
-const ESTADOS = [
-  "Todos los estados",
-  "Confirmado",
-  "Pendiente",
-  "Rebotado",
-];
+const ESTADOS = ["Todos los estados", "Confirmado", "Pendiente", "Rebotado"];
 
 const fmtDate = (iso) =>
   new Date(iso).toLocaleString([], {
@@ -31,11 +26,42 @@ const fmtDate = (iso) =>
   });
 
 export default function NotificacionesPage() {
-  const { query, setQuery, rol, setRol, estado, setEstado, rows, kpis } =
-    useNotificaciones();
+  const {
+    query,
+    setQuery,
+    rol,
+    setRol,
+    estado,
+    setEstado,
+    rows,
+    kpis,
+    loading,
+  } = useNotificaciones();
 
   const [open, setOpen] = useState(false);
   const [focus, setFocus] = useState(null);
+  const [sending, setSending] = useState(false);
+
+  async function handleForward(item) {
+    if (!item) return;
+
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/invitaciones/reenviar/${item.id}`,
+        {
+          method: "PUT",
+        }
+      );
+
+      if (!response.ok) throw new Error("Error al reenviar el correo");
+
+      alert("Correo reenviado correctamente ✅");
+      setOpen(false); // cierra el modal
+    } catch (error) {
+      console.error(error);
+      alert("No se pudo reenviar el correo ❌");
+    }
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
@@ -53,7 +79,9 @@ export default function NotificacionesPage() {
 
         <button
           className="inline-flex items-center gap-2 rounded-xl px-4 py-2 bg-blue-600 text-white hover:bg-blue-700"
-          onClick={() => alert("Simulación: reenviar enlaces a los seleccionados")}
+          onClick={() =>
+            alert("Simulación: reenviar enlaces a los seleccionados")
+          }
         >
           <RefreshCcw size={18} />
           Reenviar enlaces
@@ -67,7 +95,9 @@ export default function NotificacionesPage() {
             <p className="text-gray-700 font-medium">Total de notificaciones</p>
             <Mail className="text-blue-600" size={22} />
           </div>
-          <p className="mt-4 text-5xl font-semibold text-sky-600">{kpis.total}</p>
+          <p className="mt-4 text-5xl font-semibold text-sky-600">
+            {kpis.total}
+          </p>
         </div>
 
         <div className="rounded-2xl border p-6 bg-white">
@@ -174,60 +204,71 @@ export default function NotificacionesPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {rows.map((r) => (
-                <tr key={r.id} className="text-sm text-gray-800">
-                  <td className="py-3 pl-5">{r.usuario}</td>
-                  <td className="py-3">{r.correo}</td>
-                  <td className="py-3">
-                    <span className="inline-flex px-2 py-1 rounded-full text-xs bg-blue-50 text-blue-700">
-                      {r.rol}
-                    </span>
-                  </td>
-                  <td className="py-3">
-                    <StatusBadge value={r.estado} />
-                  </td>
-                  <td className="py-3">{fmtDate(r.fechaEnvio)}</td>
-                  <td className="py-3">
-                    {r.confirmado ? (
-                      <span className="inline-flex items-center gap-2 text-green-700">
-                        <span className="h-2.5 w-2.5 rounded-full bg-green-500" />
-                        Sí
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-2 text-gray-500">
-                        <span className="h-2.5 w-2.5 rounded-full bg-gray-400" />
-                        No
-                      </span>
-                    )}
-                  </td>
-                  <td className="py-3 pr-5 text-right">
-                    <button
-                      className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-1.5 hover:bg-gray-50"
-                      onClick={() => {
-                        setFocus(r);
-                        setOpen(true);
-                      }}
-                    >
-                      <Eye size={16} />
-                      Ver detalles
-                    </button>
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="py-10 text-center text-gray-500">
+                    Cargando notificaciones...
                   </td>
                 </tr>
-              ))}
-
-              {rows.length === 0 && (
+              ) : rows.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-10 text-center text-gray-500">
                     No hay resultados para el criterio seleccionado.
                   </td>
                 </tr>
+              ) : (
+                rows.map((r) => (
+                  <tr key={r.id} className="text-sm text-gray-800">
+                    <td className="py-3 pl-5">{r.usuario}</td>
+                    <td className="py-3">{r.correo}</td>
+                    <td className="py-3">
+                      <span className="inline-flex px-2 py-1 rounded-full text-xs bg-blue-50 text-blue-700">
+                        {r.rol}
+                      </span>
+                    </td>
+                    <td className="py-3">
+                      <StatusBadge value={r.estado} />
+                    </td>
+                    <td className="py-3">{fmtDate(r.fechaEnvio)}</td>
+                    <td className="py-3">
+                      {r.confirmado ? (
+                        <span className="inline-flex items-center gap-2 text-green-700">
+                          <span className="h-2.5 w-2.5 rounded-full bg-green-500" />
+                          Sí
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-2 text-gray-500">
+                          <span className="h-2.5 w-2.5 rounded-full bg-gray-400" />
+                          No
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-3 pr-5 text-right">
+                      <button
+                        className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-1.5 hover:bg-gray-50"
+                        onClick={() => {
+                          setFocus(r);
+                          setOpen(true);
+                        }}
+                      >
+                        <Eye size={16} />
+                        Ver detalles
+                      </button>
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
         </div>
       </div>
 
-      <DetailsModal open={open} onClose={() => setOpen(false)} item={focus} />
+      <DetailsModal
+        open={open}
+        onClose={() => setOpen(false)}
+        onForward={handleForward}
+        item={focus}
+      />
     </div>
   );
 }

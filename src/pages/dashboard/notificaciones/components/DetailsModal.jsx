@@ -1,9 +1,20 @@
 // src/pages/dashboard/notificaciones/components/DetailsModal.jsx
-import { X } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import StatusBadge from "./StatusBadge";
+import { useState } from "react";
 
-export default function DetailsModal({ open, onClose, item }) {
+export default function DetailsModal({ open, onClose, onForward, item }) {
+  const [sending, setSending] = useState(false);
   if (!open || !item) return null;
+
+  const handleReenviar = async () => {
+    try {
+      setSending(true);
+      await onForward(item); // pasa el item al padre
+    } finally {
+      setSending(false);
+    }
+  };
 
   const fmt = (iso) =>
     new Date(iso).toLocaleString([], {
@@ -15,7 +26,7 @@ export default function DetailsModal({ open, onClose, item }) {
     });
 
   return (
-    <div className="fixed inset-0 z-50" > 
+    <div className="fixed inset-0 z-50">
       {/* 🔵 Backdrop con blur (compatibilidad usando supports-variant) */}
       <div
         className="absolute inset-0 bg-black/30 supports-[backdrop-filter:blur(0)]:bg-black/20 backdrop-blur-sm md:backdrop-blur-md transition"
@@ -30,8 +41,12 @@ export default function DetailsModal({ open, onClose, item }) {
           <X size={18} />
         </button>
 
-        <h3 className="text-2xl font-semibold text-gray-900">Detalles del envío</h3>
-        <p className="text-gray-500 mt-1">Información completa sobre el correo enviado</p>
+        <h3 className="text-2xl font-semibold text-gray-900">
+          Detalles del envío
+        </h3>
+        <p className="text-gray-500 mt-1">
+          Información completa sobre el correo enviado
+        </p>
 
         <div className="grid grid-cols-2 gap-6 mt-6">
           <div>
@@ -66,11 +81,23 @@ export default function DetailsModal({ open, onClose, item }) {
         </div>
 
         <div className="mt-6 flex items-center justify-end gap-3">
-          <button className="px-4 py-2 rounded-xl border border-gray-200 hover:bg-gray-50" onClick={onClose}>
+          <button
+            className="px-4 py-2 rounded-xl border border-gray-200 hover:bg-gray-50"
+            onClick={onClose}
+          >
             Cerrar
           </button>
-          <button className="px-4 py-2 rounded-xl text-white bg-blue-600 hover:bg-blue-700">
-            Reenviar correo
+          <button
+            onClick={handleReenviar}
+            disabled={sending}
+            className={`px-4 py-2 rounded-xl text-white flex items-center gap-2 ${
+              sending
+                ? "bg-blue-400 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700"
+            }`}
+          >
+            {sending && <Loader2 size={18} className="animate-spin" />}
+            {sending ? "Reenviando..." : "Reenviar correo"}
           </button>
         </div>
       </div>
