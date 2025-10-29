@@ -9,6 +9,8 @@ import RegisterEvaluadorModal from "../components/RegisterEvaluadorModal";
 import EditEvaluadorModal from "../components/EditEvaluadorModal";
 import SuccessDialog from "../components/SuccessDialog";
 import ConfirmDeleteModal from "../components/ConfirmDeleteModal";
+import ImportarEvaluadoresModal from "../components/ImportarEvaluadoresModal";
+
 
 import { useRegisterEvaluador } from "../application/responsables/useRegisterEvaluador";
 import { getAreasConNiveles } from "../infrastructure/http/areas/areaRepostory";
@@ -31,6 +33,9 @@ export default function Evaluadores() {
   // modal eliminar
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deletingRow, setDeletingRow] = useState(null);
+
+  // modal importar CSV
+  const [importOpen, setImportOpen] = useState(false);
 
   // diálogo éxito
   const [successOpen, setSuccessOpen] = useState(false);
@@ -226,6 +231,15 @@ export default function Evaluadores() {
           Registrar Evaluador
         </button>
       </div>
+      {/* Botón de importación de CSV */}
+      <button
+        className="btn border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 flex items-center gap-2 rounded-xl px-4 py-2 text-sm shadow-sm"
+        onClick={() => setImportOpen(true)}
+       >
+        📄
+        <span>Importar CSV</span>
+      </button>
+
 
       {/* Tarjetas de estado */}
       <div className="grid md:grid-cols-3 gap-6 mt-8">
@@ -292,6 +306,15 @@ export default function Evaluadores() {
         onClose={() => setDeleteOpen(false)}
         onConfirm={confirmDelete}
         record={deletingRow}
+      />
+
+      {/* MODAL: Importar Evaluadores por CSV */}
+      <ImportarEvaluadoresModal
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        onUpload={async (file) => {
+          console.log("Subiendo CSV:", file.name);
+        }}
       />
 
       {/* DIÁLOGO DE ÉXITO */}
