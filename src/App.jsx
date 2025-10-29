@@ -14,13 +14,14 @@ import Evaluadores from "./pages/Evaluadores";
 // 👇 Importa la página del evaluador en la ruta real (dentro de /pages)
 import EvaluadorHome from "./pages/dashboard/evaluador/pages/EvaluadorHome.jsx";
 import NotificacionesPage from "@/pages/dashboard/notificaciones/NotificacionesPage";
-
+import EstablecerContraseñaPage from "@/pages/auth/EstablecerContraseñaPage";
 export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
 
       {/* Ruta directa para probar Evaluador SIN login */}
+      <Route path="/activar" element={<EstablecerContraseñaPage />} />
 
       <Route
         path="/dashboard"
