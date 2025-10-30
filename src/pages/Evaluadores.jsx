@@ -1,7 +1,7 @@
 // src/pages/Evaluadores.jsx
 
 import React, { useMemo, useState, useEffect } from "react";
-import { UserPlusIcon } from "@heroicons/react/24/outline";
+import { UserPlusIcon, ArrowUpTrayIcon } from "@heroicons/react/24/outline";
 
 import StatsCard from "../components/StatsCard";
 import EvaluadoresTable from "../components/EvaluadoresTable";
@@ -10,7 +10,6 @@ import EditEvaluadorModal from "../components/EditEvaluadorModal";
 import SuccessDialog from "../components/SuccessDialog";
 import ConfirmDeleteModal from "../components/ConfirmDeleteModal";
 import ImportarEvaluadoresModal from "../components/ImportarEvaluadoresModal";
-
 
 import { useRegisterEvaluador } from "../application/responsables/useRegisterEvaluador";
 import { getAreasConNiveles } from "../infrastructure/http/areas/areaRepostory";
@@ -208,37 +207,42 @@ export default function Evaluadores() {
         </button>
       </div>
 
-      {/* Header y botón Registrar */}
-      <div className="mt-6 flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-        <div>
-          <h1 className="text-5xl font-semibold text-primary">
-            Registro de Evaluadores
-          </h1>
-          <p className="text-slate-500 mt-2">
-            Registra evaluadores por área y nivel para garantizar la supervisión
-            de la evaluación.
-          </p>
-        </div>
+        {/* Header y acciones */}
+        <div className="mt-4 grid gap-4 md:grid-cols-[1fr_auto] md:items-center">
+          {/* Título y descripción */}
+          <div>
+            <h1 className="text-4xl md:text-5xl font-semibold text-primary leading-tight">
+              Registro de Evaluadores
+            </h1>
+            <p className="text-slate-500 mt-2 max-w-xl">
+              Registra evaluadores por área y nivel para asegurar el proceso de calificación.
+            </p>
+          </div>
 
-        <button
-          className={`btn btn-cta text-white ${
-            areasDisponibles <= 0 ? "opacity-50 cursor-not-allowed" : ""
-          }`}
-          onClick={() => setOpen(true)}
-          disabled={areasDisponibles <= 0}
-        >
-          <UserPlusIcon className="w-5 h-5" />
-          Registrar Evaluador
-        </button>
-      </div>
-      {/* Botón de importación de CSV */}
-      <button
-        className="btn border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 flex items-center gap-2 rounded-xl px-4 py-2 text-sm shadow-sm"
-        onClick={() => setImportOpen(true)}
-       >
-        📄
-        <span>Importar CSV</span>
-      </button>
+          {/* Acciones (lado derecho) */}
+          <div className="flex items-center gap-3 justify-start md:justify-end">
+            {/* Botón CSV */}
+            <button
+              className="inline-flex items-center gap-2 border border-blue-600 text-blue-600 hover:bg-blue-50 bg-white font-medium rounded-lg px-4 py-2 text-sm shadow-sm transition-all duration-150 ease-in-out"
+              onClick={() => setImportOpen(true)}
+            >
+              <ArrowUpTrayIcon className="w-4 h-4" />
+              <span>Registrar evaluadores por CSV</span>
+            </button>
+
+            {/* Botón Registrar Evaluador */}
+            <button
+              className={`bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all duration-150 ease-in-out ${
+                areasDisponibles <= 0 ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+              onClick={() => setOpen(true)}
+              disabled={areasDisponibles <= 0}
+            >
+              <UserPlusIcon className="w-5 h-5" />
+              Registrar Evaluador
+            </button>
+          </div>
+        </div>
 
 
       {/* Tarjetas de estado */}
