@@ -46,12 +46,9 @@ export default function NotificacionesPage() {
     if (!item) return;
 
     try {
-      const response = await fetch(
-        `http://localhost:8000/api/invitaciones/reenviar/${item.id}`,
-        {
-          method: "PUT",
-        }
-      );
+      const response = await fetch(`/api/invitaciones/reenviar/${item.id}`, {
+        method: "PUT",
+      });
 
       if (!response.ok) throw new Error("Error al reenviar el correo");
 

@@ -1,5 +1,4 @@
 // src/components/RegisterEvaluadorModal.jsx
-
 import { useState, useEffect } from "react";
 import {
   XMarkIcon,
@@ -18,7 +17,7 @@ export default function RegisterEvaluadorModal({
   errors,
   submitting,
   onSubmit,
-  takenAreas = [], // 👈 Ahora es un array de objetos { area, nivel }
+  takenAreas = [],
 }) {
   const [showAreas, setShowAreas] = useState(false);
   const [showNiveles, setShowNiveles] = useState(false);
@@ -59,7 +58,7 @@ export default function RegisterEvaluadorModal({
     } else {
       setAvailableNiveles([]);
     }
-  }, [form.area, takenAreas, areasConNiveles]);
+  }, [form.area, takenAreas]);
 
   if (!open) return null;
 
@@ -70,19 +69,23 @@ export default function RegisterEvaluadorModal({
   const getErrorMsg = (field) => errors[field] || null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
-      <div className="relative card w-[720px] p-8">
+      <div className="relative card w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6">
         <button
-          className="absolute right-4 top-4 text-slate-400 hover:text-slate-600"
+          className="absolute right-4 top-4 text-slate-400 hover:text-slate-600 z-10"
           onClick={onClose}
         >
-          <XMarkIcon className="w-6 h-6" />
+          <XMarkIcon className="w-5 h-5" />
         </button>
-        <h2 className="text-4xl md:text-5xl font-semibold text-primary leading-tight">
-          Registrar Nuevo <br /> Evaluador
+
+        <h2 className="text-2xl md:text-3xl font-semibold text-primary leading-tight">
+          Registrar Nuevo Evaluador
         </h2>
-        <p className="text-slate-500 mt-2">Completa los datos del evaluador</p>
+        <p className="text-slate-500 mt-1 text-sm">
+          Completa los datos del evaluador
+        </p>
+
         {Object.keys(errors).length > 0 && (
           <div className="bg-red-50 border-l-4 border-red-500 p-3 mb-4 rounded">
             <p className="text-red-700 text-sm font-medium">
@@ -91,15 +94,15 @@ export default function RegisterEvaluadorModal({
             </p>
           </div>
         )}
-        <div className="grid grid-cols-2 gap-5 mt-6">
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
           {/* Nombre */}
           <div>
-            <label className="label">Nombre *</label>
+            <label className="label text-sm">Nombre *</label>
             <input
-              className={`input ${errClass("nombre")}`}
+              className={`input text-sm ${errClass("nombre")}`}
               value={form.nombre}
               onChange={(e) => {
-                // ✅ Solo letras, espacios, tildes y ñ
                 const cleaned = e.target.value.replace(
                   /[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g,
                   ""
@@ -119,14 +122,14 @@ export default function RegisterEvaluadorModal({
               </p>
             )}
           </div>
+
           {/* Apellidos */}
           <div>
-            <label className="label">Apellidos *</label>
+            <label className="label text-sm">Apellidos *</label>
             <input
-              className={`input ${errClass("apellidos")}`}
+              className={`input text-sm ${errClass("apellidos")}`}
               value={form.apellidos}
               onChange={(e) => {
-                // ✅ Solo letras, espacios, tildes y ñ
                 const cleaned = e.target.value.replace(
                   /[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g,
                   ""
@@ -146,11 +149,12 @@ export default function RegisterEvaluadorModal({
               </p>
             )}
           </div>
+
           {/* Correo */}
-          <div className="col-span-2">
-            <label className="label">Correo electrónico *</label>
+          <div className="md:col-span-2">
+            <label className="label text-sm">Correo electrónico *</label>
             <input
-              className={`input ${errClass("correo")}`}
+              className={`input text-sm ${errClass("correo")}`}
               value={form.correo}
               onChange={(e) => {
                 const value = e.target.value;
@@ -159,7 +163,7 @@ export default function RegisterEvaluadorModal({
                 }
               }}
               placeholder="ej: maria@gmail.com"
-              maxLength={70} // Refuerzo visual
+              maxLength={70}
             />
             {getErrorMsg("correo") ? (
               <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
@@ -174,12 +178,11 @@ export default function RegisterEvaluadorModal({
           </div>
           {/* Teléfono */}
           <div>
-            <label className="label">Teléfono *</label>
+            <label className="label text-sm">Teléfono *</label>
             <input
-              className={`input ${errClass("telefono")}`}
+              className={`input text-sm ${errClass("telefono")}`}
               value={form.telefono}
               onChange={(e) => {
-                // ✅ Solo dígitos y máximo 8 caracteres
                 const cleaned = e.target.value.replace(/\D/g, "").slice(0, 8);
                 setField("telefono", cleaned);
               }}
@@ -196,11 +199,12 @@ export default function RegisterEvaluadorModal({
               </p>
             )}
           </div>
+
           {/* CI */}
           <div>
-            <label className="label">CI *</label>
+            <label className="label text-sm">CI *</label>
             <input
-              className={`input ${errClass("ci")}`}
+              className={`input text-sm ${errClass("ci")}`}
               value={form.ci}
               onChange={(e) => {
                 const cleaned = e.target.value.replace(/\D/g, "").slice(0, 10);
@@ -219,23 +223,24 @@ export default function RegisterEvaluadorModal({
               </p>
             )}
           </div>
+
           {/* Área */}
-          <div className="relative">
-            <label className="label">Área *</label>
+          <div className="relative md:col-span-2">
+            <label className="label text-sm">Área *</label>
             <button
               type="button"
               onClick={() => setShowAreas((v) => !v)}
-              className={`input flex items-center justify-between ${errClass(
+              className={`input text-sm flex items-center justify-between ${errClass(
                 "area"
               )}`}
             >
               <span className={form.area ? "text-slate-900" : "text-slate-400"}>
                 {form.area || "Selecciona un área"}
               </span>
-              <ChevronDownIcon className="w-5 h-5 text-slate-400" />
+              <ChevronDownIcon className="w-4 h-4 text-slate-400" />
             </button>
             {showAreas && (
-              <div className="absolute z-10 mt-1 w-full card p-0 overflow-hidden">
+              <div className="absolute z-10 mt-1 w-full max-h-48 overflow-auto card p-0 shadow-lg">
                 <ul className="max-h-56 overflow-auto">
                   {areasConNiveles.map((a) => (
                     <li key={a.id}>
@@ -262,16 +267,17 @@ export default function RegisterEvaluadorModal({
               </p>
             )}
           </div>
+
           {/* Nivel */}
-          <div className="relative">
-            <label className="label">Nivel *</label>
+          <div className="relative md:col-span-2">
+            <label className="label text-sm">Nivel *</label>
             <button
               type="button"
               onClick={() => setShowNiveles((v) => !v)}
-              className={`input flex items-center justify-between ${errClass(
+              className={`input text-sm flex items-center justify-between ${errClass(
                 "nivel"
               )}`}
-              disabled={!form.area} // ✅ Deshabilita si no hay área seleccionada
+              disabled={!form.area}
             >
               <span
                 className={form.nivel ? "text-slate-900" : "text-slate-400"}
@@ -281,7 +287,7 @@ export default function RegisterEvaluadorModal({
                     ? "Selecciona un nivel"
                     : "Primero selecciona un área")}
               </span>
-              <ChevronDownIcon className="w-5 h-5 text-slate-400" />
+              <ChevronDownIcon className="w-4 h-4 text-slate-400" />
             </button>
             {showNiveles && (
               <div className="absolute z-10 mt-1 w-full card p-0 overflow-hidden">
@@ -319,12 +325,13 @@ export default function RegisterEvaluadorModal({
             )}
           </div>
         </div>
-        <div className="flex items-center justify-end gap-3 mt-7">
-          <button className="btn btn-ghost" onClick={onClose}>
+
+        <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 mt-6">
+          <button className="btn btn-ghost w-full sm:w-auto" onClick={onClose}>
             Cancelar
           </button>
           <button
-            className="btn btn-cta"
+            className="btn btn-cta w-full sm:w-auto"
             onClick={onSubmit}
             disabled={submitting}
           >

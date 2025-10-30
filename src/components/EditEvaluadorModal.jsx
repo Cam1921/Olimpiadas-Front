@@ -30,7 +30,7 @@ export default function EditEvaluadorModal({
   const [showAreas, setShowAreas] = useState(false);
   const [showNiveles, setShowNiveles] = useState(false);
   const [availableNiveles, setAvailableNiveles] = useState([]);
-  const [errors, setErrors] = useState({}); // ✅ Errores del backend + validación local
+  const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [areasConNiveles, setAreasConNiveles] = useState({});
 
@@ -82,13 +82,12 @@ export default function EditEvaluadorModal({
     }
   }, [form.area, takenAreas, areasConNiveles]);
 
-  // ✅ Validación en tiempo real (solo para formato, no para unicidad)
   const validateField = (name, value) => {
     switch (name) {
       case "nombre":
       case "apellidos":
         if (!value.trim()) return "Este campo es obligatorio.";
-        if (value.trim().length < 2) return "Mínimo 2 caracteres.";
+        if (value.trim().length < 3) return "Debe tener al menos 3 caracteres.";
         if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(value.trim()))
           return "Solo letras, espacios, tildes y ñ.";
         return null;
@@ -96,10 +95,11 @@ export default function EditEvaluadorModal({
         if (!value.trim()) return "El correo es obligatorio.";
         if (value.length > 70)
           return "El correo no debe exceder los 70 caracteres.";
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))
-          return "Formato de correo inválido.";
-        if (!value.endsWith(".com"))
-          return 'El dominio debe terminar en ".com".';
+
+        // ✅ Validación solo para @gmail.com o @est.umss.edu
+        if (!/^[a-zA-Z0-9._%+-]+@(gmail\.com|est\.umss\.edu)$/i.test(value))
+          return "Solo se permiten correos @gmail.com o @est.umss.edu";
+
         return null;
       case "telefono":
         const cleanTel = value.replace(/\D/g, "");
@@ -107,6 +107,7 @@ export default function EditEvaluadorModal({
         if (!/^[67]\d{7}$/.test(cleanTel))
           return "8 dígitos, debe comenzar con 6 o 7.";
         return null;
+
       case "ci":
         const cleanCI = value.replace(/\D/g, "");
         if (!value.trim()) return "El CI es obligatorio.";
@@ -119,15 +120,32 @@ export default function EditEvaluadorModal({
     }
   };
 
-  const handleFieldChange = (name, value) => {
-    setForm((prev) => ({ ...prev, [name]: value }));
-    // Limpiar error del campo al editar
-    if (errors[name]) {
-      setErrors((prev) => {
-        const { [name]: _, ...rest } = prev;
-        return rest;
-      });
+  const handleFieldChange = (name, rawValue) => {
+    let value = rawValue;
+
+    // Aplicar limpieza según el campo
+    if (name === "nombre" || name === "apellidos") {
+      value = rawValue.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, "");
+    } else if (name === "telefono") {
+      value = rawValue.replace(/\D/g, "").slice(0, 8);
+    } else if (name === "ci") {
+      value = rawValue.replace(/\D/g, "").slice(0, 10);
+    } else if (name === "correo") {
+      if (rawValue.length > 70) return; // no permitir más de 70
+      value = rawValue;
     }
+
+    setForm((prev) => ({ ...prev, [name]: value }));
+
+    // Validar en tiempo real
+    const err = validateField(name, value);
+    setErrors((prev) => {
+      const { [name]: _, ...rest } = prev;
+      if (err) {
+        return { ...rest, [name]: err };
+      }
+      return rest;
+    });
   };
 
   function obtenerIds(areas, nombreArea, nombreNivel) {
@@ -160,7 +178,6 @@ export default function EditEvaluadorModal({
   const onSubmit = async () => {
     setSubmitting(true);
 
-    // Validación local de formato
     const localErrors = {};
     for (const [key, value] of Object.entries(form)) {
       const err = validateField(key, value);
@@ -179,6 +196,13 @@ export default function EditEvaluadorModal({
     /*  if (combinationExists) {
       localErrors.area =
         "Ya existe un evaluador para esta combinación de área y nivel.";
+    } */
+    /*  const combinationExists = takenAreas.some(a => 
+      a.area === form.area && a.nivel === form.nivel && 
+      (initial?.area === form.area && initial?.nivel === form.nivel)
+    );
+    if (combinationExists) {
+      localErrors.area = 'Ya existe un evaluador para esta combinación de área y nivel.';
     } */
 
     if (Object.keys(localErrors).length > 0) {
@@ -242,21 +266,23 @@ export default function EditEvaluadorModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
-      <div className="relative card w-[720px] p-8">
+      <div className="relative card w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6">
         <button
-          className="absolute right-4 top-4 text-slate-400 hover:text-slate-600"
+          className="absolute right-4 top-4 text-slate-400 hover:text-slate-600 z-10"
           onClick={onClose}
         >
-          <XMarkIcon className="w-6 h-6" />
+          <XMarkIcon className="w-5 h-5" />
         </button>
-        <h2 className="text-4xl md:text-5xl font-semibold text-primary leading-tight">
+
+        <h2 className="text-2xl md:text-3xl font-semibold text-primary leading-tight">
           Editar Evaluador
         </h2>
-        <p className="text-slate-500 mt-2">Actualiza los datos del evaluador</p>
+        <p className="text-slate-500 mt-1 text-sm">
+          Actualiza los datos del evaluador
+        </p>
 
-        {/* ✅ Mensaje de error general */}
         {errors.general && (
           <div className="bg-red-50 border-l-4 border-red-500 p-3 mb-4 rounded">
             <p className="text-red-700 text-sm font-medium">
@@ -265,7 +291,6 @@ export default function EditEvaluadorModal({
           </div>
         )}
 
-        {/* ✅ Mensaje de error de campos específicos */}
         {Object.keys(errors).some((k) => k !== "general") &&
           !errors.general && (
             <div className="bg-red-50 border-l-4 border-red-500 p-3 mb-4 rounded">
@@ -276,115 +301,134 @@ export default function EditEvaluadorModal({
             </div>
           )}
 
-        <div className="grid grid-cols-2 gap-5 mt-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
           {/* Nombre */}
           <div>
-            <label className="label">Nombre *</label>
+            <label className="label text-sm">Nombre *</label>
             <input
-              className={`input ${errClass("nombre")}`}
+              className={`input text-sm ${errClass("nombre")}`}
               value={form.nombre}
               onChange={(e) => handleFieldChange("nombre", e.target.value)}
+              placeholder="ej: María"
             />
-            {errors.nombre && (
+            {errors.nombre ? (
               <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
                 <ExclamationTriangleIcon className="w-4 h-4" />
                 {errors.nombre}
               </p>
+            ) : (
+              <p className="text-xs text-slate-400 mt-1">
+                Debe tener al menos 3 caracteres. Solo letras, espacios, tildes
+                y ñ.
+              </p>
             )}
           </div>
+
           {/* Apellidos */}
           <div>
-            <label className="label">Apellidos *</label>
+            <label className="label text-sm">Apellidos *</label>
             <input
-              className={`input ${errClass("apellidos")}`}
+              className={`input text-sm ${errClass("apellidos")}`}
               value={form.apellidos}
               onChange={(e) => handleFieldChange("apellidos", e.target.value)}
+              placeholder="ej: González Pérez"
             />
-            {errors.apellidos && (
+            {errors.apellidos ? (
               <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
                 <ExclamationTriangleIcon className="w-4 h-4" />
                 {errors.apellidos}
               </p>
+            ) : (
+              <p className="text-xs text-slate-400 mt-1">
+                Debe tener al menos 3 caracteres. Solo letras, espacios, tildes
+                y ñ.
+              </p>
             )}
           </div>
+
           {/* Correo */}
-          <div className="col-span-2">
-            <label className="label">Correo electrónico *</label>
+          <div className="md:col-span-2">
+            <label className="label text-sm">Correo electrónico *</label>
             <div className="relative">
               <input
-                className={`input pr-10 ${errClass("correo")}`}
+                className={`input text-sm ${errClass("correo")}`}
                 value={form.correo}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (value.length <= 70) {
-                    handleFieldChange("correo", value);
-                  }
-                }}
+                onChange={(e) => handleFieldChange("correo", e.target.value)}
+                placeholder="ej: maria@gmail.com"
                 maxLength={70}
               />
-              <LockClosedIcon className="w-5 h-5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
             </div>
-            {errors.correo && (
+            {errors.correo ? (
               <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
                 <ExclamationTriangleIcon className="w-4 h-4" />
                 {errors.correo}
               </p>
+            ) : (
+              <p className="text-xs text-slate-400 mt-1">
+                Debe contener "@" y ".com". Máximo 70 caracteres.
+              </p>
             )}
           </div>
+
           {/* Teléfono */}
           <div>
-            <label className="label">Teléfono *</label>
+            <label className="label text-sm">Teléfono *</label>
             <input
-              className={`input ${errClass("telefono")}`}
+              className={`input text-sm ${errClass("telefono")}`}
               value={form.telefono}
-              onChange={(e) =>
-                handleFieldChange("telefono", e.target.value.replace(/\D/g, ""))
-              }
+              onChange={(e) => handleFieldChange("telefono", e.target.value)}
+              placeholder="ej: 71234567"
             />
-            {errors.telefono && (
+            {errors.telefono ? (
               <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
                 <ExclamationTriangleIcon className="w-4 h-4" />
                 {errors.telefono}
               </p>
+            ) : (
+              <p className="text-xs text-slate-400 mt-1">
+                8 dígitos, empieza con 6 o 7.
+              </p>
             )}
           </div>
+
           {/* CI */}
           <div>
-            <label className="label">CI *</label>
+            <label className="label text-sm">CI *</label>
             <input
-              className={`input ${errClass("ci")}`}
+              className={`input text-sm ${errClass("ci")}`}
               value={form.ci}
-              onChange={(e) =>
-                handleFieldChange(
-                  "ci",
-                  e.target.value.replace(/\D/g, "").slice(0, 12)
-                )
-              }
+              onChange={(e) => handleFieldChange("ci", e.target.value)}
+              placeholder="ej: 1234567"
             />
-            {errors.ci && (
+            {errors.ci ? (
               <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
                 <ExclamationTriangleIcon className="w-4 h-4" />
                 {errors.ci}
               </p>
+            ) : (
+              <p className="text-xs text-slate-400 mt-1">
+                Entre 6 y 10 dígitos.
+              </p>
             )}
           </div>
+
           {/* Área */}
-          <div className="relative">
-            <label className="label">Área *</label>
+          <div className="relative md:col-span-2">
+            <label className="label text-sm">Área *</label>
             <button
               type="button"
               onClick={() => setShowAreas((v) => !v)}
-              className={`input flex items-center justify-between ${errClass(
+              className={`input text-sm flex items-center justify-between ${errClass(
                 "area"
               )}`}
             >
               <span className={form.area ? "text-slate-900" : "text-slate-400"}>
                 {form.area || "Selecciona un área"}
               </span>
-              <ChevronDownIcon className="w-5 h-5 text-slate-400" />
+              <ChevronDownIcon className="w-4 h-4 text-slate-400" />
             </button>
             {/* {showAreas && (
-              <div className="absolute z-10 mt-1 w-full card p-0 overflow-hidden">
+              <div className="absolute z-10 mt-1 w-full max-h-48 overflow-auto card p-0 shadow-lg">
                 <ul className="max-h-56 overflow-auto">
                   {AREAS.filter((area) => {
                     if (initial?.area === area) return true;
@@ -407,7 +451,7 @@ export default function EditEvaluadorModal({
               </div>
             )} */}
             {showAreas && (
-              <div className="absolute z-10 mt-1 w-full card p-0 overflow-hidden">
+              <div className="absolute z-10 mt-1 w-full max-h-48 overflow-auto card p-0 shadow-lg">
                 <ul className="max-h-56 overflow-auto">
                   {areasConNiveles.map((a) => (
                     <li key={a.id}>
@@ -434,13 +478,14 @@ export default function EditEvaluadorModal({
               </p>
             )}
           </div>
+
           {/* Nivel */}
-          <div className="relative">
-            <label className="label">Nivel *</label>
+          <div className="relative md:col-span-2">
+            <label className="label text-sm">Nivel *</label>
             <button
               type="button"
               onClick={() => setShowNiveles((v) => !v)}
-              className={`input flex items-center justify-between ${errClass(
+              className={`input text-sm flex items-center justify-between ${errClass(
                 "nivel"
               )}`}
               disabled={!form.area}
@@ -453,7 +498,7 @@ export default function EditEvaluadorModal({
                     ? "Selecciona un nivel"
                     : "Primero selecciona un área")}
               </span>
-              <ChevronDownIcon className="w-5 h-5 text-slate-400" />
+              <ChevronDownIcon className="w-4 h-4 text-slate-400" />
             </button>
             {/*  {showNiveles && (
               <div className="absolute z-10 mt-1 w-full card p-0 overflow-hidden">
@@ -476,7 +521,7 @@ export default function EditEvaluadorModal({
               </div>
             )} */}
             {showNiveles && (
-              <div className="absolute z-10 mt-1 w-full card p-0 overflow-hidden">
+              <div className="absolute z-10 mt-1 w-full max-h-48 overflow-auto card p-0 shadow-lg">
                 <ul className="max-h-56 overflow-auto">
                   {availableNiveles.length > 0 ? (
                     availableNiveles.map((n) => (
@@ -511,12 +556,13 @@ export default function EditEvaluadorModal({
             )}
           </div>
         </div>
-        <div className="flex items-center justify-end gap-3 mt-7">
-          <button className="btn btn-ghost" onClick={onClose}>
+
+        <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 mt-6">
+          <button className="btn btn-ghost w-full sm:w-auto" onClick={onClose}>
             Cancelar
           </button>
           <button
-            className="btn btn-cta"
+            className="btn btn-cta w-full sm:w-auto"
             onClick={onSubmit}
             disabled={submitting}
           >

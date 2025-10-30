@@ -11,6 +11,7 @@ import { useRegisterResponsable } from "../application/responsables/useRegisterR
 import { getAreasConNiveles } from "../infrastructure/http/areas/areaRepostory";
 import { responsablesRepo } from "../infrastructure/http/responsables/repository";
 import api from "@/lib/api";
+
 export default function ResponsablesAcademicos() {
   const [rows, setRows] = useState([]);
   const [open, setOpen] = useState(false);
@@ -151,6 +152,7 @@ export default function ResponsablesAcademicos() {
             supervisión de la evaluación.
           </p>
         </div>
+        {/* ✅ Botón actualizado: deshabilitado si no hay áreas disponibles */}
         <button
           className={`btn btn-cta text-white ${
             areasDisponibles <= 0 ? "opacity-50 cursor-not-allowed" : ""
@@ -207,6 +209,7 @@ export default function ResponsablesAcademicos() {
       />
 
       <EditResponsibleModal
+        key={editingRow?.id || "nuevo"}
         open={editOpen}
         onClose={() => setEditOpen(false)}
         initial={editingRow}

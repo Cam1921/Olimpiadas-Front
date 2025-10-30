@@ -43,6 +43,8 @@ export default function Evaluadores() {
   const { form, setField, errors, submitting, submit, resetForm, setErrors } =
     useRegisterEvaluador(takenAreas);
 
+  // 👇 Función para cargar evaluadores desde el backend
+
   const fetchEvaluadores = async () => {
     try {
       const response = await api.get("/evaluador"); // no pongas /api si ya lo tienes en baseURL
@@ -65,6 +67,17 @@ export default function Evaluadores() {
       console.error("❌ Error al cargar evaluadores:", err);
     }
   };
+
+  // 👇 Cargar datos al montar el componente
+  useEffect(() => {
+    fetchEvaluadores();
+    fetchAreas();
+  }, []);
+  async function fetchAreas() {
+    const areas = await getAreasConNiveles();
+    setAllAreas(areas);
+  }
+
   const handleDelete = async (id) => {
     try {
       await evaluadoresRepo.remove(id);
@@ -75,18 +88,6 @@ export default function Evaluadores() {
     } finally {
     }
   };
-  async function fetchAreas() {
-    const areas = await getAreasConNiveles();
-    setAllAreas(areas);
-    console.log(areas);
-  }
-  // 👇 Cargar datos al montar el componente
-  useEffect(() => {
-    fetchEvaluadores();
-
-    fetchAreas();
-  }, []);
-
   // 👇 Función para cerrar el modal Y limpiar el formulario
   const handleCloseModal = () => {
     setOpen(false);

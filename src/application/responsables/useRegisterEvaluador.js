@@ -15,8 +15,7 @@ export function useRegisterEvaluador(takenAreas = []) {
   });
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
-   const [allAreas, setAllAreas] = useState([]);
-
+ const [allAreas, setAllAreas] = useState([]);
   const setField = useCallback((name, value) => {
     setForm(prev => ({ ...prev, [name]: value }));
     setErrors(prev => {
@@ -33,7 +32,7 @@ export function useRegisterEvaluador(takenAreas = []) {
       telefono: '',
       ci: '',
       area: '',
-      nivel: '', 
+      nivel: '',
     });
     setErrors({});
   }, []);
@@ -57,9 +56,12 @@ export function useRegisterEvaluador(takenAreas = []) {
     if (form.apellidos && form.apellidos.trim().length < 2) {
       newErrors.apellidos = 'Los apellidos deben tener al menos 2 caracteres.';
     }
-    if (form.correo && !/^\S+@\S+\.\S+$/.test(form.correo)) {
-      newErrors.correo = 'Formato de correo inválido. Ej: ejemplo@gmail.com';
-    }
+    if (form.correo) {
+  const correoValido = /^[a-zA-Z0-9._%+-]+@(gmail\.com|est\.umss\.edu)$/i.test(form.correo);
+  if (!correoValido) {
+    newErrors.correo = 'Solo se permiten correos @gmail.com o @est.umss.edu';
+  }
+}
     if (form.telefono && !/^[67]\d{7}$/.test(form.telefono.replace(/\D/g, ''))) {
       newErrors.telefono = 'El teléfono debe tener 8 dígitos y comenzar con 6 o 7. Ej: 71234567';
     }
@@ -73,8 +75,53 @@ export function useRegisterEvaluador(takenAreas = []) {
       const updated = { ...prev, ...newErrors };
       return updated;
     });
+
+   /*  // ✅ Validación flexible del nivel basada en el área
+    if (form.nivel) {
+      const nivelesValidos = getNivelesByArea(form.area);
+      if (!nivelesValidos.includes(form.nivel)) {
+        newErrors.nivel = `El nivel "${form.nivel}" no es válido para el área "${form.area}".`;
+      }
+    } */
+
+    setErrors(prev => ({ ...prev, ...newErrors }));
   }, [form]);
 
+  const validate = useCallback((data, takenAreas) => {
+    const newErrors = {};
+    if (!data.nombre.trim()) newErrors.nombre = 'El nombre es obligatorio.';
+    else if (data.nombre.trim().length < 2) newErrors.nombre = 'El nombre debe tener al menos 2 caracteres.';
+    if (!data.apellidos.trim()) newErrors.apellidos = 'Los apellidos son obligatorios.';
+    else if (data.apellidos.trim().length < 2) newErrors.apellidos = 'Los apellidos deben tener al menos 2 caracteres.';
+    if (!data.correo.trim()) newErrors.correo = 'El correo es obligatorio.';
+    else if (!/^\S+@\S+\.\S+$/.test(data.correo)) newErrors.correo = 'Formato de correo inválido.';
+    if (!data.telefono.trim()) newErrors.telefono = 'El teléfono es obligatorio.';
+    else if (!/^[67]\d{7}$/.test(data.telefono.replace(/\D/g, ''))) newErrors.telefono = 'El teléfono debe tener 8 dígitos y comenzar con 6 o 7.';
+    if (!data.ci?.trim()) newErrors.ci = 'El CI es obligatorio.';
+    else if (!/^\d{6,10}$/.test(data.ci.replace(/\D/g, ''))) newErrors.ci = 'El CI debe tener entre 6 y 10 dígitos.';
+    if (!data.area) newErrors.area = 'Selecciona un área.';
+    if (!data.nivel) newErrors.nivel = 'Selecciona un nivel.';
+    /* else if (!['Primaria', 'Secundaria'].includes(data.nivel)) newErrors.nivel = 'El nivel debe ser "Primaria" o "Secundaria".'; */
+    if (!data.nivel) {
+      newErrors.nivel = 'Selecciona un nivel.';
+    } /* else {
+      // ✅ Validación flexible del nivel basada en el área
+      const nivelesValidos = getNivelesByArea(data.area);
+      if (!nivelesValidos.includes(data.nivel)) {
+        newErrors.nivel = `El nivel "${data.nivel}" no es válido para el área "${data.area}".`;
+      }
+    } */
+
+    // Verifica combinación única (área + nivel)
+    if (data.area && data.nivel) {
+      const combinationExists = takenAreas.some(a => a.area === data.area && a.nivel === data.nivel);
+      if (combinationExists) {
+        newErrors.area = 'Ya existe un evaluador para esta combinación de área y nivel.';
+      }
+    }
+
+    return newErrors;
+  }, []);
 
   function obtenerIds(areas, nombreArea, nombreNivel) {
   const area = areas.find(
@@ -95,33 +142,6 @@ export function useRegisterEvaluador(takenAreas = []) {
 
   return { id_area: area.id, id_nivel: nivel.id };
 }
-  const validate = useCallback((data, takenAreas) => {
-    const newErrors = {};
-    if (!data.nombre.trim()) newErrors.nombre = 'El nombre es obligatorio.';
-    else if (data.nombre.trim().length < 2) newErrors.nombre = 'El nombre debe tener al menos 2 caracteres.';
-    if (!data.apellidos.trim()) newErrors.apellidos = 'Los apellidos son obligatorios.';
-    else if (data.apellidos.trim().length < 2) newErrors.apellidos = 'Los apellidos deben tener al menos 2 caracteres.';
-    if (!data.correo.trim()) newErrors.correo = 'El correo es obligatorio.';
-    else if (!/^\S+@\S+\.\S+$/.test(data.correo)) newErrors.correo = 'Formato de correo inválido.';
-    if (!data.telefono.trim()) newErrors.telefono = 'El teléfono es obligatorio.';
-    else if (!/^[67]\d{7}$/.test(data.telefono.replace(/\D/g, ''))) newErrors.telefono = 'El teléfono debe tener 8 dígitos y comenzar con 6 o 7.';
-    if (!data.ci?.trim()) newErrors.ci = 'El CI es obligatorio.';
-    else if (!/^\d{6,10}$/.test(data.ci.replace(/\D/g, ''))) newErrors.ci = 'El CI debe tener entre 6 y 10 dígitos.';
-    if (!data.area) newErrors.area = 'Selecciona un área.';
-    if (!data.nivel) newErrors.nivel = 'Selecciona un nivel.';
-    /* else if (!['Primaria', 'Secundaria'].includes(data.nivel)) newErrors.nivel = 'El nivel debe ser "Primaria" o "Secundaria".'; */
-
-    // Verifica combinación única (área + nivel)
-    if (data.area && data.nivel) {
-      const combinationExists = takenAreas.some(a => a.area === data.area && a.nivel === data.nivel);
-      if (combinationExists) {
-        newErrors.area = 'Ya existe un evaluador para esta combinación de área y nivel.';
-      }
-    }
-
-    return newErrors;
-  }, []);
-
 const submit = useCallback(async () => {
   const newErrors = validate(form, takenAreas);
   setErrors(newErrors);
@@ -163,15 +183,9 @@ const submit = useCallback(async () => {
       
       return { ok: false, error: "Errores de validación detectados." };
     }
-
-    // ⚙️ Otros errores (500, conexión, etc.)
-    
-    return { ok: false, error: "Error inesperado al registrar." };
-
-  } finally {
+  }finally {
     setSubmitting(false);
-  }
-}, [form, takenAreas, validate]);
+  }}, [form, takenAreas, validate]);
 
   return {
     form,
