@@ -20,6 +20,9 @@ import EstablecerContraseñaPage from "@/pages/auth/EstablecerContraseñaPage";
 import EntornoFinal from "./components/EntornoFinal.jsx";
 import OfficialListPage from "./components/OfficialListPage";
 
+// 👇 NUEVO: importa la pestaña Publicación (sin acento)
+import PublicacionPage from "./pages/dashboard/Publicacion";
+
 export default function App() {
   return (
     <Routes>
@@ -37,6 +40,8 @@ export default function App() {
         }
       >
         <Route index element={<RoleIndexRedirect />} />
+
+        {/* Admin */}
         <Route path="panel-principal" element={<PanelPrincipal />} />
         <Route path="gestion-roles" element={<ResponsablesAcademicos />} />
         <Route path="notificaciones" element={<NotificacionesPage />} />
@@ -49,6 +54,29 @@ export default function App() {
           element={<GestionInscripciones />}
         />
         <Route path="informacion-personal" element={<InformacionPersonal />} />
+        <Route
+          path="gestion-inscripciones"
+          element={<GestionInscripciones />}
+        />
+
+        {/* 👇 NUEVO: ruta a tu HU10 / Publicación */}
+        <Route path="publicacion" element={<PublicacionPage />} />
+
+        {/* Evaluador / Responsable (comparten la misma vista) */}
+        <Route path="informacion-personal" element={<InformacionPersonal />} />
+
+        {/* (más adelante puedes añadir:)
+            <Route path="registrar-notas" element={<RegistrarNotas />} />
+            <Route path="clasificacion" element={<Clasificacion />} />
+            <Route path="control-fases-area" element={<ControlFasesArea />} />
+            <Route path="reportes-area" element={<ReportesArea />} />
+        */}
+
+        {/* (Esta ruta ya está arriba, puedes dejar solo una si quieres) */}
+        <Route
+          path="gestion-inscripciones"
+          element={<GestionInscripciones />}
+        />
       </Route>
 
       {/* Rutas de prueba (accesibles sin login) */}
