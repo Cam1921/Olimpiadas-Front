@@ -16,6 +16,7 @@ export default function ControlFasesTable({
   rolUsuario,
   onEstadoActualizado,
 }) {
+  const navigate = useNavigate();
   const [loadingArea, setLoadingArea] = useState(null);
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -64,11 +65,8 @@ export default function ControlFasesTable({
         mensajeExito = `Resultados de ${areaNombre} confirmados correctamente.`;
       }
 
-      if (accion === "publicar") {
-        nuevoEstado = "Publicado";
-        mensajeExito = `Resultados de ${areaNombre} publicados correctamente.`;
-      }
-
+      // Nota: Ya no usamos 'publicar' ni 'cerrar' aquí para acciones reales,
+      // pero mantenemos 'cerrar' porque sí implica un cambio de estado.
       if (accion === "cerrar") {
         nuevoEstado = "Cerrado";
         mensajeExito = `Fase de ${areaNombre} cerrada correctamente.`;
@@ -137,18 +135,7 @@ export default function ControlFasesTable({
     setShowModal(true);
   };
 
-  const handlePublicar = (area) => {
-    setError(null);
-    setMensajeModal(
-      `¿Publicar resultados de ${area.nombre}? Esta acción no se puede deshacer.`
-    );
-    setAccionPendiente({
-      tipo: "publicar",
-      areaId: area.id,
-      areaNombre: area.nombre,
-    });
-    setShowModal(true);
-  };
+  // Eliminamos handlePublicar porque ya no se usa
 
   const handleCerrar = (area) => {
     setError(null);
@@ -171,7 +158,6 @@ export default function ControlFasesTable({
 
   return (
     <div className="space-y-4">
-      {/* 👇 Título y subtítulo según tu mockup */}
       <div>
         <h1 className="text-2xl font-bold text-slate-800 leading-tight">
           Estado de Fases por Área
@@ -285,23 +271,37 @@ export default function ControlFasesTable({
 
                     {esAdmin && area.estado === "Confirmado" && (
                       <>
+                        {/* Navegación a Certificados */}
                         <button
                           className="btn btn-info btn-sm"
                           onClick={() => {
-                            alert(
-                              "Vista previa de certificados en desarrollo."
-                            );
+                            navigate("/certificados", {
+                              state: {
+                                areaId: area.id,
+                                areaNombre: area.nombre,
+                              },
+                            });
                           }}
                         >
                           Certificados
                         </button>
+
+                        {/* Navegación a Publicación */}
                         <button
                           className="btn btn-outline btn-sm"
-                          onClick={() => handlePublicar(area)}
-                          disabled={loadingArea === area.id}
+                          onClick={() => {
+                            navigate("/publicacion", {
+                              state: {
+                                areaId: area.id,
+                                areaNombre: area.nombre,
+                              },
+                            });
+                          }}
                         >
-                          {loadingArea === area.id ? "..." : "Publicar"}
+                          Publicar
                         </button>
+
+                        {/* Cerrar sigue usando confirmación */}
                         <button
                           className="btn btn-outline btn-sm"
                           onClick={() => handleCerrar(area)}
