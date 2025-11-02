@@ -1,5 +1,6 @@
 // src/components/ControlFasesTable.jsx
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { EyeIcon } from '@heroicons/react/24/outline';
 import ConfirmationModal from './ConfirmationModal';
 import SuccessDialog from './SuccessDialog';
@@ -11,6 +12,7 @@ async function verificarCalificacionesCompletas(areaId) {
 }
 
 export default function ControlFasesTable({ areas = [], rolUsuario, onEstadoActualizado }) {
+  const navigate = useNavigate();
   const [loadingArea, setLoadingArea] = useState(null);
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -53,11 +55,10 @@ export default function ControlFasesTable({ areas = [], rolUsuario, onEstadoActu
         mensajeExito = `Resultados de ${areaNombre} confirmados correctamente.`;
       }
 
-      if (accion === 'publicar') {
-        mensajeExito = `Resultados de ${areaNombre} publicados correctamente.`;
-      }
-
+      // Nota: Ya no usamos 'publicar' ni 'cerrar' aquí para acciones reales,
+      // pero mantenemos 'cerrar' porque sí implica un cambio de estado.
       if (accion === 'cerrar') {
+        nuevoEstado = 'Cerrado';
         mensajeExito = `Fase de ${areaNombre} cerrada correctamente.`;
       }
 
@@ -101,12 +102,7 @@ export default function ControlFasesTable({ areas = [], rolUsuario, onEstadoActu
     setShowModal(true);
   };
 
-  const handlePublicar = (area) => {
-    setError(null);
-    setMensajeModal(`¿Publicar resultados de ${area.nombre}? Esta acción no se puede deshacer.`);
-    setAccionPendiente({ tipo: 'publicar', areaId: area.id, areaNombre: area.nombre });
-    setShowModal(true);
-  };
+  // Eliminamos handlePublicar porque ya no se usa
 
   const handleCerrar = (area) => {
     setError(null);
@@ -123,7 +119,6 @@ export default function ControlFasesTable({ areas = [], rolUsuario, onEstadoActu
 
   return (
     <div className="space-y-4">
-      {/* 👇 Título y subtítulo según tu mockup */}
       <div>
         <h1 className="text-2xl font-bold text-slate-800 leading-tight">
           Estado de Fases por Área
@@ -218,21 +213,31 @@ export default function ControlFasesTable({ areas = [], rolUsuario, onEstadoActu
 
                     {esAdmin && area.estado === 'Confirmado' && (
                       <>
+                        {/* Navegación a Certificados */}
                         <button
                           className="btn btn-info btn-sm"
                           onClick={() => {
-                            alert("Vista previa de certificados en desarrollo.");
+                            navigate('/certificados', {
+                              state: { areaId: area.id, areaNombre: area.nombre }
+                            });
                           }}
                         >
                           Certificados
                         </button>
+
+                        {/* Navegación a Publicación */}
                         <button
                           className="btn btn-outline btn-sm"
-                          onClick={() => handlePublicar(area)}
-                          disabled={loadingArea === area.id}
+                          onClick={() => {
+                            navigate('/publicacion', {
+                              state: { areaId: area.id, areaNombre: area.nombre }
+                            });
+                          }}
                         >
-                          {loadingArea === area.id ? '...' : 'Publicar'}
+                          Publicar
                         </button>
+
+                        {/* Cerrar sigue usando confirmación */}
                         <button
                           className="btn btn-outline btn-sm"
                           onClick={() => handleCerrar(area)}
