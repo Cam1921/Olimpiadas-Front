@@ -12,6 +12,7 @@ import { useState } from "react";
 import StatusBadge from "./components/StatusBadge";
 import DetailsModal from "./components/DetailsModal";
 import { useNotificaciones } from "./hooks/useNotificaciones";
+import api from "@/lib/api";
 
 const ROLES = ["Todos los roles", "Evaluador", "Responsable"];
 const ESTADOS = ["Todos los estados", "Confirmado", "Pendiente", "Rebotado"];
@@ -46,12 +47,8 @@ export default function NotificacionesPage() {
     if (!item) return;
 
     try {
-      const response = await fetch(`/api/invitaciones/reenviar/${item.id}`, {
-        method: "PUT",
-      });
-
-      if (!response.ok) throw new Error("Error al reenviar el correo");
-
+      const { data } = await api.put(`/invitaciones/reenviar/${item.id}`);
+      console.log(data);
       alert("Correo reenviado correctamente ✅");
       setOpen(false); // cierra el modal
     } catch (error) {

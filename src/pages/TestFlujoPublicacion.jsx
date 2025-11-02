@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import FlujoPublicacionPanel from "../components/FlujoPublicacionPanel";
+import api from "@/lib/api";
 
 export default function TestFlujoPublicacion() {
   const [areas, setAreas] = useState([]);
@@ -9,8 +10,8 @@ export default function TestFlujoPublicacion() {
   useEffect(() => {
     const fetchAreas = async () => {
       try {
-        const res = await fetch("/api/areas-fases");
-        const data = await res.json();
+        const res = await api.get("/areas-fases");
+        const data = res.data;
 
         if (data.success && Array.isArray(data.data)) {
           // Opcional: formatear nombres y estados para mantener coherencia visual

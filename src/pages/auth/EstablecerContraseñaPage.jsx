@@ -8,9 +8,7 @@ import ModalExito from "./components/ModalExito";
 import ModalTokenExpirado from "./components/ModalTokenExpirado";
 
 const validateToken = async (token) => {
-  const res = await fetch(
-    `http://localhost:8000/api/invitaciones/verificar-token/${token}`
-  );
+  const res = await fetch(`/api/invitaciones/verificar-token/${token}`);
   if (!res.ok) return { ok: false };
   return await res.json();
 };
@@ -87,14 +85,11 @@ export default function EstablecerContraseñaPage() {
     if (!canSubmit) return;
     console.log(token);
     try {
-      const res = await fetch(
-        "http://localhost:8000/api/invitaciones/establecer-password",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token, password: p1 }),
-        }
-      );
+      const res = await fetch("/api/invitaciones/establecer-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, password: p1 }),
+      });
 
       const data = await res.json();
 

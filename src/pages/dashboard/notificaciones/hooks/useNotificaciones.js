@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import api from "@/lib/api";
 
 export function useNotificaciones() {
   const [rows, setRows] = useState([]);
@@ -12,8 +13,8 @@ export function useNotificaciones() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const res = await fetch("/api/notificaciones/listar");
-        const json = await res.json();
+        const res = await api.get("/notificaciones/listar");
+        const json = res.data;
 
         // Extraemos meta
         const meta = json.meta?.[0] || {};

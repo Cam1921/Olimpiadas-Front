@@ -4,6 +4,7 @@ import { EyeIcon } from "@heroicons/react/24/outline";
 import ConfirmationModal from "./ConfirmationModal";
 import SuccessDialog from "./SuccessDialog";
 import VistaPreviaFase from "./VistaPreviaFase";
+import api from "@/lib/api";
 
 async function verificarCalificacionesCompletas(areaId) {
   console.log("Verificando calificaciones para el área:", areaId);
@@ -73,19 +74,12 @@ export default function ControlFasesTable({
         mensajeExito = `Fase de ${areaNombre} cerrada correctamente.`;
       }
 
-      // 🔥 Llamada al backend
-      const response = await fetch(
-        `http://127.0.0.1:8000/api/estados/${areaId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ estado: nuevoEstado }),
-        }
-      );
+      const payload = {
+        estado: nuevoEstado,
+      };
+      const response = await api.put(`/estados/${areaId}`, payload);
 
-      const result = await response.json();
+      const result = await response.data;
       if (!result.success) {
         throw new Error(
           result.message || "Error al actualizar el estado en el servidor"

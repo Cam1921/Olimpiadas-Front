@@ -1,6 +1,7 @@
 // src/pages/TestControlFases.jsx
 import { useEffect, useState } from "react";
 import ControlFasesTable from "../components/ControlFasesTable";
+import api from "@/lib/api";
 
 export default function TestControlFases() {
   const [areas, setAreas] = useState([]);
@@ -10,9 +11,10 @@ export default function TestControlFases() {
   useEffect(() => {
     async function fetchEstados() {
       try {
-        const res = await fetch("/api/estados");
-        const json = await res.json();
-
+        const res = await api.get("/estados");
+        console.log(res);
+        const json = res.data;
+        console.log(json);
         if (
           json.success &&
           json.data &&
