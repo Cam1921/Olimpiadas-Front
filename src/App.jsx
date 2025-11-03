@@ -20,8 +20,11 @@ import EstablecerContraseñaPage from "@/pages/auth/EstablecerContraseñaPage";
 import EntornoFinal from "./components/EntornoFinal.jsx";
 import OfficialListPage from "./components/OfficialListPage";
 
-// 👇 NUEVO: importa la pestaña Publicación (sin acento)
+// HU10 – Publicación
 import PublicacionPage from "./pages/dashboard/Publicacion";
+
+// HU05 – Responsable / Control de Fases (import directo)
+import ControlFasesArea from "./pages/dashboard/responsable/ControlFasesArea.jsx";
 
 export default function App() {
   return (
@@ -40,7 +43,6 @@ export default function App() {
         }
       >
         <Route index element={<RoleIndexRedirect />} />
-
         {/* Admin */}
         <Route path="panel-principal" element={<PanelPrincipal />} />
         <Route path="gestion-roles" element={<ResponsablesAcademicos />} />
@@ -58,21 +60,28 @@ export default function App() {
           path="gestion-inscripciones"
           element={<GestionInscripciones />}
         />
-
-        {/* 👇 NUEVO: ruta a tu HU10 / Publicación */}
+        {/* Publicación HU10 */}
         <Route path="publicacion" element={<PublicacionPage />} />
-
-        {/* Evaluador / Responsable (comparten la misma vista) */}
+        {/* Evaluador / Responsable */}
         <Route path="informacion-personal" element={<InformacionPersonal />} />
-
-        {/* (más adelante puedes añadir:)
-            <Route path="registrar-notas" element={<RegistrarNotas />} />
-            <Route path="clasificacion" element={<Clasificacion />} />
-            <Route path="control-fases-area" element={<ControlFasesArea />} />
-            <Route path="reportes-area" element={<ReportesArea />} />
-        */}
-
+        {/* HU05 – Responsable / Control de Fases */}
+        <Route
+          path="responsable/control-fases"
+          element={<ControlFasesArea />}
+        />
         {/* (Esta ruta ya está arriba, puedes dejar solo una si quieres) */}
+        <Route
+          path="gestion-inscripciones"
+          element={<GestionInscripciones />}
+        />
+        {/* 🔁 Alias para las variaciones que usa tu menú */}
+        <Route path="responsable" element={<ControlFasesArea />} />
+        <Route path="control-fases" element={<ControlFasesArea />} />
+        <Route path="controlfases" element={<ControlFasesArea />} />
+        <Route path="responsable/controlFases" element={<ControlFasesArea />} />
+        <Route path="control-fases-area" element={<ControlFasesArea />} />{" "}
+        {/* ← ESTA ES LA QUE NECESITAS */}
+        {/* Compatibilidad */}
         <Route
           path="gestion-inscripciones"
           element={<GestionInscripciones />}
