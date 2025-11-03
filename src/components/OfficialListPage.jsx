@@ -62,43 +62,32 @@ const OfficialListPage = () => {
   const [successMessage, setSuccessMessage] = useState("");
 
   // Datos simulados
-  const competitors = [
-    {
-      id: "EST001",
-      name: "María González Pérez",
-      area: "Matemáticas",
-      level: "Tercer Nivel",
-      course: "6to A",
-      score: 95,
-      date: "2025-01-15"
-    },
-    {
-      id: "EST002",
-      name: "Carlos Mamani Quispe",
-      area: "Física",
-      level: "4to Secundaria",
-      course: "4to B",
-      score: 88,
-      date: "2025-01-16"
-    },
-    {
-      id: "EST003",
-      name: "Ana López Sánchez",
-      area: "Matemáticas",
-      level: "Segundo Nivel",
-      course: "5to C",
-      score: 92,
-      date: "2025-01-14"
-    },
-    {
-      id: "EST004",
-      name: "Luis Torres Rojas",
-      area: "Física",
-      level: "3ro Secundaria",
-      course: "3ro D",
-      score: 85,
-      date: "2025-01-17"
-    }
+  // Datos simulados — 20 competidores totales
+const competitors = [
+  // Matemáticas - Primer Nivel (12)
+  { id: "EST001", name: "María González Pérez", area: "Matemáticas", level: "Primer Nivel", course: "6to A", score: 95, date: "2025-01-15" },
+  { id: "EST002", name: "Ana López Sánchez", area: "Matemáticas", level: "Primer Nivel", course: "6to B", score: 92, date: "2025-01-14" },
+  { id: "EST003", name: "Luis Torres Rojas", area: "Matemáticas", level: "Primer Nivel", course: "6to C", score: 88, date: "2025-01-16" },
+  { id: "EST004", name: "Sofía Vargas Mendoza", area: "Matemáticas", level: "Primer Nivel", course: "6to D", score: 90, date: "2025-01-17" },
+  { id: "EST005", name: "Carlos Mamani Quispe", area: "Matemáticas", level: "Primer Nivel", course: "6to E", score: 85, date: "2025-01-18" },
+  { id: "EST006", name: "Javier Ruiz Flores", area: "Matemáticas", level: "Primer Nivel", course: "6to F", score: 93, date: "2025-01-19" },
+  { id: "EST007", name: "Elena Herrera Cruz", area: "Matemáticas", level: "Primer Nivel", course: "6to G", score: 87, date: "2025-01-20" },
+  { id: "EST008", name: "Diego Ramírez Paredes", area: "Matemáticas", level: "Primer Nivel", course: "6to H", score: 91, date: "2025-01-21" },
+  { id: "EST009", name: "Lucía Fernández Gómez", area: "Matemáticas", level: "Primer Nivel", course: "6to I", score: 89, date: "2025-01-22" },
+  { id: "EST010", name: "Miguel Ángel Salazar", area: "Matemáticas", level: "Primer Nivel", course: "6to J", score: 94, date: "2025-01-23" },
+  { id: "EST011", name: "Valeria Morales Arce", area: "Matemáticas", level: "Primer Nivel", course: "6to K", score: 86, date: "2025-01-24" },
+  { id: "EST012", name: "Andrés Castro Ríos", area: "Matemáticas", level: "Primer Nivel", course: "6to L", score: 96, date: "2025-01-25" },
+
+  // Física - 4to Secundaria (8)
+  { id: "EST013", name: "Carlos Mamani Quispe", area: "Física", level: "4to Secundaria", course: "4to A", score: 88, date: "2025-01-16" },
+  { id: "EST014", name: "Luis Torres Rojas", area: "Física", level: "4to Secundaria", course: "4to B", score: 85, date: "2025-01-17" },
+  { id: "EST015", name: "Ana López Sánchez", area: "Física", level: "4to Secundaria", course: "4to C", score: 90, date: "2025-01-18" },
+  { id: "EST016", name: "María González Pérez", area: "Física", level: "4to Secundaria", course: "4to D", score: 87, date: "2025-01-19" },
+  { id: "EST017", name: "Sofía Vargas Mendoza", area: "Física", level: "4to Secundaria", course: "4to E", score: 92, date: "2025-01-20" },
+  { id: "EST018", name: "Javier Ruiz Flores", area: "Física", level: "4to Secundaria", course: "4to F", score: 86, date: "2025-01-21" },
+  { id: "EST019", name: "Elena Herrera Cruz", area: "Física", level: "4to Secundaria", course: "4to G", score: 89, date: "2025-01-22" },
+  { id: "EST020", name: "Diego Ramírez Paredes", area: "Física", level: "4to Secundaria", course: "4to H", score: 91, date: "2025-01-23" }
+
   ];
 
   const areas = ["all", ...new Set(competitors.map(c => c.area))];
