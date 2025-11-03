@@ -1,17 +1,31 @@
 // src/components/EvaluadoresTable.jsx
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 
-export default function EvaluadoresTable({ data = [], onEdit, onDelete }) {
+export default function EvaluadoresTable({
+  data = [],
+  onEdit,
+  onDelete,
+  headerExtra, // NUEVA PROP
+}) {
   return (
     <div className="card p-0 overflow-hidden">
+      {/* Encabezado dentro del card */}
       <div className="px-6 pt-6">
-        <h3 className="text-2xl font-semibold text-primary">
-          Evaluadores Registrados
-        </h3>
-        <p className="text-slate-500">
-          Lista completa de evaluadores activos en el sistema
-        </p>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div>
+            <h3 className="text-2xl font-semibold text-primary">
+              Evaluadores Registrados
+            </h3>
+            <p className="text-slate-500">
+              Lista completa de evaluadores activos en el sistema
+            </p>
+          </div>
+
+          {/* Aquí se pinta el buscador */}
+          {headerExtra ? <div className="w-full md:w-64">{headerExtra}</div> : null}
+        </div>
       </div>
+
       <div className="overflow-x-auto">
         <table className="min-w-full mt-4">
           <thead className="text-left text-slate-500">
@@ -29,9 +43,7 @@ export default function EvaluadoresTable({ data = [], onEdit, onDelete }) {
           <tbody className="divide-y divide-slate-100">
             {data.map((r) => (
               <tr key={r.id} className="hover:bg-slate-50">
-                <td className="px-6 py-4">
-                  {r.nombre} {r.apellidos}
-                </td>
+                <td className="px-6 py-4">{r.nombre} {r.apellidos}</td>
                 <td className="px-6 py-4">{r.correo}</td>
                 <td className="px-6 py-4">{r.telefono}</td>
                 <td className="px-6 py-4">{r.ci}</td>
@@ -44,7 +56,7 @@ export default function EvaluadoresTable({ data = [], onEdit, onDelete }) {
                       className="text-cta hover:opacity-80"
                       title="Editar"
                       aria-label="Editar evaluador"
-                      onClick={() => onEdit?.(r, r.id)} // <-- IMPORTANTE: pasamos idx
+                      onClick={() => onEdit?.(r, r.id)}
                     >
                       <PencilSquareIcon className="w-5 h-5" />
                     </button>
