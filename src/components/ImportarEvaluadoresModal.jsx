@@ -242,6 +242,18 @@ export default function ImportarEvaluadoresModal({ open, onClose, onImport }) {
                 </div>
               </div>
             </div>
+            <div className="flex justify-center gap-3 pt-4">
+              <Button
+                variant="outline"
+                className="flex items-center gap-2 border-none text-red-600"
+                onClick={() => {
+                  setFile(null);
+                  setImportStep("select");
+                }}
+              >
+                <span>X</span> Eliminar archivo
+              </Button>
+            </div>
             <div className="flex justify-end gap-3 pt-4">
               <Button variant="outline" onClick={handleBeforeClose}>
                 Cancelar

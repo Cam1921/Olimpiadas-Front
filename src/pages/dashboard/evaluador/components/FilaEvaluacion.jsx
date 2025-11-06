@@ -329,7 +329,6 @@ export default function FilaEvaluacion({
           >
             {saving ? "Guardando…" : "Registrar"}
           </button>
-          <div>{estadoNivel}</div>
           {cambios && !saving && (
             <span className="text-center text-orange-500 block mt-2">
               Pendiente
