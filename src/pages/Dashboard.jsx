@@ -1,60 +1,59 @@
 // src/pages/Dashboard.jsx
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { me, logout } from "../services/auth";
+import { Outlet, useNavigate } from "react-router-dom";
+import React, { useState, useCallback, useMemo } from "react";
+import SideMenu from "../components/SideMenu";
+import Header from "../components/ui/Header";
+import Footer from "@/components/Footer";
+import { ROLE_NAMES } from "@/constants/menu";
+
+const WIDTH_EXPANDED = 260;
+const WIDTH_COLLAPSED = 72;
 
 export default function Dashboard() {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const navigate = useNavigate();
+  const toggleMenu = useCallback(() => setSidebarOpen((s) => !s), []);
 
-  // Hidrata desde sessionStorage para evitar parpadeo
-  const [user, setUser] = useState(() => {
-    const raw = sessionStorage.getItem("user");
-    return raw ? JSON.parse(raw) : null;
-  });
-  const [loading, setLoading] = useState(!user);
-
-  useEffect(() => {
-    let mounted = true;
-    me()
-      .then((u) => {
-        if (!mounted) return;
-        setUser(u);
-        setLoading(false);
-      })
-      .catch(() => {
-        // El interceptor 401 ya redirige; esto es fallback
-        sessionStorage.removeItem("token");
-        sessionStorage.removeItem("user");
-        navigate("/login", { replace: true });
-      });
-    return () => { mounted = false; };
+  const handleLogout = useCallback(() => {
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("user");
+    navigate("/", { replace: true, state: { from: "logout" } });
   }, [navigate]);
 
-  const onLogout = async () => {
-    await logout();
-    navigate("/login", { replace: true });
-  };
+  const user = useMemo(() => {
+    try {
+      const raw = sessionStorage.getItem("user");
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const roleName =
+    user?.role?.nombre || // por si alguna vez viene así
+    user?.rol?.[0] || // tu JSON actual: "rol": ["evaluador"]
+    user?.user?.personas?.[0]?.rols?.[0]?.nombre || // por si accedemos al nivel interno
+    ROLE_NAMES.ADMINISTRADOR;
 
   return (
-    <div className="min-h-screen p-6 bg-gray-50">
-      <div className="max-w-2xl mx-auto">
-        <header className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-semibold">Nebula — Dashboard</h1>
-          <button className="border rounded px-3 py-1" onClick={onLogout}>
-            Cerrar sesión
-          </button>
-        </header>
+    <div className="min-h-screen bg-[#f6f8f9]">
+      {/* ⬅️ ahora SideMenu recibe el rol real */}
+      <SideMenu open={sidebarOpen} role={roleName} />
 
-        <div className="bg-white rounded-xl shadow p-4">
-          <h2 className="text-lg font-medium mb-2">Tu perfil</h2>
-        {!loading ? (
-          <pre className="text-sm bg-gray-50 p-3 rounded overflow-auto">
-            {JSON.stringify(user, null, 2)}
-          </pre>
-        ) : (
-          <p>Cargando...</p>
-        )}
-        </div>
+      <div
+        className="flex flex-col min-h-screen transition-all duration-300"
+        style={{ marginLeft: sidebarOpen ? WIDTH_EXPANDED : WIDTH_COLLAPSED }}
+      >
+        <Header
+          title="Olimpiadas en Ciencias y Tecnología"
+          showMenu
+          onToggleMenu={toggleMenu}
+          onLogout={handleLogout}
+        />
+        <main className="flex-1 overflow-y-auto">
+          <Outlet />
+        </main>
+        <Footer />
       </div>
     </div>
   );

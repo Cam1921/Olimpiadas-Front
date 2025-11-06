@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { login } from "../services/auth";
+import { login } from "@/services/auth";
+import { useNavigate } from "react-router-dom";
 
 export default function Login() {
   const [email, setEmail] = useState("admin@nebula.com");
   const [password, setPassword] = useState("Admin12345!");
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
   const [error, setError] = useState("");
 
   async function onSubmit(e) {
@@ -13,7 +15,7 @@ export default function Login() {
     setLoading(true);
     try {
       await login(email, password);
-      window.location.href = "/"; // al dashboard
+      navigate("/Dashboard", { replace: true });
     } catch {
       setError("Credenciales inválidas");
     } finally {
@@ -31,14 +33,14 @@ export default function Login() {
             className="border rounded p-2"
             placeholder="Email"
             value={email}
-            onChange={(e)=>setEmail(e.target.value)}
+            onChange={(e) => setEmail(e.target.value)}
           />
           <input
             className="border rounded p-2"
             type="password"
             placeholder="Password"
             value={password}
-            onChange={(e)=>setPassword(e.target.value)}
+            onChange={(e) => setPassword(e.target.value)}
           />
 
           <button

@@ -1,0 +1,138 @@
+/* src/styles/globals.css */
+
+/* Fuente principal: Comfortaa */
+@import url("https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;500;600;700&display=swap");
+
+/* Tailwind v3 */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===== Design tokens (colores, tipografías, tamaños) ===== */
+:root {
+  /* Paleta */
+  --primary: #0284C7;
+  --primary-rgb: 2 132 199;
+  --surface: #F8FAFB;
+  --bg: #FFFFFF;
+  --ink: #23263D;
+  --success: #1B8665;
+  --danger: #DC2626;
+  --warning: #F59E0B;
+
+  /* Tipografía */
+  --ff-sans: "Comfortaa", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+
+  /* Escala tipográfica */
+  --fs-h1: 2.488rem; /* ≈40px */
+  --fs-h2: 2.074rem; /* ≈33px */
+  --fs-h3: 1.728rem; /* ≈28px */
+  --fs-h4: 1.44rem;  /* ≈23px */
+  --fs-h5: 1.2rem;   /* ≈19px */
+
+  --fs-body: 1rem;       /* 16px */
+  --fs-sm: 0.833rem;     /* ≈13px */
+  --fs-xs: 0.694rem;     /* ≈11px */
+}
+
+/* ===== Estilos base ===== */
+@layer base {
+  html, body, #root { height: 100%; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--ff-sans);
+    font-size: var(--fs-body);
+    font-weight: var(--fw-regular);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1 { font-size: var(--fs-h1); font-weight: var(--fw-bold); line-height: 1.2; }
+  h2 { font-size: var(--fs-h2); font-weight: var(--fw-bold); line-height: 1.25; }
+  h3 { font-size: var(--fs-h3); font-weight: var(--fw-semibold); line-height: 1.3; }
+  h4 { font-size: var(--fs-h4); font-weight: var(--fw-semibold); line-height: 1.35; }
+  h5 { font-size: var(--fs-h5); font-weight: var(--fw-medium); line-height: 1.4; }
+
+  small { font-size: var(--fs-sm); }
+}
+
+/* ===== Utilidades ligadas a tokens (útiles con Tailwind) ===== */
+@layer utilities {
+  .text-ink { color: var(--ink); }
+  .text-primary { color: var(--primary); }
+  .bg-surface { background-color: var(--surface); }
+  .bg-page { background-color: var(--bg); }
+  .border-ink\/10 { border-color: color-mix(in srgb, var(--ink) 10%, transparent); }
+
+  /* Sombra suave genérica */
+  .shadow-soft { box-shadow: 0 6px 20px rgba(35, 38, 61, 0.08); }
+
+  /* Ocultar scroll horizontal si hiciera falta */
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+}
+
+@layer components {
+  .btn-login {
+    width: 8.5em;
+    height: 2.6em;
+    margin: 0;
+    background: var(--primary);         /* #0284C7 */
+    color: var(--surface);              /* #F8FAFB */
+    border: 2px solid var(--primary);
+    border-radius: 0.625em;
+    font-size: 0.9rem;
+    line-height: 1;
+    white-space: nowrap;
+    font-weight: 700;
+    cursor: pointer;
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: color .35s ease;
+  }
+
+  .btn-login:hover {                    /* texto azul sobre fondo claro al pasar */
+    color: var(--primary);
+  }
+
+  .btn-login::after {                   /* wipe effect */
+    content: "";
+    background: var(--surface);         /* #F8FAFB */
+    position: absolute;
+    z-index: -1;
+    left: -20%;
+    right: -20%;
+    top: 0;
+    bottom: 0;
+    transform: skewX(-45deg) scale(0, 1);
+    transition: transform .5s ease;
+  }
+
+  .btn-login:hover::after {
+    transform: skewX(-45deg) scale(1, 1);
+  }
+
+  .btn-login:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 40%, transparent);
+  }
+
+  .btn-login:active {                   /* clic: vuelve a azul sólido */
+    color: var(--surface);
+  }
+  .btn-login:active::after {
+    transform: skewX(-45deg) scale(0, 1);
+  }
+}
