@@ -64,7 +64,12 @@ function allowNotaDraft(s) {
   return notaDraftRegex.test(s);
 }
 
-export default function FilaEvaluacion({ item, onSaved, esClasificados }) {
+export default function FilaEvaluacion({
+  item,
+  onSaved,
+  esClasificados,
+  estadoNivel,
+}) {
   const [nota, setNota] = useState(item.nota ?? "");
   const [descripcion, setDescripcion] = useState(item.descripcion ?? "");
   const [cond, setCond] = useState(
@@ -172,7 +177,7 @@ export default function FilaEvaluacion({ item, onSaved, esClasificados }) {
 
   // ✨ Responsive: tabla en desktop, card en mobile
   return (
-    <tr className="bg-white sm:table-row block sm:table-row my-2 sm:my-0 p-2 sm:p-0 rounded shadow sm:shadow-none">
+    <tr className="bg-white sm:table-row block  my-2 sm:my-0 p-2 sm:p-0 rounded shadow sm:shadow-none">
       {/* Nombre e ID */}
       <td className="px-4 py-3 sm:table-cell block">
         <div className="font-medium text-gray-800">{item.nombre}</div>
@@ -203,12 +208,16 @@ export default function FilaEvaluacion({ item, onSaved, esClasificados }) {
             onBlur={onNotaBlur}
             placeholder="0–100"
             inputMode="decimal"
+            disabled={
+              esClasificado || ["confirmado", "Concluido"].includes(estadoNivel)
+            }
           />
-          {!esClasificado && (
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 opacity-80">
-              {showErrorNota ? <ErrorBadge /> : <Lapis />}
-            </span>
-          )}
+          {!esClasificado &&
+            !["confirmado", "Concluido"].includes(estadoNivel) && (
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 opacity-80">
+                {showErrorNota ? <ErrorBadge /> : <Lapis />}
+              </span>
+            )}
         </div>
         {notaDraftMsg && (
           <ToastInline
@@ -244,7 +253,10 @@ export default function FilaEvaluacion({ item, onSaved, esClasificados }) {
                   setCond((prev) => ({ ...prev, [c]: e.target.checked }))
                 }
                 className="accent-[var(--primary)] w-4 h-4"
-                disabled={esClasificado}
+                disabled={
+                  esClasificado ||
+                  ["confirmado", "Concluido"].includes(estadoNivel)
+                }
               />
               <span className="text-gray-700 capitalize">{c}</span>
             </label>
@@ -260,7 +272,9 @@ export default function FilaEvaluacion({ item, onSaved, esClasificados }) {
               showErrorDesc ? "border-red-400" : "border-gray-300"
             }`}
             value={descripcion}
-            disabled={esClasificado}
+            disabled={
+              esClasificado || ["confirmado", "Concluido"].includes(estadoNivel)
+            }
             onChange={(e) => {
               setDescripcion(e.target.value);
               if (!descTouched) setDescTouched(true);
@@ -268,11 +282,12 @@ export default function FilaEvaluacion({ item, onSaved, esClasificados }) {
             onBlur={() => setDescTouched(true)}
             placeholder="Observación (5–60 caracteres)"
           />
-          {!esClasificado && (
-            <span className="absolute right-3 top-3 opacity-80">
-              {showErrorDesc ? <ErrorBadge /> : <Lapis />}
-            </span>
-          )}
+          {!esClasificado &&
+            !["confirmado", "Concluido"].includes(estadoNivel) && (
+              <span className="absolute right-3 top-3 opacity-80">
+                {showErrorDesc ? <ErrorBadge /> : <Lapis />}
+              </span>
+            )}
         </div>
         {showErrorDesc && (
           <ToastInline
@@ -301,7 +316,7 @@ export default function FilaEvaluacion({ item, onSaved, esClasificados }) {
       </td>
 
       {/* Acción */}
-      {!esClasificado && (
+      {!esClasificado && !["confirmado", "Concluido"].includes(estadoNivel) && (
         <td className="px-4 py-3 align-top w-[150px] sm:w-auto block sm:table-cell mt-2 sm:mt-0">
           <button
             onClick={onGuardar}
@@ -314,6 +329,7 @@ export default function FilaEvaluacion({ item, onSaved, esClasificados }) {
           >
             {saving ? "Guardando…" : "Registrar"}
           </button>
+          <div>{estadoNivel}</div>
           {cambios && !saving && (
             <span className="text-center text-orange-500 block mt-2">
               Pendiente

@@ -17,7 +17,12 @@ function saveLocal(mapById) {
   } catch {}
 }
 
-export default function EvaluacionesTable({ opcion_tabla, esClasificados }) {
+export default function EvaluacionesTable({
+  opcion_tabla,
+  esClasificados,
+  idAreaNivelFase,
+  estadoNivel,
+}) {
   const [rows, setRows] = useState([]);
   const [meta, setMeta] = useState(null);
   const [page, setPage] = useState(1);
@@ -26,11 +31,12 @@ export default function EvaluacionesTable({ opcion_tabla, esClasificados }) {
   const fetchEvaluaciones = async (page = 1) => {
     setLoading(true);
     try {
-      const res = await EvaluacionesRepository.getEvaluaciones({
-        page,
-        perPage: 10,
-        estado_clasificado: opcion_tabla,
-      });
+      // Aquí enviamos los params como primer argumento, y el idAreaNivelFase como segundo
+      const res = await EvaluacionesRepository.getEvaluaciones(
+        { page, perPage: 10, estado_clasificado: opcion_tabla },
+        idAreaNivelFase
+      );
+
       setRows(res.data);
       setMeta(res.meta);
       setPage(res.meta.current_page);
@@ -42,6 +48,7 @@ export default function EvaluacionesTable({ opcion_tabla, esClasificados }) {
   };
 
   useEffect(() => {
+    console.log("estado", estadoNivel);
     fetchEvaluaciones(1);
   }, [opcion_tabla]);
 
@@ -73,7 +80,10 @@ export default function EvaluacionesTable({ opcion_tabla, esClasificados }) {
             <th className="px-4 py-3">Conducta</th>
             <th className="px-4 py-3 hidden sm:table-cell">Descripción</th>
             <th className="px-4 py-3">Estado</th>
-            {!esClasificados && <th className="px-4 py-3">Acción</th>}
+            {!esClasificados &&
+              !["confirmado", "Concluido"].includes(estadoNivel) && (
+                <th className="px-4 py-3">Acción</th>
+              )}
           </tr>
         </thead>
 
@@ -91,6 +101,7 @@ export default function EvaluacionesTable({ opcion_tabla, esClasificados }) {
                 item={item}
                 onSaved={handleSaved}
                 esClasificados={esClasificados}
+                estadoNivel={estadoNivel}
               />
             ))
           ) : (

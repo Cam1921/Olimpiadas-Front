@@ -1,7 +1,6 @@
 // src/application/responsables/useEditResponsible.js
 import { useState, useEffect, useCallback } from "react";
-import { responsablesRepo } from "../../infrastructure/http/responsables/repository"; // ✅ Ruta corregida
-import { validateResponsable } from "../../domain/responsables/validators";
+import { responsablesRepo } from "../../infrastructure/http/responsables/repository";
 import { cleanNameInput, cleanPhoneInput, cleanCIInput } from "../../utils/text";
 import { getAreasConNiveles } from "../../infrastructure/http/areas/areaRepostory";
 

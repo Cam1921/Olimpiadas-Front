@@ -67,7 +67,11 @@ export default function FiltersBar({
               : "text-gray-500"
           }`}
           >
-            {nivel ? (esPrimaria(nivel) ? "Primaria" : "Secundaria") : "Seleccione nivel"}
+            {nivel
+              ? esPrimaria(nivel)
+                ? "Primaria"
+                : "Secundaria"
+              : "Seleccione nivel"}
           </span>
         ) : (
           <span className="text-gray-500">Seleccione área</span>

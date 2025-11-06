@@ -5,6 +5,8 @@ import ConfirmationModal from "./ConfirmationModal";
 import SuccessDialog from "./SuccessDialog";
 import VistaPreviaFase from "./VistaPreviaFase";
 import api from "@/lib/api";
+import { useNavigate } from "react-router-dom";
+import { Ban, Check, Slash, X } from "lucide-react";
 
 async function verificarCalificacionesCompletas(areaId) {
   console.log("Verificando calificaciones para el área:", areaId);
@@ -224,10 +226,18 @@ export default function ControlFasesTable({
                     <span className="text-xs">{area.progreso}%</span>
                   </div>
                 </td>
-                <td className="px-4 py-3 text-xs">
-                  <div>✅ {area.clasificados}</div>
-                  <div>❌ {area.noClasificados}</div>
-                  <div>🚫 {area.descalificados}</div>
+                <td className="px-4 py-3 text-xs flex flex-col gap-1">
+                  <div className="flex items-center gap-1">
+                    <Check className="w-4 h-4 text-green-500" />{" "}
+                    {area.clasificados}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <X className="w-4 h-4 text-red-500" /> {area.noClasificados}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Ban className="w-4 h-4 text-red-500" />{" "}
+                    {area.descalificados}
+                  </div>
                 </td>
                 <td className="px-4 py-3">{area.responsable}</td>
                 <td className="px-4 py-3">

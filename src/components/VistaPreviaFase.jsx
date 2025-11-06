@@ -1,7 +1,8 @@
 // src/components/VistaPreviaFase.jsx
-import { Fragment } from 'react';
-import { Dialog, Transition } from '@headlessui/react';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import { Fragment } from "react";
+import { Dialog, Transition } from "@headlessui/react";
+import { XMarkIcon } from "@heroicons/react/24/outline";
+import { Ban, Check, X } from "lucide-react";
 
 export default function VistaPreviaFase({ open, onClose, area = {} }) {
   if (!open) return null;
@@ -50,7 +51,9 @@ export default function VistaPreviaFase({ open, onClose, area = {} }) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div>
                   <h3 className="font-medium text-slate-700">Área / Nivel</h3>
-                  <p className="text-slate-600">{area.nombre} — {area.nivel}</p>
+                  <p className="text-slate-600">
+                    {area.nombre} — {area.nivel}
+                  </p>
                 </div>
                 <div>
                   <h3 className="font-medium text-slate-700">Fase actual</h3>
@@ -64,16 +67,28 @@ export default function VistaPreviaFase({ open, onClose, area = {} }) {
                 </div>
                 <div>
                   <h3 className="font-medium text-slate-700">Estado</h3>
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs ${area.estado === 'En evaluación' ? 'bg-blue-100 text-blue-800' : area.estado === 'Concluido' ? 'bg-green-100 text-green-800' : 'bg-purple-100 text-purple-800'}`}>
+                  <span
+                    className={`inline-flex items-center px-2 py-0.5 rounded text-xs ${
+                      area.estado === "En evaluación"
+                        ? "bg-blue-100 text-blue-800"
+                        : area.estado === "Concluido"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-purple-100 text-purple-800"
+                    }`}
+                  >
                     {area.estado}
                   </span>
                 </div>
                 <div>
-                  <h3 className="font-medium text-slate-700">Fecha de registro</h3>
+                  <h3 className="font-medium text-slate-700">
+                    Fecha de registro
+                  </h3>
                   <p className="text-slate-600">{fechaRegistro}</p>
                 </div>
                 <div>
-                  <h3 className="font-medium text-slate-700">Última actualización</h3>
+                  <h3 className="font-medium text-slate-700">
+                    Última actualización
+                  </h3>
                   <p className="text-slate-600">{ultimaActualizacion}</p>
                 </div>
               </div>
@@ -87,40 +102,28 @@ export default function VistaPreviaFase({ open, onClose, area = {} }) {
                       style={{ width: `${area.progreso}%` }}
                     ></div>
                   </div>
-                  <span className="text-xs text-slate-500">{area.progreso}%</span>
+                  <span className="text-xs text-slate-500">
+                    {area.progreso}%
+                  </span>
                 </div>
               </div>
 
               <div className="mb-6">
-                <h3 className="font-medium text-slate-700 mb-2">Clasificación</h3>
+                <h3 className="font-medium text-slate-700 mb-2">
+                  Clasificación
+                </h3>
                 <div className="grid grid-cols-3 gap-4 text-sm">
                   <div className="flex items-center gap-1">
-                    <span className="text-green-500">✅</span>
+                    <Check className="w-4 h-4 text-green-500" />
                     <span>{area.clasificados} clasificados</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <span className="text-red-500">❌</span>
+                    <X className="w-4 h-4 text-red-500" />
                     <span>{area.noClasificados} no clasificados</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <span className="text-gray-500">🚫</span>
+                    <Ban className="w-4 h-4 text-red-500" />
                     <span>{area.descalificados} descalificados</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mb-6">
-                <h3 className="font-medium text-slate-700 mb-2">Competidores</h3>
-                <div className="border border-slate-200 rounded-lg p-3">
-                  <div className="space-y-2">
-                    {[1, 2, 3].map((i) => (
-                      <div key={i} className="py-1 border-b last:border-b-0">
-                        <div className="flex justify-between">
-                          <span className="font-medium">Competidor {i}</span>
-                          <span className="text-slate-500">Nota: {Math.floor(Math.random() * 100)}</span>
-                        </div>
-                      </div>
-                    ))}
                   </div>
                 </div>
               </div>

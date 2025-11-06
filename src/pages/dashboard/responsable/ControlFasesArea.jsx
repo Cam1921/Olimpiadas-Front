@@ -1,4 +1,5 @@
 // src/pages/dashboard/responsable/ControlFasesArea.jsx
+import EvaluacionesRepository from "@/infrastructure/http/Evaluacion/repository";
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -68,7 +69,11 @@ function PhasePill({ text }) {
   return (
     <span
       className="inline-flex items-center gap-2 px-3 h-8 rounded-full text-sm font-medium"
-      style={{ color: C.brand, background: "#E6F2FA", border: `1px solid ${C.brand}` }}
+      style={{
+        color: C.brand,
+        background: "#E6F2FA",
+        border: `1px solid ${C.brand}`,
+      }}
     >
       <HiOutlineCheckCircle />
       {text}
@@ -82,11 +87,18 @@ function CategoryBadge({ cat }) {
       ? { bg: "#E7F5EF", fg: C.ok }
       : cat === "No clasificado"
       ? { bg: "#FFF7DB", fg: C.warn }
-      : { bg: "#FEECEC", fg: C.err };
+      : cat === "Descalificado"
+      ? { bg: "#FEECEC", fg: C.err }
+      : { bg: "FFFFFF", fg: C.brand };
+
   return (
     <span
       className="inline-block px-3 py-[2px] rounded-full text-xs font-medium"
-      style={{ background: cfg.bg, color: cfg.fg, border: `1px solid ${cfg.fg}3a` }}
+      style={{
+        background: cfg.bg,
+        color: cfg.fg,
+        border: `1px solid ${cfg.fg}3a`,
+      }}
     >
       {cat}
     </span>
@@ -98,7 +110,11 @@ function AprobadoPill() {
   return (
     <span
       className="inline-flex items-center px-4 py-[7px] rounded-full text-xs font-semibold"
-      style={{ background: "#E7F5EF", color: C.ok, border: `1px solid ${C.ok}3a` }}
+      style={{
+        background: "#E7F5EF",
+        color: C.ok,
+        border: `1px solid ${C.ok}3a`,
+      }}
     >
       Aprobado
     </span>
@@ -108,7 +124,11 @@ function RechazadoPill() {
   return (
     <span
       className="inline-flex items-center px-4 py-[7px] rounded-full text-xs font-semibold"
-      style={{ background: "#FEECEC", color: C.err, border: `1px solid ${C.err}3a` }}
+      style={{
+        background: "#FEECEC",
+        color: C.err,
+        border: `1px solid ${C.err}3a`,
+      }}
     >
       Rechazado
     </span>
@@ -116,43 +136,23 @@ function RechazadoPill() {
 }
 
 /* ===== Vista principal ===== */
-export default function ControlFasesArea() {
-  // Todos inician “pendiente”
-  const [rows, setRows] = useState([
-    {
-      id: 1,
-      nombre: "María González Pérez",
-      nota: 85.5,
-      categoria: "Clasificado",
-      observacion: "Excelente desempeño en todas las áreas evaluadas",
-      estado: "pendiente",
-      motivo: "",
-    },
-    {
-      id: 2,
-      nombre: "Carlos Mamani Quispe",
-      nota: 72.3,
-      categoria: "No clasificado",
-      observacion: "Buen nivel pero no alcanzó el puntaje mínimo requerido",
-      estado: "pendiente",
-      motivo: "",
-    },
-    {
-      id: 3,
-      nombre: "Ana Rodríguez Silva",
-      nota: 45.2,
-      categoria: "Descalificado",
-      observacion: "No cumple con los criterios de conducta establecidos",
-      estado: "pendiente",
-      motivo: "",
-    },
-  ]);
+export default function ControlFasesArea({
+  idAreaNivelFase,
+  nombreNivel,
+  nombreFase,
+  estadoFase,
+}) {
+  const [rows, setRows] = useState([]);
 
   // Rechazo (captura motivo)
   const [openRechazo, setOpenRechazo] = useState(false);
   const [rowSel, setRowSel] = useState(null);
   const [motivo, setMotivo] = useState("");
   const [motivoErr, setMotivoErr] = useState("");
+
+  const [meta, setMeta] = useState(null);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
 
   // Ver motivo
   const [openVer, setOpenVer] = useState(false);
@@ -161,7 +161,44 @@ export default function ControlFasesArea() {
   // Botón de “Aval aplicado a Clasificados”
   const [avalGranted, setAvalGranted] = useState(false);
 
-  const aprobar = (r) => {
+  const fetchEvaluaciones = async (page = 1) => {
+    setLoading(true);
+    try {
+      // Aquí enviamos los params como primer argumento, y el idAreaNivelFase como segundo
+      const res = await EvaluacionesRepository.getEvaluaciones(
+        { page, perPage: 10 },
+        idAreaNivelFase
+      );
+      const adaptedData = res.data.map((item) => ({
+        id: item.id_evaluacion,
+        nombre: item.nombre,
+        nota: item.nota || "Sin nota",
+        categoria: item.estado_clasificado || "Sin categoria",
+        observacion: item.descripcion || "Sin observacion",
+        estado: item.estado_confirmado,
+        motivo: item.observacion,
+      }));
+      setRows(adaptedData);
+      setMeta(res.meta);
+      setPage(res.meta.current_page);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    console.log(estadoFase);
+    if (estadoFase == "confirmado") {
+      setAvalGranted(true);
+    }
+    fetchEvaluaciones(1);
+  }, []);
+  const aprobar = async (r) => {
+    await EvaluacionesRepository.updateEvaluacion(r.id, {
+      estado_confirmacion: "aprobado",
+      observacion: "Ninguno",
+    });
     setRows((prev) =>
       prev.map((x) =>
         x.id === r.id ? { ...x, estado: "aprobado", motivo: "Ninguno" } : x
@@ -191,7 +228,7 @@ export default function ControlFasesArea() {
   };
 
   /* ✅ Validación: min 5 y máx 500 */
-  const confirmarRechazo = () => {
+  const confirmarRechazo = async () => {
     const len = (motivo || "").trim().length;
     if (len < 5) {
       setMotivoErr("El motivo es obligatorio (mín. 5 caracteres).");
@@ -201,6 +238,10 @@ export default function ControlFasesArea() {
       setMotivoErr(`Máximo ${MAX_MOTIVO_CHARS} caracteres.`);
       return;
     }
+    await EvaluacionesRepository.updateEvaluacion(rowSel.id, {
+      estado_confirmacion: "rechazado",
+      observacion: motivo.trim(),
+    });
     setRows((prev) =>
       prev.map((x) =>
         x.id === rowSel.id
@@ -217,15 +258,21 @@ export default function ControlFasesArea() {
   };
 
   /* ✅ Otorgar aval: aprueba en bloque solo los “Clasificado” */
-  const otorgarAval = () => {
-    setRows((prev) =>
-      prev.map((x) =>
-        x.categoria === "Clasificado"
-          ? { ...x, estado: "aprobado", motivo: "Ninguno" }
-          : x
-      )
-    );
-    setAvalGranted(true);
+  const otorgarAval = async () => {
+    try {
+      await EvaluacionesRepository.otorgarAval(idAreaNivelFase);
+      setRows((prev) =>
+        prev.map((x) =>
+          x.categoria === "Clasificado"
+            ? { ...x, estado: "aprobado", motivo: "Ninguno" }
+            : x
+        )
+      );
+      setAvalGranted(true);
+      fetchEvaluaciones(1);
+    } catch (error) {
+      console.error("Error al otorgar aval:", error);
+    }
   };
 
   return (
@@ -242,9 +289,9 @@ export default function ControlFasesArea() {
       <div className="bg-white rounded-2xl shadow-sm border border-[#23263D]/10 mb-5">
         <div className="px-5 py-4 flex items-center justify-between">
           <div className="text-[15px] font-semibold" style={{ color: C.ink }}>
-            Fase Actual: <span className="font-normal">Clasificación</span>
+            Fase Actual: <span className="font-normal">{nombreFase}</span>
           </div>
-          <PhasePill text="Clasificación" />
+          <PhasePill text={nombreFase} />
         </div>
       </div>
 
@@ -253,7 +300,10 @@ export default function ControlFasesArea() {
         <div className="px-5 pt-5">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-[20px] font-semibold" style={{ color: C.ink }}>
+              <div
+                className="text-[20px] font-semibold"
+                style={{ color: C.ink }}
+              >
                 Control de Clasificación
               </div>
               <p className="text-xs mt-[2px]" style={{ color: `${C.ink}99` }}>
@@ -272,7 +322,9 @@ export default function ControlFasesArea() {
               title="Otorgar aval de fase"
             >
               <HiOutlineCheckCircle size={18} />
-              {avalGranted ? "Aval aplicado a Clasificados" : "Otorgar aval de fase"}
+              {avalGranted
+                ? "Aval aplicado a Clasificados"
+                : "Otorgar aval de fase"}
             </button>
           </div>
         </div>
@@ -291,71 +343,109 @@ export default function ControlFasesArea() {
               </tr>
             </thead>
             <tbody>
-              {rows.map((r) => (
-                <tr key={r.id} className="border-t" style={{ borderColor: "#23263D1a" }}>
-                  <td className="px-5 py-3">{r.nombre}</td>
-                  <td className="px-5 py-3">{r.nota}</td>
-                  <td className="px-5 py-3">
-                    <CategoryBadge cat={r.categoria} />
+              {loading ? (
+                <tr>
+                  <td
+                    colSpan={7}
+                    className="px-4 py-6 text-center text-gray-500"
+                  >
+                    Cargando evaluaciones...
                   </td>
-                  <td className="px-5 py-3">{r.observacion}</td>
+                </tr>
+              ) : (
+                rows.map((r) => (
+                  <tr
+                    key={r.id}
+                    className="border-t"
+                    style={{ borderColor: "#23263D1a" }}
+                  >
+                    <td className="px-5 py-3">{r.nombre}</td>
+                    <td className="px-5 py-3">{r.nota}</td>
+                    <td className="px-5 py-3">
+                      <CategoryBadge cat={r.categoria} />
+                    </td>
+                    <td className="px-5 py-3">{r.observacion}</td>
 
-                  {/* Acción */}
-                  <td className="px-5 py-3">
-                    {r.estado === "aprobado" ? (
-                      <AprobadoPill />
-                    ) : r.estado === "rechazado" ? (
-                      <RechazadoPill />
-                    ) : (
-                      <div className="flex items-center gap-2">
+                    {/* Acción */}
+                    <td className="px-5 py-3">
+                      {r.estado === "aprobado" ? (
+                        <AprobadoPill />
+                      ) : r.estado === "rechazado" ? (
+                        <RechazadoPill />
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => aprobar(r)}
+                            className="inline-flex items-center gap-2 h-8 px-3 rounded-md text-white text-xs shadow-sm"
+                            style={{ background: C.brand }}
+                          >
+                            <HiCheck size={14} />
+                            Aprobar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => abrirRechazo(r)}
+                            className="inline-flex items-center gap-2 h-8 px-3 rounded-md text-xs shadow-sm"
+                            style={{
+                              background: "#FFFFFF",
+                              color: "#6B7280",
+                              border: `1px solid ${C.grayB}`,
+                            }}
+                          >
+                            <HiXMark size={14} />
+                            Rechazar
+                          </button>
+                        </div>
+                      )}
+                    </td>
+
+                    {/* Motivo */}
+                    <td className="px-5 py-3">
+                      {r.estado === "rechazado" && r.motivo ? (
                         <button
                           type="button"
-                          onClick={() => aprobar(r)}
+                          onClick={() => abrirVerMotivo(r)}
                           className="inline-flex items-center gap-2 h-8 px-3 rounded-md text-white text-xs shadow-sm"
                           style={{ background: C.brand }}
                         >
-                          <HiCheck size={14} />
-                          Aprobar
+                          <HiOutlineEye size={14} />
+                          Ver
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => abrirRechazo(r)}
-                          className="inline-flex items-center gap-2 h-8 px-3 rounded-md text-xs shadow-sm"
-                          style={{
-                            background: "#FFFFFF",
-                            color: "#6B7280",
-                            border: `1px solid ${C.grayB}`,
-                          }}
-                        >
-                          <HiXMark size={14} />
-                          Rechazar
-                        </button>
-                      </div>
-                    )}
-                  </td>
-
-                  {/* Motivo */}
-                  <td className="px-5 py-3">
-                    {r.estado === "rechazado" && r.motivo ? (
-                      <button
-                        type="button"
-                        onClick={() => abrirVerMotivo(r)}
-                        className="inline-flex items-center gap-2 h-8 px-3 rounded-md text-white text-xs shadow-sm"
-                        style={{ background: C.brand }}
-                      >
-                        <HiOutlineEye size={14} />
-                        Ver
-                      </button>
-                    ) : r.estado === "aprobado" ? (
-                      "Ninguno"
-                    ) : (
-                      ""
-                    )}
-                  </td>
-                </tr>
-              ))}
+                      ) : r.estado === "aprobado" ? (
+                        "Ninguno"
+                      ) : (
+                        ""
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
+          {meta && (
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-4 py-3 mt-4">
+              <div className="flex gap-2 justify-center items-center">
+                <button
+                  disabled={!meta.prev_page_url}
+                  onClick={() => fetchEvaluaciones(page - 1)}
+                  className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+                >
+                  Anterior
+                </button>
+                <span className="text-gray-600 mt-2 sm:mt-0">
+                  Página {meta.current_page} de {meta.last_page}
+                </span>
+                <button
+                  disabled={!meta.next_page_url}
+                  onClick={() => fetchEvaluaciones(page + 1)}
+                  className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+                >
+                  Siguiente
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="px-5 pb-5" />
@@ -386,7 +476,8 @@ export default function ControlFasesArea() {
         }
       >
         <p className="text-sm mb-2" style={{ color: `${C.ink}99` }}>
-          Explica brevemente el motivo (mín. 5 caracteres, máx. {MAX_MOTIVO_CHARS}).
+          Explica brevemente el motivo (mín. 5 caracteres, máx.{" "}
+          {MAX_MOTIVO_CHARS}).
         </p>
 
         <textarea
@@ -431,7 +522,11 @@ export default function ControlFasesArea() {
       >
         <div
           className="rounded-xl border p-4 text-sm"
-          style={{ borderColor: "#E5E7EB", color: C.ink, background: "#F8FAFB" }}
+          style={{
+            borderColor: "#E5E7EB",
+            color: C.ink,
+            background: "#F8FAFB",
+          }}
         >
           {rowVer?.motivo}
         </div>

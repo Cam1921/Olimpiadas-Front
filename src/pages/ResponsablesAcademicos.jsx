@@ -11,6 +11,7 @@ import { useRegisterResponsable } from "../application/responsables/useRegisterR
 import { getAreasConNiveles } from "../infrastructure/http/areas/areaRepostory";
 import { responsablesRepo } from "../infrastructure/http/responsables/repository";
 import api from "@/lib/api";
+import Evaluadores from "./Evaluadores";
 
 export default function ResponsablesAcademicos() {
   const [rows, setRows] = useState([]);
@@ -24,7 +25,7 @@ export default function ResponsablesAcademicos() {
   const [successOpen, setSuccessOpen] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
   const [allAreas, setAllAreas] = useState([]);
-
+  const [activeTab, setActiveTab] = useState("responsables");
   const takenAreas = useMemo(() => rows.map((r) => r.area), [rows]);
   const areasCubiertas = useMemo(
     () => new Set(rows.map((r) => r.area)).size,
@@ -63,13 +64,13 @@ export default function ResponsablesAcademicos() {
   };
 
   useEffect(() => {
+    fetchAreas();
     fetchResponsables();
     async function fetchAreas() {
       const areas = await getAreasConNiveles();
       setAllAreas(areas);
       console.log(areas);
     }
-    fetchAreas();
   }, []);
 
   const handleDelete = async (id) => {
@@ -124,18 +125,23 @@ export default function ResponsablesAcademicos() {
       setDeleteOpen(false);
     }
   };
-  const handleNavigate = () => {
-    window.location.href = "evaluadores"; // Navega a la página de Evaluadores
-  };
+  if (activeTab === "evaluadores") {
+    return (
+      <Evaluadores onBackToResponsables={() => setActiveTab("responsables")} />
+    );
+  }
 
   return (
     <div className="p-6 md:p-8">
       <div className="flex items-center gap-8 border-b border-slate-200">
-        <button className="py-3 border-b-2 border-cta text-cta font-semibold">
+        <button
+          onClick={() => setActiveTab("responsables")}
+          className="py-3 border-b-2 border-cta text-cta font-semibold"
+        >
           Responsables Académicos
         </button>
         <button
-          onClick={handleNavigate}
+          onClick={() => setActiveTab("evaluadores")}
           className="py-3 text-slate-400 hover:text-slate-600"
         >
           Evaluadores

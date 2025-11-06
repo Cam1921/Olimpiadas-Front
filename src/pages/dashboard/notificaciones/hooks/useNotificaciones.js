@@ -15,7 +15,7 @@ export function useNotificaciones() {
         setLoading(true);
         const res = await api.get("/notificaciones/listar");
         const json = res.data;
-
+        console.log(json);
         // Extraemos meta
         const meta = json.meta?.[0] || {};
         setKpis({
@@ -33,12 +33,12 @@ export function useNotificaciones() {
           rol: item.rol.charAt(0).toUpperCase() + item.rol.slice(1),
           estado: item.estado,
           fechaEnvio: item.created_at,
-          confirmado: item.usado === true,
+          confirmado: item.usado,
           respuesta: null,
           proveedor: null,
           motivoFallo: null,
         }));
-
+        console.log(mapped);
         setRows(mapped);
       } catch (error) {
         console.error("Error al obtener notificaciones:", error);

@@ -11,9 +11,9 @@ const EvaluacionesRepository = {
    * @param {number} [params.page=1]
    * @param {string} [params.busqueda]
    */
-  async getEvaluaciones(params = {}) {
+  async getEvaluaciones(params = {}, idAreaNivelFase) {
     try {
-      const response = await api.get(`/evaluador/evaluaciones`, {
+      const response = await api.get(`/evaluador/evaluaciones/${idAreaNivelFase}`, {
         params: {
           perPage: params.perPage ?? 10,
           page: params.page ?? 1,
@@ -40,6 +40,39 @@ const EvaluacionesRepository = {
       return response.data;
     } catch (error) {
       console.error("Error al actualizar evaluación:", error);
+      throw error.response?.data || error;
+    }
+  },
+
+ async otorgarAval(idAreaNivelFase) {
+  try {
+    const res = await api.post(`evaluador/evaluaciones/otorgar-aval/${idAreaNivelFase}`);
+    return res.data; // ✅ ahora sí retornamos la respuesta correcta
+  } catch (error) {
+    console.error("Error al otorgar aval:", error);
+    throw error.response?.data || error;
+  }
+},
+
+  /**
+   * 🔍 Filtrar evaluaciones por fase, área, nivel, búsqueda y estado clasificado
+   * @param {Object} params - Filtros disponibles:
+   * {
+   *   id_fase?: number,
+   *   id_area?: number,
+   *   id_nivel?: number,
+   *   busqueda?: string,
+   *   estado_clasificado?: string,
+   *   per_page?: number,
+   *   page?: number
+   * }
+   */
+  async filtrarEvaluaciones(params = {}) {
+    try {
+      const response = await api.get("/evaluaciones/filtrar", { params });
+      return response.data;
+    } catch (error) {
+      console.error("Error al filtrar evaluaciones:", error);
       throw error.response?.data || error;
     }
   },

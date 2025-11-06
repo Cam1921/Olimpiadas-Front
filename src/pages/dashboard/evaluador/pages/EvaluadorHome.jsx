@@ -3,7 +3,11 @@ import EvaluacionesTable from "../components/EvaluacionesTable.jsx";
 import api from "@/lib/api";
 import { FileDown } from "lucide-react";
 
-export default function EvaluadorHome() {
+export default function EvaluadorHome({
+  idAreaNivelFase,
+  nombreNivel,
+  estadoNivel,
+}) {
   const [estado, setEstado] = useState("todos");
   const [esClasificados, setEsClasificados] = useState(false);
   const [busqueda, setBusqueda] = useState("");
@@ -30,13 +34,13 @@ export default function EvaluadorHome() {
 
       if (estado && estado !== "todos") params.estado_clasificado = estado;
 
-      // Llamada al backend usando Axios
-      const response = await api.get("evaluador/evaluaciones/exportar", {
+      if (idAreaNivelFase) params.idAreaNivelFase = idAreaNivelFase; // ✅ enviar ID de área-nivel-fase
+
+      const response = await api.get("/evaluador/evaluaciones/exportar", {
         params,
-        responseType: "blob", // 👈 clave para que descargue binario (Excel)
+        responseType: "blob", // clave para descarga Excel
       });
 
-      // Crear blob y disparar descarga
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
@@ -60,7 +64,7 @@ export default function EvaluadorHome() {
     <div className="p-6">
       <header className="mb-4">
         <h1 className="text-2xl md:text-3xl font-semibold text-gray-800">
-          Calificación de competidores
+          Calificación de competidores del Nivel {nombreNivel || ""}
         </h1>
         <p className="text-gray-500">
           Registra las calificaciones y observaciones de los competidores
@@ -103,6 +107,8 @@ export default function EvaluadorHome() {
           opcion_tabla={estado}
           esClasificados={esClasificados}
           busqueda={busqueda}
+          idAreaNivelFase={idAreaNivelFase}
+          estadoNivel={estadoNivel}
         />
       </section>
     </div>

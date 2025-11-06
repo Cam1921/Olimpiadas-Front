@@ -262,8 +262,8 @@ export default function InscripcionesManagement() {
           </p>
           <p className="text-sm text-gray-500 mb-3">
             Campos requeridos: Nombre Completo, CI, Contacto tutor legal, Unidad
-            educativa, Departamento, Grado, Área(s), Nivel, Tutor académico, Nombre del equipo
-            (opcional).
+            educativa, Departamento, Grado, Área(s), Nivel, Tutor académico,
+            Nombre del equipo (opcional).
           </p>
           <p className="text-sm text-gray-500">
             Solo se admiten archivos con extensión .CSV
@@ -327,8 +327,8 @@ export default function InscripcionesManagement() {
                   <br />
                   <span className="font-semibold">
                     Nombre Completo, CI, Contacto tutor legal, Unidad educativa,
-                    Departamento, Grado, Área(s), Nivel, Tutor académico, Nombre del equipo
-                    (opcional)
+                    Departamento, Grado, Área(s), Nivel, Tutor académico, Nombre
+                    del equipo (opcional)
                   </span>
                 </p>
               </>
@@ -352,8 +352,8 @@ export default function InscripcionesManagement() {
                   <br />
                   <span className="font-semibold">
                     Nombre Completo, CI, Contacto tutor legal, Unidad educativa,
-                    Departamento, Grado, Área(s), Nivel, Tutor académico, Nombre del equipo
-                    (opcional)
+                    Departamento, Grado, Área(s), Nivel, Tutor académico, Nombre
+                    del equipo (opcional)
                   </span>
                 </p>
               </>

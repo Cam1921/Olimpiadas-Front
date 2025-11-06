@@ -13,7 +13,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:8000/', 
+        target: 'http://nebulasoft.tis.cs.umss.edu.bo/', 
         changeOrigin: true,
         secure: false,
       },

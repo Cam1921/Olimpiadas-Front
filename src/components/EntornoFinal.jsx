@@ -1,16 +1,50 @@
 // src/components/EntornoFinal.jsx
-import React, { useState } from 'react';
-import SuccessDialog from './SuccessDialog';
-import ConfirmationModal from './ConfirmationModal';
+import React, { useEffect, useState } from "react";
+import SuccessDialog from "./SuccessDialog";
+import ConfirmationModal from "./ConfirmationModal";
+import { entornoFinalRepo } from "@/infrastructure/http/entornoFinal/repository";
+import OfficialListPage from "./OfficialListPage";
 
 export default function EntornoFinal() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [selectedArea, setSelectedArea] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
+  const [areas, setAreas] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedLista, setSelectedLista] = useState(false);
 
-  // Datos simulados
-  const areas = [
+  const fetchNiveles = async () => {
+    setLoading(true);
+    try {
+      const response = await entornoFinalRepo.listAreasConNiveles();
+      console.log(response.data);
+      // Protegemos contra respuestas no esperadas
+      const data = Array.isArray(response.data) ? response.data : [];
+      console.log("Niveles recibidos:", data);
+
+      const adaptedData = data.map((item) => ({
+        id: item.id_area_nivel_fase, // 👈 este es el campo correcto en tu JSON
+        name: item.area,
+        nivel: item.nivel,
+        enabled: false,
+        classifiedCount: item.resumen_evaluaciones.clasificados,
+        status: item.estado,
+        enabledDate: "2025-01-21",
+      }));
+      console.log(adaptedData);
+      setAreas(adaptedData);
+    } catch (err) {
+      console.error("Error al cargar área con niveles:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    fetchNiveles();
+  }, []);
+
+  /*  const areas = [
     {
       id: 1,
       name: "Matemáticas",
@@ -18,7 +52,7 @@ export default function EntornoFinal() {
       status: "Confirmado",
       enabled: false,
       classifiedCount: 12,
-      enabledDate: "2025-01-21"
+      enabledDate: "2025-01-21",
     },
     {
       id: 2,
@@ -27,13 +61,15 @@ export default function EntornoFinal() {
       status: "Confirmado",
       enabled: false,
       classifiedCount: 8,
-      enabledDate: "2025-01-20"
-    }
-  ];
+      enabledDate: "2025-01-20",
+    },
+  ]; */
 
-  const totalEnabled = areas.filter(a => a.enabled).length;
+  const totalEnabled = areas.filter((a) => a.enabled).length;
   const totalClassified = areas.reduce((sum, a) => sum + a.classifiedCount, 0);
-  const pendingAreas = areas.filter(a => !a.enabled && a.status === "Confirmado").length;
+  const pendingAreas = areas.filter(
+    (a) => !a.enabled && a.status === "Confirmado"
+  ).length;
 
   const handlePrepare = (area) => {
     setSelectedArea(area);
@@ -42,12 +78,35 @@ export default function EntornoFinal() {
 
   const handleConfirmFinalSetup = () => {
     if (selectedArea) {
-      const msg = `El área ${selectedArea.name} ha sido habilitada para la fase final con ${selectedArea.classifiedCount} competidores.`;
-      setSuccessMessage(msg);
-      setShowSuccessModal(true);
-      setShowConfirmModal(false);
+      try {
+        const res = entornoFinalRepo.preparaEntornoFinal(selectedArea.id);
+        console.log(res);
+        const msg = `El área ${selectedArea.name} ha sido habilitada para la fase final con ${selectedArea.classifiedCount} competidores.`;
+        setSuccessMessage(msg);
+        setShowSuccessModal(true);
+        setShowConfirmModal(false);
+        fetchNiveles();
+      } catch (error) {
+        console.error("Error al preparar el entorno final:", error);
+      }
     }
   };
+  if (selectedLista) {
+    return (
+      <div className="p-6">
+        <button
+          onClick={() => {
+            setSelectedLista(false);
+            fetchNiveles();
+          }}
+          className="mb-4 px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300"
+        >
+          ← Volver a entorno final
+        </button>
+        <OfficialListPage />
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
@@ -59,51 +118,88 @@ export default function EntornoFinal() {
         </p>
       </div>
 
-     {/* Tarjetas de resumen (estilo exacto a la primera foto) */}
-<div className="flex flex-col sm:flex-row gap-4 mb-8">
-  {/* Habilitados para final */}
-  <div className="card flex-1 p-4 flex items-center justify-between">
-    <div>
-      <p className="text-xs text-slate-500">Habilitados para final</p>
-      <p className="text-2xl font-bold text-slate-800">{totalClassified}</p>
-    </div>
-    <div className="text-blue-600">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.62 48.62 0 0012 20.907a48.62 48.62 0 008.214-4.095M6 6h12v4M6 10h12v4m-6-4a2 2 0 100 4 2 2 0 000-4z" />
-      </svg>
-    </div>
-  </div>
+      {/* Tarjetas de resumen (estilo exacto a la primera foto) */}
+      <div className="flex flex-col sm:flex-row gap-4 mb-8">
+        {/* Habilitados para final */}
+        <div className="card flex-1 p-4 flex items-center justify-between">
+          <div>
+            <p className="text-xs text-slate-500">Habilitados para final</p>
+            <p className="text-2xl font-bold text-slate-800">
+              {totalClassified}
+            </p>
+          </div>
+          <div className="text-blue-600">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="w-6 h-6"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.62 48.62 0 0012 20.907a48.62 48.62 0 008.214-4.095M6 6h12v4M6 10h12v4m-6-4a2 2 0 100 4 2 2 0 000-4z"
+              />
+            </svg>
+          </div>
+        </div>
 
-  {/* Áreas habilitadas */}
-  <div className="card flex-1 p-4 flex items-center justify-between">
-    <div>
-      <p className="text-xs text-slate-500">Áreas habilitadas</p>
-      <p className="text-2xl font-bold text-green-600">{totalEnabled}</p>
-    </div>
-    <div className="text-green-600">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    </div>
-  </div>
+        {/* Áreas habilitadas */}
+        <div className="card flex-1 p-4 flex items-center justify-between">
+          <div>
+            <p className="text-xs text-slate-500">Áreas habilitadas</p>
+            <p className="text-2xl font-bold text-green-600">{totalEnabled}</p>
+          </div>
+          <div className="text-green-600">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="w-6 h-6"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </div>
+        </div>
 
-  {/* Pendientes */}
-  <div className="card flex-1 p-4 flex items-center justify-between">
-    <div>
-      <p className="text-xs text-slate-500">Pendientes</p>
-      <p className="text-2xl font-bold text-amber-500">{pendingAreas}</p>
-    </div>
-    <div className="text-amber-500">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-      </svg>
-    </div>
-  </div>
-</div>
+        {/* Pendientes */}
+        <div className="card flex-1 p-4 flex items-center justify-between">
+          <div>
+            <p className="text-xs text-slate-500">Pendientes</p>
+            <p className="text-2xl font-bold text-amber-500">{pendingAreas}</p>
+          </div>
+          <div className="text-amber-500">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="w-6 h-6"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+              />
+            </svg>
+          </div>
+        </div>
+      </div>
 
       {/* Preparación por Área */}
       <div className="card p-6 mb-8">
-        <h2 className="text-xl font-semibold text-primary mb-4">Preparación de Entorno Final por Área</h2>
+        <h2 className="text-xl font-semibold text-primary mb-4">
+          Preparación de Entorno Final por Área
+        </h2>
         <p className="text-slate-600 mb-6">
           Habilita la fase final para áreas que han completado la clasificatoria
         </p>
@@ -153,7 +249,7 @@ export default function EntornoFinal() {
       {/* Botón a Lista Oficial */}
       <div className="text-center">
         <button
-          onClick={() => window.location.href = "/lista-oficial"}
+          onClick={() => setSelectedLista(true)}
           className="btn btn-cta px-6 py-3 font-medium"
         >
           Ver Lista Oficial de Habilitados

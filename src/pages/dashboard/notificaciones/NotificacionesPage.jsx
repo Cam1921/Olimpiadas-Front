@@ -13,6 +13,7 @@ import StatusBadge from "./components/StatusBadge";
 import DetailsModal from "./components/DetailsModal";
 import { useNotificaciones } from "./hooks/useNotificaciones";
 import api from "@/lib/api";
+import SuccessDialog from "@/components/SuccessDialog";
 
 const ROLES = ["Todos los roles", "Evaluador", "Responsable"];
 const ESTADOS = ["Todos los estados", "Confirmado", "Pendiente", "Rebotado"];
@@ -42,6 +43,7 @@ export default function NotificacionesPage() {
   const [open, setOpen] = useState(false);
   const [focus, setFocus] = useState(null);
   const [sending, setSending] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   async function handleForward(item) {
     if (!item) return;
@@ -49,8 +51,8 @@ export default function NotificacionesPage() {
     try {
       const { data } = await api.put(`/invitaciones/reenviar/${item.id}`);
       console.log(data);
-      alert("Correo reenviado correctamente ✅");
       setOpen(false); // cierra el modal
+      setShowSuccessModal(true);
     } catch (error) {
       console.error(error);
       alert("No se pudo reenviar el correo ❌");
@@ -70,16 +72,6 @@ export default function NotificacionesPage() {
             usuarios del sistema.
           </p>
         </div>
-
-        <button
-          className="inline-flex items-center gap-2 rounded-xl px-4 py-2 bg-blue-600 text-white hover:bg-blue-700"
-          onClick={() =>
-            alert("Simulación: reenviar enlaces a los seleccionados")
-          }
-        >
-          <RefreshCcw size={18} />
-          Reenviar enlaces
-        </button>
       </div>
 
       {/* KPIs */}
@@ -225,7 +217,7 @@ export default function NotificacionesPage() {
                     </td>
                     <td className="py-3">{fmtDate(r.fechaEnvio)}</td>
                     <td className="py-3">
-                      {r.confirmado ? (
+                      {r.estado === "Confirmado" ? (
                         <span className="inline-flex items-center gap-2 text-green-700">
                           <span className="h-2.5 w-2.5 rounded-full bg-green-500" />
                           Sí
@@ -256,7 +248,14 @@ export default function NotificacionesPage() {
           </table>
         </div>
       </div>
-
+      <SuccessDialog
+        open={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title="Reenvio de correo"
+        subtitle="Correo enviado para el establecimiento de constraseña"
+        message="El correo ha sido enviado con exito."
+        confirmLabel="Aceptar"
+      />
       <DetailsModal
         open={open}
         onClose={() => setOpen(false)}

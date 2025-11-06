@@ -98,9 +98,7 @@ function PhaseTabs({ phase, setPhase }) {
         <button
           type="button"
           className={`${base} border-2 shadow ${
-            phase === "clasificatoria"
-              ? "text-[#23263D]"
-              : "text-[#23263D]/60"
+            phase === "clasificatoria" ? "text-[#23263D]" : "text-[#23263D]/60"
           }`}
           style={{
             borderColor: phase === "clasificatoria" ? BRAND : "transparent",
@@ -114,7 +112,9 @@ function PhaseTabs({ phase, setPhase }) {
         <button
           type="button"
           className={`${base} ${
-            phase === "final" ? "border-2 shadow text-[#23263D]" : "text-[#23263D]/60"
+            phase === "final"
+              ? "border-2 shadow text-[#23263D]"
+              : "text-[#23263D]/60"
           }`}
           style={{ borderColor: phase === "final" ? BRAND : "transparent" }}
           onClick={() => setPhase("final")}
@@ -236,7 +236,8 @@ function ContentFinalSoloVista() {
         Listas de Fase Final
       </div>
       <p className="text-xs text-[#23263D]/60 mb-3">
-        Generar listas especializadas para certificados, ceremonia y publicación.
+        Generar listas especializadas para certificados, ceremonia y
+        publicación.
       </p>
 
       <FinalItem
@@ -261,21 +262,22 @@ function ContentFinalSoloVista() {
       />
 
       <div
-  className="rounded-xl shadow-sm p-4 border mt-3"
-  style={{ borderColor: "#0284C7", backgroundColor: "#E6F4FB" }}
->
-  <div className="flex items-start gap-3">
-    <HiCheckCircleOutline size={22} color="#0284C7" />
-    <div>
-      <div className="font-semibold" style={{ color: "#0284C7" }}>
-        Requisitos Cumplidos
+        className="rounded-xl shadow-sm p-4 border mt-3"
+        style={{ borderColor: "#0284C7", backgroundColor: "#E6F4FB" }}
+      >
+        <div className="flex items-start gap-3">
+          <HiCheckCircleOutline size={22} color="#0284C7" />
+          <div>
+            <div className="font-semibold" style={{ color: "#0284C7" }}>
+              Requisitos Cumplidos
+            </div>
+            <div className="text-sm" style={{ color: "#0284C7" }}>
+              Esta area tiene aval del responsable y puede generar todas las
+              listas de fase final
+            </div>
+          </div>
+        </div>
       </div>
-      <div className="text-sm" style={{ color: "#0284C7" }}>
-        Esta area tiene aval del responsable y puede generar todas las listas de fase final
-      </div>
-    </div>
-  </div>
-</div>
     </>
   );
 }

@@ -25,6 +25,8 @@ import PublicacionPage from "./pages/dashboard/Publicacion";
 
 // HU05 – Responsable / Control de Fases (import directo)
 import ControlFasesArea from "./pages/dashboard/responsable/ControlFasesArea.jsx";
+import HomePlanillas from "./pages/dashboard/evaluador/pages/HomePlanillas";
+import HomePlanillasResponsable from "./pages/dashboard/responsable/HomePlanillasResponsable";
 
 export default function App() {
   return (
@@ -48,7 +50,7 @@ export default function App() {
         <Route path="gestion-roles" element={<ResponsablesAcademicos />} />
         <Route path="notificaciones" element={<NotificacionesPage />} />
         <Route path="evaluadores" element={<Evaluadores />} />
-        <Route path="registrar-notas" element={<EvaluadorHome />} />
+        {/*   <Route path="registrar-notas" element={<EvaluadorHome />} /> */}
         <Route path="control-fases" element={<TestControlFases />} />
         <Route path="resultados-reportes" element={<TestFlujoPublicacion />} />
         <Route
@@ -78,8 +80,14 @@ export default function App() {
         <Route path="responsable" element={<ControlFasesArea />} />
         <Route path="control-fases" element={<ControlFasesArea />} />
         <Route path="controlfases" element={<ControlFasesArea />} />
-        <Route path="responsable/controlFases" element={<ControlFasesArea />} />
-        <Route path="control-fases-area" element={<ControlFasesArea />} />{" "}
+        {/*   <Route path="responsable/controlFases" element={<ControlFasesArea />} /> */}
+        {/*  <Route path="control-fases-area" element={<ControlFasesArea />} />{" "} */}
+        <Route path="entorno-final" element={<EntornoFinal />} />
+        <Route path="registrar-notas" element={<HomePlanillas />} />
+        <Route
+          path="control-fases-area"
+          element={<HomePlanillasResponsable />}
+        />
         {/* ← ESTA ES LA QUE NECESITAS */}
         {/* Compatibilidad */}
         <Route
@@ -93,7 +101,7 @@ export default function App() {
       <Route path="/evaluadores-test" element={<Evaluadores />} />
 
       {/* 🔹 Rutas para Entorno Final y Lista Oficial (pruebas visuales) */}
-      <Route path="/entorno-final" element={<EntornoFinal />} />
+
       <Route path="/lista-oficial" element={<OfficialListPage />} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
