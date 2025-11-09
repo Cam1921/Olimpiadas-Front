@@ -8,6 +8,7 @@ import PanelPrincipal from "@/pages/dashboard/panelPrincipal/administrador/Panel
 import GestionInscripciones from "./pages/dashboard/gestionInscripciones/GestionInscripciones";
 import RoleIndexRedirect from "@/pages/dashboard/RoleIndexRedirect";
 import InformacionPersonal from "@/pages/dashboard/informacionPersonal/InformacionPersonal";
+import TestCronograma from "@/pages/TestCronograma";
 
 import TestControlFases from "./pages/TestControlFases";
 import TestFlujoPublicacion from "./pages/TestFlujoPublicacion.jsx";
@@ -99,6 +100,10 @@ export default function App() {
       {/* Rutas de prueba (accesibles sin login) */}
       <Route path="/responsables-test" element={<ResponsablesAcademicos />} />
       <Route path="/evaluadores-test" element={<Evaluadores />} />
+      {/* Rutas de prueba (accesibles sin login) */}
+<Route path="/responsables-test" element={<ResponsablesAcademicos />} />
+<Route path="/evaluadores-test" element={<Evaluadores />} />
+<Route path="/cronograma-test" element={<TestCronograma />} />
 
       {/* 🔹 Rutas para Entorno Final y Lista Oficial (pruebas visuales) */}
 

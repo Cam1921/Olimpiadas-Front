@@ -1,26 +1,14 @@
 // src/lib/api.js
 import axios from "axios";
-import {API_URL} from "../config"
+import { API_URL } from "../config";
 
 const baseURL = (API_URL || "").replace(/\/+$/, "");
-const api = axios.create({ baseURL, timeout: 15000 });
-
-api.interceptors.request.use((config) => {
-  const token = sessionStorage.getItem("token");
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
+const api = axios.create({
+  baseURL,
+  timeout: 15000,
+  withCredentials: true, // 👈 ¡ES CLAVE!
 });
 
-api.interceptors.response.use(
-  (r) => r,
-  (err) => {
-    if (err?.response?.status === 401) {
-      sessionStorage.removeItem("token");
-      sessionStorage.removeItem("user");
-      window.location.href = "/login";
-    }
-    return Promise.reject(err);
-  }
-);
+// ❌ Elimina completamente el interceptor de Authorization
 
 export default api;
