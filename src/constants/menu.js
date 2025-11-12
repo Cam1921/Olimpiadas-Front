@@ -10,6 +10,7 @@
       { icon: "BiHome", label: "Panel Principal", path: "panel-principal" },
       { icon: "GoPeople", label: "Gestion de Inscripciones", path: "gestion-inscripciones" },
       { icon: "HiOutlineUserGroup", label: "Gestion de Roles", path: "gestion-roles" },
+      { icon: "AiOutlineEdit ", label: "Asignación de Competidores", path: "asignacion-competidores" },
       { icon: "GoMail", label: "Notificaciones", path: "notificaciones" },
       { icon: "BsSliders2", label: "Control de Fases", path: "control-fases" },
       { icon: "HiAcademicCap", label: "Entorno Final", path: "entorno-final" },
