@@ -28,6 +28,9 @@ import ControlFasesArea from "./pages/dashboard/responsable/ControlFasesArea.jsx
 import HomePlanillas from "./pages/dashboard/evaluador/pages/HomePlanillas";
 import HomePlanillasResponsable from "./pages/dashboard/responsable/HomePlanillasResponsable";
 
+// NUEVO: HU13 – Medallero / Parametrización (ruta /dashboard/medallero-premiacion)
+import ParametrizarMedallero from "./pages/dashboard/medallero/ParametrizarMedallero.jsx";
+
 export default function App() {
   return (
     <Routes>
@@ -53,29 +56,17 @@ export default function App() {
         {/*   <Route path="registrar-notas" element={<EvaluadorHome />} /> */}
         <Route path="control-fases" element={<TestControlFases />} />
         <Route path="resultados-reportes" element={<TestFlujoPublicacion />} />
-        <Route
-          path="gestion-inscripciones"
-          element={<GestionInscripciones />}
-        />
+        <Route path="gestion-inscripciones" element={<GestionInscripciones />} />
         <Route path="informacion-personal" element={<InformacionPersonal />} />
-        <Route
-          path="gestion-inscripciones"
-          element={<GestionInscripciones />}
-        />
+        <Route path="gestion-inscripciones" element={<GestionInscripciones />} />
         {/* Publicación HU10 */}
         <Route path="publicacion" element={<PublicacionPage />} />
         {/* Evaluador / Responsable */}
         <Route path="informacion-personal" element={<InformacionPersonal />} />
         {/* HU05 – Responsable / Control de Fases */}
-        <Route
-          path="responsable/control-fases"
-          element={<ControlFasesArea />}
-        />
+        <Route path="responsable/control-fases" element={<ControlFasesArea />} />
         {/* (Esta ruta ya está arriba, puedes dejar solo una si quieres) */}
-        <Route
-          path="gestion-inscripciones"
-          element={<GestionInscripciones />}
-        />
+        <Route path="gestion-inscripciones" element={<GestionInscripciones />} />
         {/* 🔁 Alias para las variaciones que usa tu menú */}
         <Route path="responsable" element={<ControlFasesArea />} />
         <Route path="control-fases" element={<ControlFasesArea />} />
@@ -84,16 +75,10 @@ export default function App() {
         {/*  <Route path="control-fases-area" element={<ControlFasesArea />} />{" "} */}
         <Route path="entorno-final" element={<EntornoFinal />} />
         <Route path="registrar-notas" element={<HomePlanillas />} />
-        <Route
-          path="control-fases-area"
-          element={<HomePlanillasResponsable />}
-        />
-        {/* ← ESTA ES LA QUE NECESITAS */}
-        {/* Compatibilidad */}
-        <Route
-          path="gestion-inscripciones"
-          element={<GestionInscripciones />}
-        />
+        <Route path="control-fases-area" element={<HomePlanillasResponsable />} />
+
+        {/* NUEVO: Medallero y Premiación */}
+        <Route path="medallero-premiacion" element={<ParametrizarMedallero />} />
       </Route>
 
       {/* Rutas de prueba (accesibles sin login) */}
@@ -101,7 +86,6 @@ export default function App() {
       <Route path="/evaluadores-test" element={<Evaluadores />} />
 
       {/* 🔹 Rutas para Entorno Final y Lista Oficial (pruebas visuales) */}
-
       <Route path="/lista-oficial" element={<OfficialListPage />} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
