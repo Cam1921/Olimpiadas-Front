@@ -1,3 +1,4 @@
+// src/pages/dashboard/publicacion/hooks/usePublicacion.js
 import { useEffect, useState } from "react";
 import EvaluacionesRepository from "@/infrastructure/http/Evaluacion/repository"; 
 import { getAreasConNiveles } from "@/infrastructure/http/areas/areaRepostory";

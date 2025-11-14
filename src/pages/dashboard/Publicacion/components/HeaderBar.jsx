@@ -1,3 +1,4 @@
+// src/pages/dashboard/publicacion/components/HeaderBar.jsx
 import { HiOutlineDocumentArrowUp, HiOutlineGlobeAmericas } from "react-icons/hi2";
 
 export default function HeaderBar({ onGenerar, onPublicar, isGenerating = false }) {

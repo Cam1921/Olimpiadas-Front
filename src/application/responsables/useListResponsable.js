@@ -1,4 +1,4 @@
-// src/hooks/useListResponsables.js
+// src/application/reponsables/useListResponsables.js
 import { useEffect, useState } from "react";
 import { responsablesRepo } from "../../infrastructure/http/responsables/repository";
 

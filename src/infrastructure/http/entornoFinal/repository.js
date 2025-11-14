@@ -1,3 +1,4 @@
+// src/infrastructure/http/entornoFinal/repository.js
 import api from "../../../lib/api";
 
 export const entornoFinalRepo = {

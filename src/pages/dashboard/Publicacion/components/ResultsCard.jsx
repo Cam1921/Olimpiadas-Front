@@ -1,3 +1,4 @@
+// src/pages/dashboard/publicacion/components/ResultsCard.jsx
 import CustomSelect from "./CustomSelect";
 
 export default function ResultsCard({

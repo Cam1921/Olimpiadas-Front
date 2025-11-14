@@ -1,3 +1,4 @@
+// src/pages/dashboard/publicacion/components/GenerateListsModal.jsx
 import Modal from "./Modal";
 import { areaHasPrimaria, areaHasSecundaria, AREAS } from "../constants";
 

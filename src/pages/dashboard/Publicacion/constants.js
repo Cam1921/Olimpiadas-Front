@@ -1,3 +1,4 @@
+// src/pages/dashboard/publicacion/constants.js
 // Áreas visibles en el dropdown
 // ===== Áreas visibles en el dropdown =====
 export const AREAS = [

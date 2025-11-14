@@ -1,3 +1,4 @@
+// src/pages/dashboard/publicacion/components/FiltersBar.jsx
 import { AREAS_NIVELES, esPrimaria, esSecundaria } from "../constants";
 import { FaFilter } from "react-icons/fa";
 

@@ -14,6 +14,7 @@ import TestFlujoPublicacion from "./pages/TestFlujoPublicacion.jsx";
 
 import ResponsablesAcademicos from "./pages/ResponsablesAcademicos";
 import Evaluadores from "./pages/Evaluadores";
+import ClasificacionHome from "@/pages/dashboard/evaluador/pages/clasificacion/ClasificacionHome.jsx";
 import EvaluadorHome from "./pages/dashboard/evaluador/pages/EvaluadorHome.jsx";
 import NotificacionesPage from "@/pages/dashboard/notificaciones/NotificacionesPage";
 import EstablecerContraseñaPage from "@/pages/auth/EstablecerContraseñaPage";
@@ -84,6 +85,7 @@ export default function App() {
         {/*  <Route path="control-fases-area" element={<ControlFasesArea />} />{" "} */}
         <Route path="entorno-final" element={<EntornoFinal />} />
         <Route path="registrar-notas" element={<HomePlanillas />} />
+        <Route path="clasificacion" element={<ClasificacionHome />} />
         <Route
           path="control-fases-area"
           element={<HomePlanillasResponsable />}

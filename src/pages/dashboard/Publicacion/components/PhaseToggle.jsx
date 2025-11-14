@@ -1,3 +1,4 @@
+// src/pages/dashboard/publicacion/components/PhaseToggle.jsx
 import { MdOutlineTimeline, MdFlag } from "react-icons/md";
 
 export default function PhaseToggle({ fase, onChange }) {

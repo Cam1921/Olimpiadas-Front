@@ -1,3 +1,4 @@
+// src/pages/dashboard/publicacion/components/ResultsTable.jsx
 export default function ResultsTable({ rows, loading }) {
   if (loading) return <div className="animate-pulse">Cargando…</div>;
   if (!rows?.length) return <div className="text-sm text-gray-500">Sin datos.</div>;
