@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import api from "@/lib/api";
 import EvaluacionesTableClasificacion from "@/pages/dashboard/evaluador/components/EvaluacionesTableClasificacion.jsx";
+import EvaluacionesRepository from "@/infrastructure/http/Evaluacion/repository.js";
 
 export default function ClasificacionHome() {
   // Filtros UI
@@ -10,15 +11,19 @@ export default function ClasificacionHome() {
   const [sort, setSort] = useState({ by: "nombre", dir: "asc" }); // 'nombre' | 'nota'
   const [estado, setEstado] = useState("todos"); // 'todos'|'clasificados'|'no_clasificados'|'descalificados'
 
-  // Contexto (área/nivel/fase) que la tabla necesita
+  // Acciones (exportar / concluir)
+  const [exporting, setExporting] = useState(false);
+  const [concluding, setConcluding] = useState(false);
+
+  // Contexto (área/nivel/fase)
   const { state } = useLocation();
   const [ctxLoading, setCtxLoading] = useState(true);
   const [ctxError, setCtxError] = useState("");
   const [idAreaNivelFase, setIdAreaNivelFase] = useState(null);
-  const [estadoNivel, setEstadoNivel] = useState(null);
+  const [estadoNivel, setEstadoNivel] = useState(null); // 'en_evaluacion'|'concluido'|'confirmado'|'publicado'
   const [headerTitle, setHeaderTitle] = useState("");
 
-  // 1) Usa lo que venga por state o lo último guardado…
+  // 1) Usa lo que venga por state o lo último guardado; si no hay, autodetecta el primer nivel asignado
   useEffect(() => {
     const sId    = state?.idAreaNivelFase ?? sessionStorage.getItem("idAreaNivelFase");
     const sEst   = state?.estadoNivel ?? sessionStorage.getItem("estadoNivel");
@@ -26,36 +31,32 @@ export default function ClasificacionHome() {
 
     if (sId) {
       setIdAreaNivelFase(sId);
-      setEstadoNivel(sEst || "");
+      setEstadoNivel(sEst || "en_evaluacion");
       setHeaderTitle(sTitle || "");
       setCtxLoading(false);
       return;
     }
 
-    // 2) …y si no hay nada, toma automáticamente el PRIMER nivel del evaluador
     (async () => {
       setCtxLoading(true);
       setCtxError("");
       try {
         const res = await api.get("/evaluador/niveles");
         const list = Array.isArray(res?.data?.data) ? res.data.data : [];
-
         if (!list.length) {
           setCtxError("No tienes niveles asignados.");
           return;
         }
-
-        // Puedes ajustar esta selección (por ahora tomamos el primero)
+        // toma el primero (ajústalo si requieres otro criterio)
         const first = list[0];
         const id    = first.id_area_nivel_fase;
         const title = `${first.area} • ${first.nivel} • ${first.fase}`;
-        const est   = first.estado ?? "";
+        const est   = (first.estado ?? "en_evaluacion").toLowerCase();
 
         setIdAreaNivelFase(id);
         setEstadoNivel(est);
         setHeaderTitle(title);
 
-        // Persiste para refrescos/volver directo
         sessionStorage.setItem("idAreaNivelFase", id);
         sessionStorage.setItem("estadoNivel", est);
         sessionStorage.setItem("headerTitle", title);
@@ -67,8 +68,9 @@ export default function ClasificacionHome() {
     })();
   }, [state]);
 
-  // Chips estado → parámetro backend
+  // Map chip → parámetro backend
   const opcionTabla = useMemo(() => (estado === "todos" ? "" : estado), [estado]);
+
   const opciones = [
     { label: "Todos", value: "todos" },
     { label: "Clasificados", value: "clasificados" },
@@ -86,18 +88,101 @@ export default function ClasificacionHome() {
     setSort(next);
   };
 
+  // ======== Exportar listas (Excel) ========
+  const handleExport = async () => {
+    if (!idAreaNivelFase || exporting) return;
+    setExporting(true);
+    try {
+      // Llama al repo (GET blob). Ajusta la URL en repository.js si tu backend usa otra ruta/params
+      const blob = await EvaluacionesRepository.exportClasificacionExcel(
+        idAreaNivelFase,
+        { estado_clasificado: opcionTabla || undefined, q: query || undefined, sort_by: sort.by, sort_dir: sort.dir }
+      );
+
+      const nombreEstado = estado === "todos" ? "todos" : estado;
+      const nombreBase   = (headerTitle || "clasificacion").replace(/[^\w\-]+/g, "_");
+      const filename     = `${nombreBase}_${nombreEstado}.xlsx`;
+
+      const url = URL.createObjectURL(new Blob([blob], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      }));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      alert("No se pudo exportar las listas.");
+      console.error(e);
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  // ======== Concluir calificación (pasar a "concluido") ========
+  const puedeConcluir = useMemo(() => {
+    // Deshabilita si ya está concluido/confirmado/publicado
+    const est = (estadoNivel || "").toLowerCase();
+    return est !== "concluido" && est !== "confirmado" && est !== "publicado";
+  }, [estadoNivel]);
+
+  const handleConcluir = async () => {
+    if (!idAreaNivelFase || concluding || !puedeConcluir) return;
+    if (!confirm("¿Marcar como CONCLUIDA la calificación de este Área/Nivel?")) return;
+
+    setConcluding(true);
+    try {
+      // Llama al repo (POST). Ajusta la URL en repository.js si tu backend usa otra ruta.
+      await EvaluacionesRepository.concluirCalificacion(idAreaNivelFase);
+      setEstadoNivel("concluido");
+      sessionStorage.setItem("estadoNivel", "concluido");
+    } catch (e) {
+      alert("No se pudo concluir la calificación.");
+      console.error(e);
+    } finally {
+      setConcluding(false);
+    }
+  };
+
   return (
     <div className="p-6 space-y-4">
       <header className="space-y-1">
-        <h1 className="text-2xl md:text-3xl font-semibold text-gray-800">
-          {headerTitle ? `Clasificación - ${headerTitle}` : "Clasificación"}
-        </h1>
-        <p className="text-gray-500">
-          Visualiza las listas de competidores clasificados, no clasificados y descalificados.
-        </p>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-semibold text-gray-800">
+              {headerTitle ? `Clasificación - ${headerTitle}` : "Clasificación"}
+            </h1>
+            <p className="text-gray-500">
+              Visualiza las listas de competidores clasificados, no clasificados y descalificados.
+            </p>
+          </div>
+
+          {/* Botones de acción */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleExport}
+              disabled={!idAreaNivelFase || exporting || ctxLoading}
+              className="inline-flex items-center gap-2 rounded-lg bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 disabled:opacity-60"
+              title="Descargar Excel de la vista actual"
+            >
+              <span>⬇</span> {exporting ? "Exportando…" : "Exportar listas"}
+            </button>
+
+            <button
+              onClick={handleConcluir}
+              disabled={!idAreaNivelFase || !puedeConcluir || concluding || ctxLoading}
+              className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 disabled:opacity-60"
+              title="Marcar calificación como Concluida"
+            >
+              {concluding ? "Concluyendo…" : "Concluir calificación"}
+            </button>
+          </div>
+        </div>
       </header>
 
-      {/* Barra superior: chips + buscador + ordenar */}
+      {/* Chips + buscador + ordenar */}
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="flex flex-wrap gap-2">
           {opciones.map((op) => (
@@ -130,7 +215,7 @@ export default function ClasificacionHome() {
           <span className="text-sm text-gray-600">Ordenar por:</span>
           <button
             type="button"
-            onClick={() => toggleSort("nombre")}
+            onClick={() => setSort((s) => (s.by === "nombre" ? { by: "nombre", dir: s.dir === "asc" ? "desc" : "asc" } : { by: "nombre", dir: "asc" }))}
             aria-pressed={active("nombre")}
             className={[
               "flex items-center gap-1 rounded-lg border px-3 py-1.5 text-sm transition",
@@ -145,7 +230,7 @@ export default function ClasificacionHome() {
 
           <button
             type="button"
-            onClick={() => toggleSort("nota")}
+            onClick={() => setSort((s) => (s.by === "nota" ? { by: "nota", dir: s.dir === "asc" ? "desc" : "asc" } : { by: "nota", dir: "desc" }))}
             aria-pressed={active("nota")}
             className={[
               "flex items-center gap-1 rounded-lg border px-3 py-1.5 text-sm transition",
@@ -160,7 +245,7 @@ export default function ClasificacionHome() {
         </div>
       </div>
 
-      {/* Estado del contexto */}
+      {/* Estado del contexto o tabla */}
       {ctxLoading ? (
         <div className="px-4 py-10 text-center text-gray-500">Cargando…</div>
       ) : ctxError ? (
@@ -173,7 +258,6 @@ export default function ClasificacionHome() {
             estadoFilter={estado}
             query={query}
             sort={sort}
-            // el repo trae los mismos datos que “Registrar notas” (nota, conducta, descripción, estado)
           />
         </section>
       )}
