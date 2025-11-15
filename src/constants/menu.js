@@ -29,6 +29,5 @@
     [ROLE_NAMES.RESPONSABLE_DE_AREA]: [
       { icon: "BsPersonCheck", label: "Información Personal", path: "informacion-personal" },
       { icon: "BsSliders2", label: "Control de Fases de mi Área", path: "control-fases-area" },
-      { icon: "FaRegFileAlt", label: "Reportes de mi Área", path: "reportes-area" },
     ],
   };
