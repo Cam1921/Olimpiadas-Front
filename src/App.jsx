@@ -16,7 +16,7 @@ import TestFlujoPublicacion from "./pages/TestFlujoPublicacion.jsx";
 import ResponsablesAcademicos from "./pages/ResponsablesAcademicos";
 import Evaluadores from "./pages/Evaluadores";
 import ClasificacionHome from "@/pages/dashboard/evaluador/pages/clasificacion/ClasificacionHome.jsx";
-import EvaluadorHome from "./pages/dashboard/evaluador/pages/EvaluadorHome.jsx";
+
 import NotificacionesPage from "@/pages/dashboard/notificaciones/NotificacionesPage";
 import EstablecerContraseñaPage from "@/pages/auth/EstablecerContraseñaPage";
 import EntornoFinal from "./components/EntornoFinal.jsx";
@@ -89,6 +89,7 @@ export default function App() {
           path="gestion-inscripciones"
           element={<GestionInscripciones />}
         />
+        <Route path="gestion-cronograma" element={<TestCronograma />} />
         {/* 🔁 Alias para las variaciones que usa tu menú */}
         <Route path="responsable" element={<ControlFasesArea />} />
         <Route path="control-fases" element={<ControlFasesArea />} />
@@ -125,7 +126,6 @@ export default function App() {
       {/* Rutas de prueba (accesibles sin login) */}
       <Route path="/responsables-test" element={<ResponsablesAcademicos />} />
       <Route path="/evaluadores-test" element={<Evaluadores />} />
-      <Route path="/cronograma-test" element={<TestCronograma />} />
 
       {/* 🔹 Rutas para Entorno Final y Lista Oficial (pruebas visuales) */}
       <Route path="/lista-oficial" element={<OfficialListPage />} />

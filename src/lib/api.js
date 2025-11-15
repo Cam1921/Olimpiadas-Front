@@ -5,10 +5,26 @@ import { API_URL } from "../config";
 const baseURL = (API_URL || "").replace(/\/+$/, "");
 const api = axios.create({
   baseURL,
-  timeout: 15000,
-  withCredentials: true, // 👈 ¡ES CLAVE!
+  timeout: 15000,  
 });
 
-// ❌ Elimina completamente el interceptor de Authorization
+api.interceptors.request.use((config) => {
+  const token = sessionStorage.getItem("token");
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
+api.interceptors.response.use(
+  (r) => r,
+  (err) => {
+    if (err?.response?.status === 401) {
+      sessionStorage.removeItem("token");
+      sessionStorage.removeItem("user");
+      window.location.href = "/login";
+    }
+    return Promise.reject(err);
+  }
+);
+
 
 export default api;

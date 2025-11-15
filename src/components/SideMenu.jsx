@@ -1,13 +1,13 @@
 // src/components/SideMenu.jsx
 import { NavLink } from "react-router-dom";
-import { BiHome,BiCategoryAlt } from "react-icons/bi";
+import { BiHome, BiCategoryAlt } from "react-icons/bi";
 import { GoPeople, GoMail } from "react-icons/go";
 import {
   HiOutlineUserGroup,
   HiAcademicCap,
   HiOutlinePencilSquare,
 } from "react-icons/hi2";
-import { BsSliders2,BsPersonCheck } from "react-icons/bs";
+import { BsSliders2, BsPersonCheck } from "react-icons/bs";
 import { GrTrophy } from "react-icons/gr";
 import { FaRegFileAlt } from "react-icons/fa";
 import { LuFileCheck } from "react-icons/lu";
@@ -15,6 +15,8 @@ import { ImSphere } from "react-icons/im";
 import { IoTimeOutline } from "react-icons/io5";
 import { FiUser, FiLogOut } from "react-icons/fi";
 import { MENU_BY_ROLE, ROLE_NAMES } from "@/constants/menu";
+import { AiOutlineEdit } from "react-icons/ai";
+import { CalendarCheck } from "lucide-react";
 
 const ICONS = {
   BiHome,
@@ -23,6 +25,8 @@ const ICONS = {
   HiOutlineUserGroup,
   HiAcademicCap,
   HiOutlinePencilSquare,
+  AiOutlineEdit,
+  CalendarCheck,
   BsSliders2,
   BsPersonCheck,
   GrTrophy,
@@ -86,7 +90,7 @@ export default function SideMenu({
               {/* Etiqueta: solo visible cuando está abierto */}
               <span
                 className={[
-                  "ml-2 whitespace-nowrap overflow-hidden",
+                  "ml-2  whitespace-nowrap overflow-hidden",
                   "transition-all duration-200",
                   open ? "opacity-100 max-w-[200px]" : "opacity-0 max-w-0",
                 ].join(" ")}
