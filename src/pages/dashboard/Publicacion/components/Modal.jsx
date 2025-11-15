@@ -1,4 +1,4 @@
-// src/.../Modal.jsx
+// src/pages/dashboard/publicacion/components/Modal.jsx
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { IoClose } from "react-icons/io5";

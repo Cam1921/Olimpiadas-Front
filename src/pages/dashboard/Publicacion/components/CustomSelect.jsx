@@ -1,3 +1,4 @@
+// src/pages/dashboard/publicacion/components/CustomSelect.jsx
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { MdKeyboardArrowDown } from "react-icons/md";
 import { FiCheck } from "react-icons/fi";

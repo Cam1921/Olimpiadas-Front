@@ -1,3 +1,4 @@
+// src/pages/dashboard/publicacion/components/PublishActions.jsx
 import { FaRegEye, FaFileDownload } from "react-icons/fa";
 
 export default function PublishActions({ fase, disabled, onPreview, onDownload }) {

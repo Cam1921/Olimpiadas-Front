@@ -1,3 +1,4 @@
+// src/pages/dashboard/publicacion/components/EmptyState.jsx
 export default function EmptyState({ title = "Sin datos", subtitle }) {
   return (
     <div className="border rounded-2xl p-6 text-center text-sm">

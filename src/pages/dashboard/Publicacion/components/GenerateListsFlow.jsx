@@ -1,3 +1,4 @@
+// src/pages/dashboard/publicacion/components/GenerateListsFlow.jsx
 import { useState } from "react";
 import Modal from "./Modal";
 import { AREAS, areaHasPrimaria, areaHasSecundaria } from "../constants";

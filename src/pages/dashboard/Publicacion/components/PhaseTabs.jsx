@@ -1,3 +1,4 @@
+// src/pages/dashboard/publicacion/components/PhaseTabs.jsx
 import { MdOutlineTimeline, MdOutlineHourglassEmpty } from "react-icons/md";
 
 export default function PhaseTabs({ fase, setFase, disableFinal = true }) {

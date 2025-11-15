@@ -1,3 +1,4 @@
+// src/pages/TestFlujoPublicacion.jsx
 import { useEffect, useState } from "react";
 import FlujoPublicacionPanel from "../components/FlujoPublicacionPanel";
 import api from "@/lib/api";

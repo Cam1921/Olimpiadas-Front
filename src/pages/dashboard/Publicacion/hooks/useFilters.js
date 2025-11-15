@@ -1,3 +1,4 @@
+// src/pages/dashboard/publicacion/hooks/useFilters.js
 import { useMemo, useState, useEffect } from "react";
 import { getAreasConNiveles } from "@/infrastructure/http/areas/areaRepostory";
 

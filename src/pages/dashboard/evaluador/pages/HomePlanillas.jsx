@@ -1,3 +1,4 @@
+// src/pages/dashboard/evaluador/pages/HomePlanillas.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import api from "@/lib/api";
 import EvaluadorHome from "./EvaluadorHome";
@@ -42,48 +43,6 @@ export default function HomePlanillas() {
   useEffect(() => {
     fetchNiveles();
   }, []);
-  /*   const areas = [
-    {
-      id: "MAT-PRIM-001",
-      title: "Matemáticas",
-      fase: "clasificatoria",
-      nivel: "Primaria",
-      total: 3,
-      evaluados: 3,
-    },
-    {
-      id: "MAT-SEC-001",
-      title: "Matemáticas",
-      fase: "clasificatoria",
-      nivel: "Secundaria",
-      total: 1,
-      evaluados: 1,
-    },
-    {
-      id: "CIE-SEC-001",
-      title: "Ciencias",
-      fase: "final",
-      nivel: "Secundaria",
-      total: 2,
-      evaluados: 1,
-    },
-    {
-      id: "FIS-PRIM-001",
-      title: "Física",
-      fase: "final",
-      nivel: "Primaria",
-      total: 5,
-      evaluados: 2,
-    },
-    {
-      id: "BIO-SEC-001",
-      title: "Biología",
-      fase: "clasificatoria",
-      nivel: "Secundaria",
-      total: 4,
-      evaluados: 4,
-    },
-  ]; */
 
   const filtered = useMemo(() => {
     if (!areas) return [];
@@ -130,7 +89,7 @@ export default function HomePlanillas() {
               Calificación de Competidores
             </h1>
             <p className="text-slate-500 mt-1">
-              Seleccione un nivel/área para ver la planilla de notas
+              Seleccione una fase para ver la planilla de notas
             </p>
           </div>
         </div>

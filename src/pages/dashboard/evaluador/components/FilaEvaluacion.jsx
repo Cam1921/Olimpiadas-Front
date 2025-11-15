@@ -69,6 +69,7 @@ export default function FilaEvaluacion({
   onSaved,
   esClasificados,
   estadoNivel,
+  readOnly = false, // ← NUEVO: permite usar la fila en modo solo lectura (Clasificación)
 }) {
   const [nota, setNota] = useState(item.nota ?? "");
   const [descripcion, setDescripcion] = useState(item.descripcion ?? "");
@@ -108,7 +109,12 @@ export default function FilaEvaluacion({
   useEffect(() => setToastOk(false), [nota, descripcion, cond]);
   useEffect(() => setEsClasificado(esClasificados), [esClasificados]);
 
+  // 🔒 Bloqueo centralizado: readOnly (Clasificación) o estados que impiden editar
+  const disabledAll =
+    readOnly || esClasificado || ["confirmado", "Concluido"].includes(estadoNivel);
+
   const onNotaChange = (e) => {
+    if (disabledAll) return;
     let next = e.target.value.replace(/[^\d.,]/g, "");
     if (allowNotaDraft(next)) {
       setNota(next);
@@ -121,6 +127,7 @@ export default function FilaEvaluacion({
   };
 
   const onNotaBlur = () => {
+    if (disabledAll) return;
     if (/^[0-9]{1,2}[.,]$/.test(nota)) setNota(nota.slice(0, -1));
     if (/^100[.,]0$/.test(nota)) setNota("100");
   };
@@ -132,6 +139,8 @@ export default function FilaEvaluacion({
   };
 
   const onGuardar = async () => {
+    if (disabledAll) return;
+
     if (esVacio || !numValido) {
       setNotaTouched(true);
       setToastErr("Debe ingresar una nota válida");
@@ -202,22 +211,19 @@ export default function FilaEvaluacion({
           <input
             className={`bg-white rounded-2xl border px-4 py-3 pr-12 w-full shadow-[inset_0_0_0_1px_rgba(0,0,0,0.02)] focus:outline-none ${
               showErrorNota ? "border-red-400" : "border-gray-300"
-            }`}
+            } ${disabledAll ? "bg-gray-100 cursor-not-allowed" : ""}`}
             value={nota}
             onChange={onNotaChange}
             onBlur={onNotaBlur}
             placeholder="0–100"
             inputMode="decimal"
-            disabled={
-              esClasificado || ["confirmado", "Concluido"].includes(estadoNivel)
-            }
+            disabled={disabledAll}
           />
-          {!esClasificado &&
-            !["confirmado", "Concluido"].includes(estadoNivel) && (
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 opacity-80">
-                {showErrorNota ? <ErrorBadge /> : <Lapis />}
-              </span>
-            )}
+          {!disabledAll && (
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 opacity-80">
+              {showErrorNota ? <ErrorBadge /> : <Lapis />}
+            </span>
+          )}
         </div>
         {notaDraftMsg && (
           <ToastInline
@@ -250,13 +256,11 @@ export default function FilaEvaluacion({
                 type="checkbox"
                 checked={cond[c]}
                 onChange={(e) =>
+                  !disabledAll &&
                   setCond((prev) => ({ ...prev, [c]: e.target.checked }))
                 }
                 className="accent-[var(--primary)] w-4 h-4"
-                disabled={
-                  esClasificado ||
-                  ["confirmado", "Concluido"].includes(estadoNivel)
-                }
+                disabled={disabledAll}
               />
               <span className="text-gray-700 capitalize">{c}</span>
             </label>
@@ -270,24 +274,22 @@ export default function FilaEvaluacion({
           <textarea
             className={`bg-white rounded-2xl border px-4 py-3 resize-none pr-12 w-full min-h-[76px] shadow-[inset_0_0_0_1px_rgba(0,0,0,0.02)] focus:outline-none ${
               showErrorDesc ? "border-red-400" : "border-gray-300"
-            }`}
+            } ${disabledAll ? "bg-gray-100 cursor-not-allowed" : ""}`}
             value={descripcion}
-            disabled={
-              esClasificado || ["confirmado", "Concluido"].includes(estadoNivel)
-            }
+            disabled={disabledAll}
             onChange={(e) => {
+              if (disabledAll) return;
               setDescripcion(e.target.value);
               if (!descTouched) setDescTouched(true);
             }}
             onBlur={() => setDescTouched(true)}
             placeholder="Observación (5–60 caracteres)"
           />
-          {!esClasificado &&
-            !["confirmado", "Concluido"].includes(estadoNivel) && (
-              <span className="absolute right-3 top-3 opacity-80">
-                {showErrorDesc ? <ErrorBadge /> : <Lapis />}
-              </span>
-            )}
+          {!disabledAll && (
+            <span className="absolute right-3 top-3 opacity-80">
+              {showErrorDesc ? <ErrorBadge /> : <Lapis />}
+            </span>
+          )}
         </div>
         {showErrorDesc && (
           <ToastInline
@@ -315,8 +317,8 @@ export default function FilaEvaluacion({
         )}
       </td>
 
-      {/* Acción */}
-      {!esClasificado && !["confirmado", "Concluido"].includes(estadoNivel) && (
+      {/* Acción — oculta si está en solo lectura o bloqueado por estado */}
+      {!disabledAll && (
         <td className="px-4 py-3 align-top w-[150px] sm:w-auto block sm:table-cell mt-2 sm:mt-0">
           <button
             onClick={onGuardar}

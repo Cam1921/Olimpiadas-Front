@@ -1,3 +1,4 @@
+// src/pages/dashboard/publicacion/components/ToastInline.jsx
 import { useEffect } from "react";
 
 export default function ToastInline({ type="info", message, duration=5000, onClose }) {

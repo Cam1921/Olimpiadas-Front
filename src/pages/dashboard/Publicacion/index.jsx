@@ -1,3 +1,4 @@
+// src/pages/dashboard/publicacion/index.jsx
 import { useEffect, useState } from "react";
 import HeaderBar from "./components/HeaderBar";
 import PhaseTabs from "./components/PhaseTabs";
