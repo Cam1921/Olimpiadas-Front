@@ -28,6 +28,8 @@ import PublicacionPage from "./pages/dashboard/Publicacion";
 import ControlFasesArea from "./pages/dashboard/responsable/ControlFasesArea.jsx";
 import HomePlanillas from "./pages/dashboard/evaluador/pages/HomePlanillas";
 import HomePlanillasResponsable from "./pages/dashboard/responsable/HomePlanillasResponsable";
+import PaginaPrincipal from "./components/asignar-competidores/PaginaPrincipal";
+import PreviewDistribucion from "./components/asignar-competidores/PreviewDistribucion";
 
 // NUEVO: HU13 – Medallero / Parametrización (ruta /dashboard/medallero-premiacion)
 import ParametrizarMedallero from "./pages/dashboard/medallero/ParametrizarMedallero.jsx";
@@ -52,6 +54,8 @@ export default function App() {
         {/* Admin */}
         <Route path="panel-principal" element={<PanelPrincipal />} />
         <Route path="gestion-roles" element={<ResponsablesAcademicos />} />
+        <Route path="asignacion-competidores" element={<PaginaPrincipal/>} />//asignacion-competidores
+        <Route path="asignacion-competidores/preview" element={<PreviewDistribucion />} />
         <Route path="notificaciones" element={<NotificacionesPage />} />
         <Route path="evaluadores" element={<Evaluadores />} />
         {/*   <Route path="registrar-notas" element={<EvaluadorHome />} /> */}
