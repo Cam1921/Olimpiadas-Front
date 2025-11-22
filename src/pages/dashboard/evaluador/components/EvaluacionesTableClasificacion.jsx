@@ -4,16 +4,17 @@ import FilaEvaluacion from "./FilaEvaluacion.jsx";
 import EvaluacionesRepository from "@/infrastructure/http/Evaluacion/repository.js";
 
 function toNumberNota(raw) {
-  if (raw === null || raw === undefined || raw === "" || raw === "0-100") return null;
+  if (raw === null || raw === undefined || raw === "" || raw === "0-100")
+    return null;
   const n = Number(String(raw).replace(",", "."));
   return Number.isFinite(n) ? n : null;
 }
 
 export default function EvaluacionesTableClasificacion({
   idAreaNivelFase,
-  estadoNivel,              // por si quieres pintar algún detalle del estado del nivel
-  estadoFilter = "todos",   // 'todos'|'clasificados'|'no_clasificados'|'descalificados'
-  query = "",               // buscar por nombre o CI
+  estadoNivel, // por si quieres pintar algún detalle del estado del nivel
+  estadoFilter = "todos", // 'todos'|'clasificados'|'no_clasificados'|'descalificados'
+  query = "", // buscar por nombre o CI
   sort = { by: "nombre", dir: "asc" }, // {by:'nombre'|'nota', dir:'asc'|'desc'}
 }) {
   const [rows, setRows] = useState([]);
@@ -30,8 +31,16 @@ export default function EvaluacionesTableClasificacion({
     if (!idAreaNivelFase) return;
     setLoading(true);
     try {
+      const params = {
+        busqueda: query,
+        page: nextPage,
+        perPage: 10,
+        estado_clasificado: opcion_tabla,
+        ordenar_por: sort.by,
+        direccion: sort.dir,
+      };
       const res = await EvaluacionesRepository.getEvaluaciones(
-        { page: nextPage, perPage: 10, estado_clasificado: opcion_tabla },
+        params,
         idAreaNivelFase
       );
       setRows(res.data);
@@ -48,15 +57,22 @@ export default function EvaluacionesTableClasificacion({
   useEffect(() => {
     fetchEvaluaciones(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [opcion_tabla, idAreaNivelFase]);
+  }, [opcion_tabla, idAreaNivelFase, sort]);
 
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      fetchEvaluaciones(1);
+    }, 500); // espera 500ms después de que el usuario deja de escribir
+
+    return () => clearTimeout(delay);
+  }, [query]);
   // --- Filtros locales (buscador y ordenar) sobre lo que vino del back (por página) ---
   const filtradas = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return rows;
     return rows.filter((r) => {
       const nom = String(r?.nombre || "").toLowerCase();
-      const ci  = String(r?.ci || "").toLowerCase();
+      const ci = String(r?.ci || "").toLowerCase();
       return nom.includes(q) || ci.includes(q);
     });
   }, [rows, query]);
@@ -69,14 +85,14 @@ export default function EvaluacionesTableClasificacion({
         const b = toNumberNota(B.x?.nota);
         if (a === null && b === null) return A.i - B.i;
         if (a === null) return sort.dir === "asc" ? -1 : 1;
-        if (b === null) return sort.dir === "asc" ?  1 : -1;
+        if (b === null) return sort.dir === "asc" ? 1 : -1;
         return sort.dir === "asc" ? a - b : b - a;
       });
     } else {
       arr.sort((A, B) => {
         const an = String(A.x?.nombre || "").toLocaleLowerCase();
         const bn = String(B.x?.nombre || "").toLocaleLowerCase();
-        const c  = an.localeCompare(bn, "es", { sensitivity: "base" });
+        const c = an.localeCompare(bn, "es", { sensitivity: "base" });
         return sort.dir === "desc" ? -c : c || A.i - B.i;
       });
     }
@@ -106,8 +122,8 @@ export default function EvaluacionesTableClasificacion({
                 Cargando evaluaciones...
               </td>
             </tr>
-          ) : ordenadas.length ? (
-            ordenadas.map((item) => (
+          ) : rows.length ? (
+            rows.map((item) => (
               <FilaEvaluacion
                 key={item.id_evaluacion}
                 item={item}

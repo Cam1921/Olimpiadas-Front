@@ -10,6 +10,7 @@ import {
   HiOutlineCheckCircle,
   HiXMark,
 } from "react-icons/hi2";
+import api from "@/lib/api"; // <--- tu axios/cliente HTTP
 
 const BRAND = "#0284C7";
 const TEXT = "#23263D";
@@ -23,13 +24,76 @@ const CHIP = {
 };
 
 const DATA_INICIAL = [
-  { id: 1, area: "Matemáticas",  nivel: "Secundaria", participantes: 45, oro: 3, plata: 5, bronce: 8, menciones: 10 },
-  { id: 2, area: "Física",       nivel: "Secundaria", participantes: 38, oro: 2, plata: 4, bronce: 6, menciones: 8 },
-  { id: 3, area: "Química",      nivel: "Secundaria", participantes: 52, oro: 4, plata: 6, bronce: 10, menciones: 12 },
-  { id: 4, area: "Biología",     nivel: "Secundaria", participantes: 41, oro: 3, plata: 5, bronce: 7, menciones: 9 },
-  { id: 5, area: "Informática",  nivel: "Primaria",   participantes: 29, oro: 2, plata: 3, bronce: 5, menciones: 6 },
-  { id: 6, area: "Astrofísica",  nivel: "Secundaria", participantes: 33, oro: 2, plata: 4, bronce: 6, menciones: 7 },
-  { id: 7, area: "Robótica",     nivel: "Primaria",   participantes: 40, oro: 8, plata: 6, bronce: 8, menciones: 15 },
+  {
+    id: 1,
+    area: "Matemáticas",
+    nivel: "Secundaria",
+    participantes: 45,
+    oro: 3,
+    plata: 5,
+    bronce: 8,
+    menciones: 10,
+  },
+  {
+    id: 2,
+    area: "Física",
+    nivel: "Secundaria",
+    participantes: 38,
+    oro: 2,
+    plata: 4,
+    bronce: 6,
+    menciones: 8,
+  },
+  {
+    id: 3,
+    area: "Química",
+    nivel: "Secundaria",
+    participantes: 52,
+    oro: 4,
+    plata: 6,
+    bronce: 10,
+    menciones: 12,
+  },
+  {
+    id: 4,
+    area: "Biología",
+    nivel: "Secundaria",
+    participantes: 41,
+    oro: 3,
+    plata: 5,
+    bronce: 7,
+    menciones: 9,
+  },
+  {
+    id: 5,
+    area: "Informática",
+    nivel: "Primaria",
+    participantes: 29,
+    oro: 2,
+    plata: 3,
+    bronce: 5,
+    menciones: 6,
+  },
+  {
+    id: 6,
+    area: "Astrofísica",
+    nivel: "Secundaria",
+    participantes: 33,
+    oro: 2,
+    plata: 4,
+    bronce: 6,
+    menciones: 7,
+  },
+  {
+    id: 7,
+    area: "Robótica",
+    nivel: "Primaria",
+    participantes: 40,
+    oro: 8,
+    plata: 6,
+    bronce: 8,
+    menciones: 15,
+  },
 ];
 
 /* ================= Mensaje de éxito SIN barra verde inferior ================= */
@@ -59,7 +123,9 @@ function SuccessDialog({
               </div>
               <div className="flex-1">
                 <div className="flex items-start justify-between gap-3">
-                  <h3 className="text-2xl font-semibold text-[#23263D]">{title}</h3>
+                  <h3 className="text-2xl font-semibold text-[#23263D]">
+                    {title}
+                  </h3>
                   <button
                     onClick={onClose}
                     className="text-[#23263D]/60 hover:text-[#23263D] rounded-md p-1"
@@ -92,16 +158,20 @@ function SuccessDialog({
 function computeTotals(rows) {
   const acc = { oro: 0, plata: 0, bronce: 0, menciones: 0, totalPremios: 0 };
   rows.forEach((r) => {
-    acc.oro += r.oro;
-    acc.plata += r.plata;
-    acc.bronce += r.bronce;
-    acc.menciones += r.menciones;
-    acc.totalPremios += r.oro + r.plata + r.bronce + r.menciones;
+    acc.oro += Number(r.oro || 0);
+    acc.plata += Number(r.plata || 0);
+    acc.bronce += Number(r.bronce || 0);
+    acc.menciones += Number(r.menciones || 0);
+    acc.totalPremios +=
+      Number(r.oro || 0) +
+      Number(r.plata || 0) +
+      Number(r.bronce || 0) +
+      Number(r.menciones || 0);
   });
   return acc;
 }
 
-/* ================= UI piezas ================= */
+/* ================= UI piezas (sin cambios) ================= */
 function MetricCard({ label, value, Icon, color }) {
   return (
     <div className="relative rounded-2xl bg-white border border-[#23263D]/10 shadow-sm p-6">
@@ -109,7 +179,10 @@ function MetricCard({ label, value, Icon, color }) {
         <Icon size={22} />
       </div>
       <div className="text-[15px] text-[#23263D]/75">{label}</div>
-      <div className="mt-5 text-5xl leading-none font-semibold" style={{ color }}>
+      <div
+        className="mt-5 text-5xl leading-none font-semibold"
+        style={{ color }}
+      >
         {value}
       </div>
     </div>
@@ -149,7 +222,7 @@ function Pill({ type, value }) {
   );
 }
 
-/* ================= Modal de parametrización ================= */
+/* ================= Modal de parametrización (sin cambios en UI) ================= */
 function RowInput({ label, value, onChange, Icon, color }) {
   return (
     <div>
@@ -179,7 +252,9 @@ function EditMedalleroModal({ open, onClose, baseRows, onSave }) {
 
   const setValue = (id, field, val) => {
     const n = Math.max(0, Number(String(val).replace(/\D+/g, "")) || 0);
-    setDraft((prev) => prev.map((r) => (r.id === id ? { ...r, [field]: n } : r)));
+    setDraft((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, [field]: n } : r))
+    );
   };
 
   if (!open) return null;
@@ -192,7 +267,9 @@ function EditMedalleroModal({ open, onClose, baseRows, onSave }) {
           {/* header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-[#23263D]/10">
             <div>
-              <div className="text-xl font-semibold">Parametrizar Medallero por Área</div>
+              <div className="text-xl font-semibold">
+                Parametrizar Medallero por Área
+              </div>
               <p className="text-sm text-[#23263D]/70">
                 Edita los cupos por tipo de premio para cada área y nivel.
               </p>
@@ -227,7 +304,9 @@ function EditMedalleroModal({ open, onClose, baseRows, onSave }) {
                   <div className="flex items-center justify-between">
                     <div className="text-lg font-semibold">{r.area}</div>
                   </div>
-                  <div className="text-xs text-[#23263D]/70">{r.participantes} participantes</div>
+                  <div className="text-xs text-[#23263D]/70">
+                    {r.participantes} participantes
+                  </div>
                   <div className="mt-1">
                     <NivelBadge nivel={r.nivel} />
                   </div>
@@ -280,11 +359,41 @@ function EditMedalleroModal({ open, onClose, baseRows, onSave }) {
             <div className="mt-5 rounded-2xl border border-[#23263D]/10 bg-[#FAFCFF] p-4">
               <div className="text-base font-semibold mb-3">Resumen Total</div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-sm">
-                <ResumenItem icon={HiOutlineTrophy} color={CHIP.oro.text} bg={CHIP.oro.bg} label="Oro" value={resumen.oro}/>
-                <ResumenItem icon={HiOutlineStar} color={CHIP.plata.text} bg={CHIP.plata.bg} label="Plata" value={resumen.plata}/>
-                <ResumenItem icon={HiOutlineFire} color={CHIP.bronce.text} bg={CHIP.bronce.bg} label="Bronce" value={resumen.bronce}/>
-                <ResumenItem icon={HiOutlineSparkles} color={CHIP.menciones.text} bg={CHIP.menciones.bg} label="Menciones" value={resumen.menciones}/>
-                <ResumenItem icon={HiOutlineClock} color={BRAND} bg={"#E6F0FF"} label="Total" value={`${resumen.totalPremios} premios`}/>
+                <ResumenItem
+                  icon={HiOutlineTrophy}
+                  color={CHIP.oro.text}
+                  bg={CHIP.oro.bg}
+                  label="Oro"
+                  value={resumen.oro}
+                />
+                <ResumenItem
+                  icon={HiOutlineStar}
+                  color={CHIP.plata.text}
+                  bg={CHIP.plata.bg}
+                  label="Plata"
+                  value={resumen.plata}
+                />
+                <ResumenItem
+                  icon={HiOutlineFire}
+                  color={CHIP.bronce.text}
+                  bg={CHIP.bronce.bg}
+                  label="Bronce"
+                  value={resumen.bronce}
+                />
+                <ResumenItem
+                  icon={HiOutlineSparkles}
+                  color={CHIP.menciones.text}
+                  bg={CHIP.menciones.bg}
+                  label="Menciones"
+                  value={resumen.menciones}
+                />
+                <ResumenItem
+                  icon={HiOutlineClock}
+                  color={BRAND}
+                  bg={"#E6F0FF"}
+                  label="Total"
+                  value={`${resumen.totalPremios} premios`}
+                />
               </div>
             </div>
           </div>
@@ -294,10 +403,13 @@ function EditMedalleroModal({ open, onClose, baseRows, onSave }) {
   );
 }
 
-function ResumenItem({ icon:Icon, color, bg, label, value }) {
+function ResumenItem({ icon: Icon, color, bg, label, value }) {
   return (
     <div className="flex items-center gap-2">
-      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full" style={{ background:bg }}>
+      <span
+        className="inline-flex items-center justify-center w-6 h-6 rounded-full"
+        style={{ background: bg }}
+      >
         <Icon size={16} style={{ color }} />
       </span>
       <span className="text-[#23263D]/70">{label}:</span>
@@ -308,9 +420,12 @@ function ResumenItem({ icon:Icon, color, bg, label, value }) {
 
 /* ================= Página principal ================= */
 export default function ParametrizarMedallero() {
-  const [rows, setRows] = useState(DATA_INICIAL);
-  const [metrics, setMetrics] = useState(() => computeTotals(DATA_INICIAL));
+  // rows keep the same shape your UI expects:
+  // { id, area, nivel, participantes, oro, plata, bronce, menciones }
+  const [rows, setRows] = useState([]);
+  const [metrics, setMetrics] = useState(() => computeTotals([]));
   const [canSave, setCanSave] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // estado del diálogo de éxito
   const [ok, setOk] = useState({
@@ -325,10 +440,47 @@ export default function ParametrizarMedallero() {
     []
   );
 
+  // --- load from backend on mount ---
   useEffect(() => {
-    setMetrics(computeTotals(rows));
-    setCanSave(false);
+    loadFromBackend();
   }, []);
+
+  const loadFromBackend = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get("/config-medallero");
+      // backend returns res.data.data array with:
+      // id_area_nivel, area, nivel, participantes, oros, platas, bronces, menciones_honorificas
+      const mapped = (res.data.data || []).map((it) => ({
+        id: it.id_area_nivel, // keep UI's id
+        id_area_nivel: it.id_area_nivel, // keep original too
+        area: it.area,
+        nivel: it.nivel,
+        participantes: it.participantes ?? 0,
+        oro: Number(it.oros ?? 0),
+        plata: Number(it.platas ?? 0),
+        bronce: Number(it.bronces ?? 0),
+        menciones: Number(it.menciones_honorificas ?? 0),
+      }));
+
+      setRows(mapped);
+      setMetrics(computeTotals(mapped));
+      setCanSave(false);
+    } catch (err) {
+      console.error("Error cargando config-medallero:", err);
+      // dejar DATA_INICIAL si falla
+      setRows(DATA_INICIAL);
+      setMetrics(computeTotals(DATA_INICIAL));
+      setLoading(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // keep metrics in sync if rows changed externally
+    setMetrics(computeTotals(rows));
+  }, [rows]);
 
   const handleRecalcular = () => {
     const t = computeTotals(rows);
@@ -336,16 +488,44 @@ export default function ParametrizarMedallero() {
     setCanSave(true);
   };
 
-  const handleGuardar = () => {
-    setOk({
-      open: true,
-      message: "Configuración guardada exitosamente.",
-    });
-    setCanSave(false);
+  const handleGuardar = async () => {
+    // prepare payload matching backend expected fields
+    const payload = {
+      configs: rows.map((r) => ({
+        id_area_nivel: r.id_area_nivel ?? r.id,
+        oros: Number(r.oro || 0),
+        platas: Number(r.plata || 0),
+        bronces: Number(r.bronce || 0),
+        menciones_honorificas: Number(r.menciones || 0),
+      })),
+    };
+
+    try {
+      setLoading(true);
+      await api.post("/config-medallero/save-all", payload);
+
+      setOk({
+        open: true,
+        message: "Configuración guardada exitosamente.",
+      });
+      setCanSave(false);
+    } catch (err) {
+      console.error("Error guardando config-medallero:", err);
+      setOk({
+        open: true,
+        message: "Error al guardar configuración. Revisa la consola.",
+      });
+      setLoading(false);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // viene desde el modal de parametrización
-  const handleSaveFromModal = (newRows, meta) => {
+  // viene desde el modal de parametrización (draft mantiene id fields)
+  const handleSaveFromModal = (
+    newRows /* array of rows with id as before */,
+    meta
+  ) => {
     setRows(newRows);
     setMetrics(computeTotals(newRows));
     setOpenEdit(false);
@@ -435,38 +615,49 @@ export default function ParametrizarMedallero() {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((r, idx) => {
-                  const zebra = idx % 2 === 1 ? "bg-[#FAFCFD]" : "bg-white";
-                  return (
-                    <tr key={r.id} className={`${zebra} border-t border-[#23263D]/5`}>
-                      <td className="py-4 pl-4 pr-2">
-                        <div className="font-medium">{r.area}</div>
-                        <div className="mt-1">
-                          <NivelBadge nivel={r.nivel} />
-                        </div>
-                      </td>
-                      <td className="py-4 px-2 text-[#23263D]/80">{r.participantes}</td>
-                      <td className="py-4 px-2">
-                        <Pill type="oro" value={r.oro} />
-                      </td>
-                      <td className="py-4 px-2">
-                        <Pill type="plata" value={r.plata} />
-                      </td>
-                      <td className="py-4 px-2">
-                        <Pill type="bronce" value={r.bronce} />
-                      </td>
-                      <td className="py-4 pr-2 w-[120px] text-center">
-                        <Pill type="menciones" value={r.menciones} />
-                      </td>
-                      <td
-                        className="py-4 pl-2 pr-2 w-[120px] text-right font-semibold"
-                        style={{ color: BRAND }}
+                {!loading ? (
+                  rows.map((r, idx) => {
+                    const zebra = idx % 2 === 1 ? "bg-[#FAFCFD]" : "bg-white";
+                    return (
+                      <tr
+                        key={r.id}
+                        className={`${zebra} border-t border-[#23263D]/5`}
                       >
-                        {r.oro + r.plata + r.bronce + r.menciones}
-                      </td>
-                    </tr>
-                  );
-                })}
+                        <td className="py-4 pl-4 pr-2">
+                          <div className="font-medium">{r.area}</div>
+                          <div className="mt-1">
+                            <NivelBadge nivel={r.nivel} />
+                          </div>
+                        </td>
+                        <td className="py-4 px-2 text-[#23263D]/80">
+                          {r.participantes}
+                        </td>
+                        <td className="py-4 px-2">
+                          <Pill type="oro" value={r.oro} />
+                        </td>
+                        <td className="py-4 px-2">
+                          <Pill type="plata" value={r.plata} />
+                        </td>
+                        <td className="py-4 px-2">
+                          <Pill type="bronce" value={r.bronce} />
+                        </td>
+                        <td className="py-4 pr-2 w-[120px] text-center">
+                          <Pill type="menciones" value={r.menciones} />
+                        </td>
+                        <td
+                          className="py-4 pl-2 pr-2 w-[120px] text-right font-semibold"
+                          style={{ color: BRAND }}
+                        >
+                          {r.oro + r.plata + r.bronce + r.menciones}
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <div className="w-full py-10 flex items-center justify-center">
+                    <span className="text-[#23263D]/70">Cargando datos...</span>
+                  </div>
+                )}
               </tbody>
             </table>
           </div>
@@ -488,7 +679,9 @@ export default function ParametrizarMedallero() {
                 canSave ? "hover:opacity-95" : "opacity-60 cursor-not-allowed"
               }`}
               style={{ backgroundColor: BRAND }}
-              title={canSave ? "Guardar cambios" : "Recalcula o edita para habilitar"}
+              title={
+                canSave ? "Guardar cambios" : "Recalcula o edita para habilitar"
+              }
             >
               <HiOutlineCheckCircle size={18} />
               Guardar cambios

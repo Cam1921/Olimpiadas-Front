@@ -112,7 +112,6 @@ export default function App() {
           path="control-fases-area"
           element={<HomePlanillasResponsable />}
         />
-        {/* ← ESTA ES LA QUE NECESITAS */}
         {/* Compatibilidad */}
         <Route
           path="gestion-inscripciones"

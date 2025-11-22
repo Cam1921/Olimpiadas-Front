@@ -150,6 +150,7 @@ export default function GestionInscripciones({ importedData = [] }) {
               items={areas.map((a) => a.nombre)}
               defaultLabel="Todos"
               onSelect={(nombreSeleccionado) => {
+                console.log(nombreSeleccionado);
                 const areaSeleccionada = areas.find(
                   (a) => a.nombre === nombreSeleccionado
                 );
@@ -167,6 +168,7 @@ export default function GestionInscripciones({ importedData = [] }) {
               icon={FaChevronDown}
               items={niveles.map((n) => n.nombre)}
               defaultLabel="Todos"
+              menuClass="w-48"
               onSelect={(nombreSeleccionado) => {
                 const nivelSeleccionado = niveles.find(
                   (n) => n.nombre === nombreSeleccionado

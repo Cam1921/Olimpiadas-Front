@@ -1,13 +1,20 @@
 // src/components/CronogramaActividadesPanel.jsx
-import { useState, useEffect } from 'react';
-import { PlusIcon, PencilIcon, TrashIcon, ArrowUpTrayIcon, EyeIcon } from '@heroicons/react/24/outline';
-import ConfirmationModal from './ConfirmationModal';
-import SuccessDialog from './SuccessDialog';
+import { useState, useEffect } from "react";
+import {
+  PlusIcon,
+  PencilIcon,
+  TrashIcon,
+  ArrowUpTrayIcon,
+  EyeIcon,
+} from "@heroicons/react/24/outline";
+import ConfirmationModal from "./ConfirmationModal";
+import SuccessDialog from "./SuccessDialog";
+import { actividadService } from "@/services/actividadService";
+import { faseService } from "@/services/faseService";
+import Dropdown from "./Dropdown";
+import { FaChevronDown } from "react-icons/fa";
 
-// ✅ SIMULACIÓN: No usamos 'api' ni llamadas HTTP
-// Los datos viven solo en memoria (se borran al recargar)
-
-export default function CronogramaActividadesPanel({ userRole = 'admin' }) {
+export default function CronogramaActividadesPanel({ userRole = "admin" }) {
   const [showDescriptionModal, setShowDescriptionModal] = useState(null);
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -17,22 +24,165 @@ export default function CronogramaActividadesPanel({ userRole = 'admin' }) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [showAddActivity, setShowAddActivity] = useState(false);
   const [editingActivity, setEditingActivity] = useState(null);
-  const [newActivityName, setNewActivityName] = useState('');
-  const [newActivityDescription, setNewActivityDescription] = useState('');
+  const [newActivityName, setNewActivityName] = useState(null);
+  const [newActivityDescription, setNewActivityDescription] = useState("");
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [showConfirmPublish, setShowConfirmPublish] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(null);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [successTitle, setSuccessTitle] = useState('Operación Exitosa');
-  const [successSubtitle, setSuccessSubtitle] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
+  const [successTitle, setSuccessTitle] = useState("Operación Exitosa");
+  const [successSubtitle, setSuccessSubtitle] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [showEventDetail, setShowEventDetail] = useState(null);
-  const [saving, setSaving] = useState(false);
+  const [opciones, setOpciones] = useState([]);
+  const [fases, setFases] = useState([]);
+  const [fase, setFase] = useState(null);
+  const [actividades, SetActividades] = useState([]);
+  const [actividad, setActividad] = useState(null);
 
   useEffect(() => {
     setCurrentMonth(new Date(selectedYear, selectedMonth, 1));
   }, [selectedYear, selectedMonth]);
+
+  const fetchActivities = async (faseid) => {
+    if (!faseid) return;
+    try {
+      setLoading(true);
+      const res = await actividadService.porFase(faseid);
+      const data = res.data;
+
+      // adaptamos el backend a lo que la tabla necesita
+      const adaptedData = data.map((item) => ({
+        label: item.nombre,
+        value: item.id,
+      }));
+      SetActividades(adaptedData);
+      setLoading(false);
+    } catch (error) {
+      setError(error);
+      setLoading(false);
+    }
+  };
+  const fetchFases = async () => {
+    try {
+      setLoading(true);
+      const res = await faseService.getDropdown();
+      const data = res.data;
+
+      // adaptamos el backend a lo que la tabla necesita
+      const adaptedData = data.map((item) => ({
+        label: item.nombre,
+        value: item.id,
+      }));
+
+      setFases(adaptedData);
+      setLoading(false);
+    } catch (error) {
+      setError(error);
+      setLoading(false);
+    }
+  };
+  const fetchAllfases = async () => {
+    try {
+      setLoading(true);
+      const res = await faseService.getAll();
+      const data = res.data;
+      console.log(data);
+      // adaptamos el backend a lo que la tabla necesita
+      const adaptedData = data
+        .filter((item) => item.fecha_inicio || item.fecha_fin)
+        .map((item) => ({
+          id: item.id,
+          name: item.nombre,
+          description: item.descripcion,
+          fase: item.fase,
+          fase_id: item.fase_id,
+          color: getRandomColor(),
+          published: item.estado_publicado,
+          dates: [
+            item.fecha_inicio
+              ? {
+                  date: item.fecha_inicio.split("T")[0],
+                  startTime: item.hora_inicio_ini,
+                  endTime: item.hora_fin_ini,
+                }
+              : null,
+            item.fecha_fin
+              ? {
+                  date: item.fecha_fin.split("T")[0],
+                  startTime: item.hora_inicio_fin,
+                  endTime: item.hora_fin_fin,
+                }
+              : null,
+          ].filter(Boolean),
+        }));
+
+      setActivities(adaptedData);
+      setLoading(false);
+    } catch (error) {
+      setError(error);
+      setLoading(false);
+    }
+  };
+
+  const fetchAllActividades = async () => {
+    try {
+      setLoading(true);
+      const res = await actividadService.getAll();
+      const data = res.data;
+      console.log(data);
+      // adaptamos el backend a lo que la tabla necesita
+      const adaptedData = data
+        .filter((item) => item.fecha_inicio || item.fecha_fin)
+        .map((item) => ({
+          id: item.id,
+          name: `${item.nombre} - ${item.fase}`,
+          description: item.descripcion,
+          fase: item.fase,
+          fase_id: item.fase_id,
+          color: getRandomColor(),
+          published: item.estado_publicado,
+          dates: [
+            item.fecha_inicio
+              ? {
+                  date: item.fecha_inicio.split("T")[0],
+                  startTime: item.hora_inicio_ini,
+                  endTime: item.hora_fin_ini,
+                }
+              : null,
+            item.fecha_fin
+              ? {
+                  date: item.fecha_fin.split("T")[0],
+                  startTime: item.hora_inicio_fin,
+                  endTime: item.hora_fin_fin,
+                }
+              : null,
+          ].filter(Boolean),
+        }));
+
+      setActivities((prev) => [...prev, ...adaptedData]);
+
+      setLoading(false);
+    } catch (error) {
+      setError(error);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAllfases();
+    fetchAllActividades();
+    fetchFases();
+  }, []);
+
+  useEffect(() => {
+    if (fase) {
+      fetchActivities(fase.value);
+    } else {
+      fetchFases();
+    }
+  }, [fase]);
 
   const generateYears = () => {
     const currentYear = new Date().getFullYear();
@@ -40,8 +190,18 @@ export default function CronogramaActividadesPanel({ userRole = 'admin' }) {
   };
 
   const monthNames = [
-    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    "Enero",
+    "Febrero",
+    "Marzo",
+    "Abril",
+    "Mayo",
+    "Junio",
+    "Julio",
+    "Agosto",
+    "Septiembre",
+    "Octubre",
+    "Noviembre",
+    "Diciembre",
   ];
 
   const generateDays = () => {
@@ -63,14 +223,13 @@ export default function CronogramaActividadesPanel({ userRole = 'admin' }) {
   const days = generateDays();
 
   const getDateString = (date) => {
-    if (!date || !(date instanceof Date) || isNaN(date.getTime())) return '';
+    if (!date || !(date instanceof Date) || isNaN(date.getTime())) return "";
     const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const d = String(date.getDate()).padStart(2, '0');
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
     return `${y}-${m}-${d}`;
   };
 
-  // ✅ NUEVA FUNCIÓN: Verifica si la fecha es hoy o futura
   const isFutureOrToday = (date) => {
     if (!date || !(date instanceof Date) || isNaN(date.getTime())) return false;
     const today = new Date();
@@ -83,20 +242,22 @@ export default function CronogramaActividadesPanel({ userRole = 'admin' }) {
   const isSelected = (date) => {
     if (!date || !(date instanceof Date) || isNaN(date.getTime())) return false;
     const dStr = getDateString(date);
-    return selectedDates.some(item => item.date === dStr);
+    return selectedDates.some((item) => item.date === dStr);
   };
 
   const getActivityInfo = (date) => {
     if (!date || !(date instanceof Date) || isNaN(date.getTime())) return null;
     const dStr = getDateString(date);
     const eventsOnDate = activities
-      .filter(act => act.dates.some(d => d.date === dStr))
-      .map(act => {
-        const event = act.dates.find(d => d.date === dStr);
+      .filter((act) => act.dates.some((d) => d.date === dStr))
+      .map((act) => {
+        const event = act.dates.find((d) => d.date === dStr);
         return {
           ...event,
           id: act.id,
           name: act.name,
+          fase: act.fase,
+          id_fase: act.id_fase,
           description: act.description,
           color: act.color,
           published: act.published,
@@ -106,143 +267,221 @@ export default function CronogramaActividadesPanel({ userRole = 'admin' }) {
     return eventsOnDate.length > 0 ? eventsOnDate : null;
   };
 
-  // ✅ MODIFICADO: Ignora fechas pasadas
   const toggleDate = (date) => {
     if (!date || !(date instanceof Date) || isNaN(date.getTime())) return;
-    if (!isFutureOrToday(date)) return; // ❌ Bloquea fechas anteriores
+    if (!isFutureOrToday(date)) return;
 
     const dStr = getDateString(date);
-    setSelectedDates(prev => {
-      const exists = prev.find(item => item.date === dStr);
+
+    setSelectedDates((prev) => {
+      const exists = prev.find((item) => item.date === dStr);
+
+      // Si ya estaba seleccionada → quitarla
       if (exists) {
-        return prev.filter(item => item.date !== dStr);
-      } else {
-        return [...prev, { date: dStr, startTime: '09:00', endTime: '17:00' }];
+        return prev.filter((item) => item.date !== dStr);
       }
+
+      // Si NO existe y ya hay 2 fechas → NO permitir agregar más
+      if (prev.length >= 2) {
+        console.log(
+          "Solo puedes seleccionar la fecha de inicio y la fecha de fin."
+        );
+        return prev;
+      }
+
+      // Agregar nueva fecha
+      const newDates = [
+        ...prev,
+        { date: dStr, startTime: "09:00", endTime: "17:00" },
+      ];
+
+      // Ordenar las fechas (inicio → fin)
+      newDates.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      return newDates;
     });
   };
 
   const getRandomColor = () => {
     const colors = [
-      'bg-blue-100 text-blue-800',
-      'bg-purple-100 text-purple-800',
-      'bg-green-100 text-green-800',
-      'bg-yellow-100 text-yellow-800',
-      'bg-red-100 text-red-800',
-      'bg-indigo-100 text-indigo-800',
-      'bg-pink-100 text-pink-800',
-      'bg-teal-100 text-teal-800',
+      "bg-blue-100 text-blue-800",
+      "bg-purple-100 text-purple-800",
+      "bg-green-100 text-green-800",
+      "bg-yellow-100 text-yellow-800",
+      "bg-red-100 text-red-800",
+      "bg-indigo-100 text-indigo-800",
+      "bg-pink-100 text-pink-800",
+      "bg-teal-100 text-teal-800",
     ];
     return colors[Math.floor(Math.random() * colors.length)];
   };
 
   const resetForm = () => {
-    setNewActivityName('');
-    setNewActivityDescription('');
+    setFase(null);
+    setActividad(null);
+    setNewActivityDescription("");
     setSelectedDates([]);
     setEditingActivity(null);
     setShowAddActivity(false);
   };
 
-  // ✅ VALIDACIÓN EXTRA: al crear
-  const handleAddActivity = () => {
-    if (!newActivityName.trim() || selectedDates.length === 0) {
-      alert('Por favor, ingresa un nombre y selecciona al menos una fecha.');
-      return;
+  const handleAddActivity = async () => {
+    try {
+      setLoading(true);
+
+      const data = {
+        estado_publicado: "borrador",
+        fecha_inicio: selectedDates[0].date,
+        fecha_fin: selectedDates[selectedDates.length - 1].date,
+        hora_inicio_ini: selectedDates[0].startTime,
+        hora_fin_ini: selectedDates[0].endTime,
+        hora_fin_fin: selectedDates[selectedDates.length - 1].endTime,
+        hora_inicio_fin: selectedDates[selectedDates.length - 1].startTime,
+        descripcion: newActivityDescription.trim() || "",
+      };
+
+      let id = null;
+
+      if (actividad && fase) {
+        const res = await actividadService.update(actividad.value, data);
+        id = actividad.value;
+      } else {
+        const res = await faseService.update(fase.value, data);
+        id = fase.value;
+      }
+
+      fetchAllfases();
+      fetchAllActividades();
+      setSuccessTitle("Actividad Programada");
+      setSuccessSubtitle("La actividad ha sido creada con éxito");
+      setSuccessMessage(
+        `"${newActivityName.label}" se ha programado para ${selectedDates.length} día(s).`
+      );
+      setShowSuccess(true);
+      resetForm();
+    } catch (error) {
+      console.log("Error al agregar la actividad:", error);
+      if (error.response) {
+        setError(
+          error.response.data?.message || "Error al agregar la actividad."
+        );
+      } else if (error.request) {
+        setError("El servidor no responde");
+      } else {
+        setError("Error desconocido al agregar la actividad.");
+      }
+    } finally {
+      setTimeout(() => {
+        setError("");
+      }, 5000);
+      setLoading(false);
     }
-
-    const hasPastDate = selectedDates.some(item => {
-      const selectedDate = new Date(item.date);
-      return !isFutureOrToday(selectedDate);
-    });
-
-    if (hasPastDate) {
-      alert('No se permiten fechas anteriores a hoy.');
-      return;
-    }
-
-    const newActivity = {
-      id: Date.now(),
-      name: newActivityName.trim(),
-      description: newActivityDescription.trim() || null,
-      color: getRandomColor(),
-      published: false,
-      dates: selectedDates.map(d => ({
-        date: d.date,
-        startTime: d.startTime,
-        endTime: d.endTime,
-      })),
-    };
-
-    setActivities([...activities, newActivity]);
-    setSuccessTitle('Actividad Programada');
-    setSuccessSubtitle('La actividad ha sido creada con éxito');
-    setSuccessMessage(`"${newActivityName}" se ha programado para ${selectedDates.length} día(s).`);
-    setShowSuccess(true);
-    resetForm();
   };
 
-  // ✅ VALIDACIÓN EXTRA: al editar
-  const handleUpdateActivity = () => {
-    if (!newActivityName.trim() || selectedDates.length === 0) {
-      alert('Por favor, ingresa un nombre y selecciona al menos una fecha.');
-      return;
+  const handleUpdateActivity = async () => {
+    setLoading(true);
+    try {
+      const hasPastDate = selectedDates.some((item) => {
+        const selectedDate = new Date(item.date);
+        return !isFutureOrToday(selectedDate);
+      });
+
+      const activityIdToEdit = editingActivity?.id;
+      if (!activityIdToEdit) {
+        alert("Error: No se pudo encontrar la actividad a editar.");
+        return;
+      }
+
+      const data = {
+        estado_publicado: "borrador",
+        fecha_inicio: selectedDates[0].date,
+        fecha_fin: selectedDates[selectedDates.length - 1].date,
+        hora_inicio_ini: selectedDates[0].startTime,
+        hora_fin_ini: selectedDates[0].endTime,
+        hora_fin_fin: selectedDates[selectedDates.length - 1].endTime,
+        hora_inicio_fin: selectedDates[selectedDates.length - 1].startTime,
+        descripcion: newActivityDescription.trim() || null,
+      };
+      console.log(data);
+      if (actividad && fase) {
+        const res = await actividadService.update(actividad.value, data);
+      } else {
+        const res = await faseService.update(fase.value, data);
+      }
+
+      fetchAllfases();
+      fetchAllActividades();
+
+      setSuccessTitle("Actividad Actualizada");
+      setSuccessSubtitle("Los cambios han sido guardados");
+      setSuccessMessage(
+        `"${newActivityName}" ha sido actualizada correctamente.`
+      );
+      setShowSuccess(true);
+      resetForm();
+    } catch (error) {
+      console.log("Error al agregar la actividad:", error);
+      if (error.response) {
+        setError(
+          error.response.data?.message || "Error al agregar la actividad."
+        );
+      } else if (error.request) {
+        setError("El servidor no responde");
+      } else {
+        setError("Error desconocido al agregar la actividad.");
+      }
+    } finally {
+      setTimeout(() => {
+        setError("");
+      }, 5000);
+      setLoading(false);
     }
-
-    const hasPastDate = selectedDates.some(item => {
-      const selectedDate = new Date(item.date);
-      return !isFutureOrToday(selectedDate);
-    });
-
-    if (hasPastDate) {
-      alert('No se permiten fechas anteriores a hoy.');
-      return;
-    }
-
-    const activityIdToEdit = editingActivity?.id;
-    if (!activityIdToEdit) {
-      alert('Error: No se pudo encontrar la actividad a editar.');
-      return;
-    }
-
-    const updatedActivity = {
-      id: activityIdToEdit,
-      name: newActivityName.trim(),
-      description: newActivityDescription.trim() || null,
-      color: editingActivity.color,
-      published: editingActivity.published,
-      dates: selectedDates.map(d => ({
-        date: d.date,
-        startTime: d.startTime,
-        endTime: d.endTime,
-      })),
-    };
-
-    setActivities(activities.map(a => a.id === activityIdToEdit ? updatedActivity : a));
-    setSuccessTitle('Actividad Actualizada');
-    setSuccessSubtitle('Los cambios han sido guardados');
-    setSuccessMessage(`"${newActivityName}" ha sido actualizada correctamente.`);
-    setShowSuccess(true);
-    resetForm();
   };
 
-  const confirmDeleteActivity = (id) => {
-    const deleted = activities.find(a => a.id === id);
-    setActivities(activities.filter(a => a.id !== id));
-    setSuccessTitle('Actividad Eliminada');
-    setSuccessSubtitle('La actividad ya no está programada');
-    setSuccessMessage(`"${deleted?.name}" ha sido eliminada del cronograma.`);
-    setShowSuccess(true);
-    setShowConfirmDelete(null);
+  const confirmDeleteActivity = async (activity) => {
+    try {
+      const first = selectedDates?.[0];
+      const last = selectedDates?.[selectedDates.length - 1];
+
+      const data = {
+        estado_publicado: "sin_fechas",
+        fecha_inicio: "",
+        fecha_fin: "",
+        hora_inicio_ini: "",
+        hora_fin_ini: "",
+        hora_inicio_fin: "",
+        hora_fin_fin: "",
+      };
+
+      if (activity.fase) {
+        const res = await actividadService.update(activity.id, data);
+      } else {
+        const res = await faseService.update(activity.id, data);
+      }
+      fetchAllfases();
+      fetchAllActividades();
+
+      setSuccessTitle("Actividad Eliminada");
+      setSuccessSubtitle("La actividad ya no está programada");
+      setShowSuccess(true);
+      setShowConfirmDelete(null);
+    } catch (error) {
+      console.log("Error al eliminar la actividad:", error);
+    }
   };
 
-  const handlePublish = () => {
-    setActivities(activities.map(a => ({ ...a, published: true })));
-    setSuccessTitle('Cronograma Publicado');
-    setSuccessSubtitle('Todos los participantes pueden ver las fechas');
-    setSuccessMessage('El cronograma ha sido publicado exitosamente.');
-    setShowSuccess(true);
-    setShowConfirmPublish(false);
+  const handlePublish = async () => {
+    try {
+      await faseService.publicarTodo();
+      fetchAllfases();
+      fetchAllActividades();
+      setActivities(activities.map((a) => ({ ...a, published: true })));
+      setSuccessTitle("Cronograma Publicado");
+      setSuccessSubtitle("Todos los participantes pueden ver las fechas");
+      setSuccessMessage("El cronograma ha sido publicado exitosamente.");
+      setShowSuccess(true);
+      setShowConfirmPublish(false);
+    } catch (error) {}
   };
 
   const goToPreviousMonth = () => {
@@ -265,42 +504,69 @@ export default function CronogramaActividadesPanel({ userRole = 'admin' }) {
 
   const editFromDetail = (activity) => {
     if (!activity?.id) {
-      alert('Error: La actividad no tiene un ID válido.');
+      alert("Error: La actividad no tiene un ID válido.");
       return;
     }
+    const fixTime = (time) => time?.slice(0, 5) ?? "00:00";
+    handleEditActivity(activity);
     setEditingActivity(activity);
     setNewActivityName(activity.name);
-    setNewActivityDescription(activity.description || '');
-    setSelectedDates(activity.dates.map(d => ({
-      date: d.date,
-      startTime: d.startTime,
-      endTime: d.endTime
-    })));
+    setNewActivityDescription(activity.description || "");
+    setSelectedDates(
+      activity.dates.map((d) => ({
+        date: d.date,
+        startTime: fixTime(d.startTime),
+        endTime: fixTime(d.endTime),
+      }))
+    );
     setShowAddActivity(true);
     setShowEventDetail(null);
   };
 
+  const handleEditActivity = (activityData) => {
+    // activityData: objeto de la actividad a editar
+
+    if (activityData == null) return;
+    if (activityData.fase && activityData.fase_id) {
+      setActividad({ label: activityData.name, value: activityData.id });
+      setNewActivityName({ label: activityData.name, value: activityData.id });
+      setFase({ label: activityData.fase, value: activityData.fase_id });
+      setEditingActivity(true); // si manejas un estado de edición
+    } else {
+      setActividad(null);
+      setFase({ label: activityData.name, value: activityData.id });
+      setEditingActivity(true);
+    }
+  };
   const renderAdminView = () => (
     <>
       <div className="flex justify-between items-start mb-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Cronograma de Actividades</h1>
-          <p className="text-sm text-slate-500 mt-1">Selecciona fechas y asígnalas a una actividad.</p>
+          <h1 className="text-2xl font-bold text-slate-800">
+            Cronograma de Actividades
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">
+            Selecciona fechas y asígnalas a una actividad.
+          </p>
         </div>
         <div className="flex gap-3">
           <button
             className="btn btn-outline flex items-center gap-2"
             onClick={() => {
               setEditingActivity(null);
-              setNewActivityName('');
-              setNewActivityDescription('');
+
+              setNewActivityName(null);
+              setNewActivityName("");
+              setNewActivityDescription("");
               setShowAddActivity(true);
             }}
           >
             <PlusIcon className="w-4 h-4" /> Nueva Actividad
           </button>
           <button
-            className={`btn btn-primary flex items-center gap-2 ${activities.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`btn btn-primary flex items-center gap-2 ${
+              activities.length === 0 ? "opacity-50 cursor-not-allowed" : ""
+            }`}
             onClick={() => setShowConfirmPublish(true)}
             disabled={activities.length === 0}
           >
@@ -318,7 +584,9 @@ export default function CronogramaActividadesPanel({ userRole = 'admin' }) {
             className="border border-slate-300 rounded px-2 py-1 text-xs w-20"
           >
             {generateYears().map((year) => (
-              <option key={year} value={year}>{year}</option>
+              <option key={year} value={year}>
+                {year}
+              </option>
             ))}
           </select>
         </div>
@@ -330,7 +598,9 @@ export default function CronogramaActividadesPanel({ userRole = 'admin' }) {
             className="border border-slate-300 rounded px-2 py-1 text-xs w-24"
           >
             {monthNames.map((name, index) => (
-              <option key={index} value={index}>{name}</option>
+              <option key={index} value={index}>
+                {name}
+              </option>
             ))}
           </select>
         </div>
@@ -338,57 +608,63 @@ export default function CronogramaActividadesPanel({ userRole = 'admin' }) {
 
       <div className="card p-4 mb-6">
         <div className="flex justify-between items-center mb-4">
-          <button onClick={goToPreviousMonth} className="btn btn-sm btn-outline">{"<"}</button>
-          <h3 className="text-lg font-medium">{monthNames[selectedMonth]} de {selectedYear}</h3>
-          <button onClick={goToNextMonth} className="btn btn-sm btn-outline">{">"}</button>
+          <button
+            onClick={goToPreviousMonth}
+            className="btn btn-sm btn-outline"
+          >
+            {"<"}
+          </button>
+          <h3 className="text-lg font-medium">
+            {monthNames[selectedMonth]} de {selectedYear}
+          </h3>
+          <button onClick={goToNextMonth} className="btn btn-sm btn-outline">
+            {">"}
+          </button>
         </div>
 
         <div className="grid grid-cols-7 gap-1 text-xs font-medium text-slate-500">
-          {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map(day => (
-            <div key={day} className="text-center py-2">{day}</div>
+          {["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"].map((day) => (
+            <div key={day} className="text-center py-2">
+              {day}
+            </div>
           ))}
         </div>
 
         <div className="grid grid-cols-7 gap-1 mt-2">
           {days.map((date, idx) => {
             const isValidDate = date instanceof Date && !isNaN(date.getTime());
+
             const info = isValidDate ? getActivityInfo(date) : null;
 
             return (
               <div
                 key={idx}
-                className={`h-16 flex flex-col items-center justify-center text-xs rounded-md p-1 transition-colors ${
+                className={` flex flex-col items-center justify-center text-xs rounded-md p-1 transition-colors ${
                   !isValidDate
-                    ? ''
+                    ? ""
                     : !isFutureOrToday(date)
-                    ? 'text-slate-300 bg-slate-50 cursor-not-allowed' // ❌ Pasadas: gris y bloqueadas
+                    ? "text-slate-300 bg-slate-50 cursor-not-allowed"
                     : isSelected(date)
-                    ? 'bg-blue-200 border border-blue-400 cursor-pointer'
+                    ? "bg-blue-200 border border-blue-400 cursor-pointer"
                     : info
-                    ? 'bg-white border border-slate-200 cursor-pointer'
-                    : 'hover:bg-slate-100 cursor-pointer'
-                } ${showAddActivity ? 'pointer-events-none opacity-70' : ''}`}
+                    ? "bg-white border border-slate-200 cursor-pointer"
+                    : "hover:bg-slate-100 cursor-pointer"
+                } ${showAddActivity ? "pointer-events-none opacity-70" : ""}`}
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (isValidDate && isFutureOrToday(date) && !showAddActivity) {
-                    if (info) {
-                      const firstEvent = info[0];
-                      setEditingActivity(firstEvent.activity);
-                      setNewActivityName(firstEvent.activity.name);
-                      setNewActivityDescription(firstEvent.activity.description || '');
-                      setSelectedDates(firstEvent.activity.dates.map(d => ({
-                        date: d.date,
-                        startTime: d.startTime,
-                        endTime: d.endTime
-                      })));
-                      setShowAddActivity(true);
-                    } else {
-                      toggleDate(date);
-                    }
+                  if (
+                    isValidDate &&
+                    isFutureOrToday(date) &&
+                    !showAddActivity
+                  ) {
+                    toggleDate(date);
+                    console.log(selectedDates.length);
+                    console.log(selectedDates);
+                    console.log(date);
                   }
                 }}
               >
-                {isValidDate ? date.getDate() : ''}
+                {isValidDate ? date.getDate() : ""}
                 {isValidDate && info && (
                   <div className="mt-1 space-y-1 w-full">
                     {info.map((event, i) => (
@@ -412,25 +688,40 @@ export default function CronogramaActividadesPanel({ userRole = 'admin' }) {
       </div>
 
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-slate-800">Actividades Programadas</h2>
+        <h2 className="text-xl font-semibold text-slate-800">
+          Actividades Programadas
+        </h2>
         {activities.length === 0 ? (
-          <div className="text-center py-8 text-slate-500">No hay actividades aún.</div>
+          <div className="text-center py-8 text-slate-500">
+            No hay actividades aún.
+          </div>
         ) : (
-          activities.map((activity) => (
-            <div key={activity.id} className="card p-4 flex justify-between items-center">
+          activities.map((activity, index) => (
+            <div
+              key={index}
+              className="card p-4 flex justify-between items-center"
+            >
               <div className="flex items-center gap-3">
-                <span className={`inline-block px-3 py-1 text-xs rounded-full ${activity.color}`}>
+                <span
+                  className={`inline-block px-3 py-1 text-xs rounded-full ${activity.color}`}
+                >
                   {activity.name}
                 </span>
                 <div className="text-sm text-slate-600">
-                  {activity.dates.map((d) => {
-                    const dt = new Date(d.date);
-                    return `${dt.toLocaleDateString()} (${d.startTime}–${d.endTime})`;
-                  }).join(', ')}
+                  {activity.dates
+                    .map((d) => {
+                      const dt = new Date(d.date);
+                      return `${dt.toLocaleDateString()} (${d.startTime}–${
+                        d.endTime
+                      })`;
+                    })
+                    .join(", ")}
                 </div>
                 {activity.description && (
                   <div className="flex items-center gap-1">
-                    <span className="text-xs text-slate-500 italic">Descripción:</span>
+                    <span className="text-xs text-slate-500 italic">
+                      Descripción:
+                    </span>
                     <button
                       onClick={() => setShowDescriptionModal(activity)}
                       className="text-blue-600 hover:text-blue-800"
@@ -450,16 +741,18 @@ export default function CronogramaActividadesPanel({ userRole = 'admin' }) {
                 </button>
                 <button
                   className="btn btn-sm btn-outline text-red-600"
-                  onClick={() => setShowConfirmDelete(activity.id)}
+                  onClick={() => setShowConfirmDelete(activity)}
                 >
                   <TrashIcon className="w-4 h-4" />
                 </button>
                 <span
                   className={`px-2 py-1 text-xs rounded-full ${
-                    activity.published ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                    activity.published
+                      ? "bg-green-100 text-green-800"
+                      : "bg-gray-100 text-gray-800"
                   }`}
                 >
-                  {activity.published ? 'Publicado' : 'Borrador'}
+                  {activity.published}
                 </span>
               </div>
             </div>
@@ -471,35 +764,48 @@ export default function CronogramaActividadesPanel({ userRole = 'admin' }) {
 
   const renderEvaluatorView = () => (
     <div>
-      <h1 className="text-2xl font-bold text-slate-800 mb-4">Cronograma de Actividades</h1>
-      <p className="text-sm text-slate-500 mb-6">Fechas clave para evaluadores.</p>
+      <h1 className="text-2xl font-bold text-slate-800 mb-4">
+        Cronograma de Actividades
+      </h1>
+      <p className="text-sm text-slate-500 mb-6">
+        Fechas clave para evaluadores.
+      </p>
 
       <div className="card p-4">
         <div className="grid grid-cols-7 gap-1 text-xs font-medium text-slate-500 mb-2">
-          {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map(day => (
-            <div key={day} className="text-center py-2">{day}</div>
+          {["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"].map((day) => (
+            <div key={day} className="text-center py-2">
+              {day}
+            </div>
           ))}
         </div>
         <div className="grid grid-cols-7 gap-1">
           {days.map((date, idx) => {
             const info = getActivityInfo(date);
             return (
-              <div key={idx} className={`h-16 flex flex-col items-center justify-center text-xs rounded-md p-1 ${info ? 'bg-white border border-slate-200' : 'bg-white'}`}>
-                {date ? date.getDate() : ''}
+              <div
+                key={idx}
+                className={`h-16 flex flex-col items-center justify-center text-xs rounded-md p-1 ${
+                  info ? "bg-white border border-slate-200" : "bg-white"
+                }`}
+              >
+                {date ? date.getDate() : ""}
                 {info && (
                   <div className="mt-1 space-y-1 w-full">
-                    {info.filter(e => e.published).map((event, i) => (
-                      <div
-                        key={i}
-                        className={`px-1 py-0.5 text-[10px] rounded truncate ${event.color} text-xs cursor-pointer`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openEventDetail(event, date);
-                        }}
-                      >
-                        {event.name}
-                      </div>
-                    ))}
+                    {info
+                      .filter((e) => e.published)
+                      .map((event, i) => (
+                        <div
+                          key={i}
+                          className={`px-1 py-0.5 text-[10px] rounded truncate ${event.color} text-xs cursor-pointer`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openEventDetail(event, date);
+                          }}
+                        >
+                          {event.name}
+                        </div>
+                      ))}
                   </div>
                 )}
               </div>
@@ -509,19 +815,30 @@ export default function CronogramaActividadesPanel({ userRole = 'admin' }) {
       </div>
 
       <div className="mt-6 space-y-3">
-        <h2 className="text-lg font-semibold text-slate-800">Eventos Confirmados</h2>
+        <h2 className="text-lg font-semibold text-slate-800">
+          Eventos Confirmados
+        </h2>
         {activities
-          .filter(a => a.published)
-          .map(activity => (
-            <div key={activity.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-md">
-              <span className={`inline-block px-3 py-1 text-xs rounded-full ${activity.color}`}>
+          .filter((a) => a.published)
+          .map((activity) => (
+            <div
+              key={activity.id}
+              className="flex items-center gap-3 p-3 bg-slate-50 rounded-md"
+            >
+              <span
+                className={`inline-block px-3 py-1 text-xs rounded-full ${activity.color}`}
+              >
                 {activity.name}
               </span>
               <div className="text-sm text-slate-600">
-                {activity.dates.map(d => {
-                  const dt = new Date(d.date);
-                  return `${dt.toLocaleDateString()} (${d.startTime}–${d.endTime})`;
-                }).join(', ')}
+                {activity.dates
+                  .map((d) => {
+                    const dt = new Date(d.date);
+                    return `${dt.toLocaleDateString()} (${d.startTime}–${
+                      d.endTime
+                    })`;
+                  })
+                  .join(", ")}
               </div>
               {activity.description && (
                 <div className="text-xs text-slate-500 italic ml-2">
@@ -536,22 +853,33 @@ export default function CronogramaActividadesPanel({ userRole = 'admin' }) {
 
   const renderCompetidorView = () => (
     <div className="bg-white rounded-lg shadow p-6">
-      <h1 className="text-2xl font-bold text-slate-800 mb-2">📅 Fechas Importantes</h1>
-      <p className="text-sm text-slate-500 mb-6">¡No te pierdas ninguna fecha!</p>
+      <h1 className="text-2xl font-bold text-slate-800 mb-2">
+        📅 Fechas Importantes
+      </h1>
+      <p className="text-sm text-slate-500 mb-6">
+        ¡No te pierdas ninguna fecha!
+      </p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         {activities
-          .filter(a => a.published)
-          .map(activity => (
+          .filter((a) => a.published)
+          .map((activity) => (
             <div key={activity.id} className="p-4 border rounded-lg">
-              <div className={`inline-block px-3 py-1 text-xs rounded-full ${activity.color} mb-2`}>
+              <div
+                className={`inline-block px-3 py-1 text-xs rounded-full ${activity.color} mb-2`}
+              >
                 {activity.name}
               </div>
               <div className="text-sm text-slate-600">
-                {activity.dates.map(d => {
-                  const dt = new Date(d.date);
-                  return `${dt.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })} • ${d.startTime}–${d.endTime}`;
-                }).join(', ')}
+                {activity.dates
+                  .map((d) => {
+                    const dt = new Date(d.date);
+                    return `${dt.toLocaleDateString("es-ES", {
+                      day: "2-digit",
+                      month: "short",
+                    })} • ${d.startTime}–${d.endTime}`;
+                  })
+                  .join(", ")}
               </div>
               {activity.description && (
                 <div className="text-xs text-slate-500 mt-2 italic">
@@ -562,58 +890,105 @@ export default function CronogramaActividadesPanel({ userRole = 'admin' }) {
           ))}
       </div>
 
-      {activities.filter(a => a.published).length === 0 && (
-        <div className="text-center py-8 text-slate-500">Próximamente se publicarán las fechas.</div>
+      {activities.filter((a) => a.published).length === 0 && (
+        <div className="text-center py-8 text-slate-500">
+          Próximamente se publicarán las fechas.
+        </div>
       )}
     </div>
   );
 
   return (
     <div className="space-y-6">
-      {userRole === 'admin' && renderAdminView()}
-      {userRole === 'evaluator' && renderEvaluatorView()}
-      {userRole === 'competitor' && renderCompetidorView()}
+      {userRole === "admin" && renderAdminView()}
+      {userRole === "evaluator" && renderEvaluatorView()}
+      {userRole === "competitor" && renderCompetidorView()}
 
-      {/* Modal: Nueva/Editar Actividad */}
-      {/* Modal: Ver Descripción */}
-{showDescriptionModal && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-    <div className="bg-white rounded-lg p-5 w-full max-w-sm">
-      <h3 className="text-lg font-semibold mb-2">{showDescriptionModal.name}</h3>
-      <div className="text-sm text-slate-600 mb-4">
-        {showDescriptionModal.dates.map((d) => {
-          const dt = new Date(d.date);
-          return `${dt.toLocaleDateString()} (${d.startTime}–${d.endTime})`;
-        }).join(', ')}
-      </div>
-      <div className="text-sm text-slate-500 italic mb-4">
-        {showDescriptionModal.description || 'Sin descripción'}
-      </div>
-      <div className="flex justify-end">
-        <button
-          className="btn btn-outline text-sm"
-          onClick={() => setShowDescriptionModal(null)}
-        >
-          Cerrar
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+      {showDescriptionModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg p-5 w-full max-w-sm">
+            <h3 className="text-lg font-semibold mb-2">
+              {showDescriptionModal.name}
+            </h3>
+            <div className="text-sm text-slate-600 mb-4">
+              {showDescriptionModal.dates
+                .map((d) => {
+                  const dt = new Date(d.date);
+                  return `${dt.toLocaleDateString()} (${d.startTime}–${
+                    d.endTime
+                  })`;
+                })
+                .join(", ")}
+            </div>
+            <div className="text-sm text-slate-500 italic mb-4">
+              {showDescriptionModal.description || "Sin descripción"}
+            </div>
+            <div className="flex justify-end">
+              <button
+                className="btn btn-outline text-sm"
+                onClick={() => setShowDescriptionModal(null)}
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showAddActivity && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg p-5 w-full max-w-sm">
             <h2 className="text-xl font-bold mb-3">
-              {editingActivity ? 'Editar Actividad' : 'Nueva Actividad'}
+              {editingActivity ? "Editar Actividad" : "Nueva Actividad"}
             </h2>
+            {error && (
+              <div className="bg-red-100 border border-red-300 text-red-800 p-3 rounded mb-4">
+                {error}
+              </div>
+            )}
 
-            <input
+            {/*   <input
               type="text"
               placeholder="Nombre de la actividad"
               value={newActivityName}
               onChange={(e) => setNewActivityName(e.target.value)}
               className="w-full p-2 border border-slate-300 rounded mb-3 text-sm"
+            /> */}
+            <Dropdown
+              items={actividades || []}
+              defaultLabel="Selecciona una actividad"
+              selectedLabel={
+                actividad && actividad
+                  ? actividad.label
+                  : "Selecciona una actividad (seleccione una fase antes)"
+              }
+              icon={FaChevronDown}
+              menuClass="w-full"
+              buttonClass="px-3 py-2 w-full border border-slate-300 rounded mb-3 text-sm text-left flex justify-between items-center"
+              disabled={editingActivity || !fase} // <--- Aquí
+              onSelect={(item) => {
+                if (!editingActivity) {
+                  setNewActivityName(item);
+                  setActividad(item);
+                }
+              }}
+            />
+
+            <Dropdown
+              items={fases || []}
+              defaultLabel="Selecciona una fase*"
+              icon={FaChevronDown}
+              selectedLabel={fase && fase ? fase.label : "Selecciona una fase*"}
+              menuClass="w-full"
+              buttonClass="px-3 py-2 w-full border border-slate-300 rounded mb-3 text-sm text-left flex justify-between items-center"
+              disabled={editingActivity} // <--- Aquí
+              onSelect={(item) => {
+                if (!editingActivity) {
+                  setActividad(null);
+                  setFase(item);
+                  setNewActivityName(item);
+                }
+              }}
             />
 
             <textarea
@@ -628,10 +1003,13 @@ export default function CronogramaActividadesPanel({ userRole = 'admin' }) {
             </p>
             <div className="max-h-28 overflow-y-auto mb-3 space-y-2">
               {selectedDates.length === 0 ? (
-                <p className="text-xs italic text-slate-400">Ninguna fecha seleccionada</p>
+                <p className="text-xs italic text-slate-400">
+                  Ninguna fecha seleccionada
+                </p>
               ) : (
                 selectedDates.map((item, index) => {
-                  const dateObj = new Date(item.date);
+                  const dateObj = new Date(item.date + "T00:00:00");
+
                   const formattedDate = dateObj.toLocaleDateString();
 
                   const handleStartTimeChange = (e) => {
@@ -647,7 +1025,10 @@ export default function CronogramaActividadesPanel({ userRole = 'admin' }) {
                   };
 
                   return (
-                    <div key={item.date} className="flex items-center gap-2 p-1 bg-slate-100 rounded">
+                    <div
+                      key={item.date}
+                      className="flex items-center gap-2 p-1 bg-slate-100 rounded"
+                    >
                       <span className="text-xs flex-1">{formattedDate}</span>
                       <div className="flex gap-1">
                         <input
@@ -679,14 +1060,14 @@ export default function CronogramaActividadesPanel({ userRole = 'admin' }) {
               </button>
               <button
                 className="btn btn-primary flex-1 text-sm"
-                onClick={editingActivity ? handleUpdateActivity : handleAddActivity}
+                onClick={
+                  editingActivity ? handleUpdateActivity : handleAddActivity
+                }
                 disabled={
-                  !newActivityName.trim() ||
-                  selectedDates.length === 0 ||
-                  selectedDates.some(item => !isFutureOrToday(new Date(item.date)))
+                  selectedDates.length === 0 || !newActivityName || !fase
                 }
               >
-                {editingActivity ? 'Actualizar' : 'Guardar'}
+                {editingActivity ? "Actualizar" : "Guardar"}
               </button>
             </div>
           </div>
@@ -697,12 +1078,18 @@ export default function CronogramaActividadesPanel({ userRole = 'admin' }) {
       {showEventDetail && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg p-5 w-full max-w-sm">
-            <div className={`inline-block px-3 py-1 text-xs rounded-full ${showEventDetail.activity.color} mb-3`}>
+            <div
+              className={`inline-block px-3 py-1 text-xs rounded-full ${showEventDetail.activity.color} mb-3`}
+            >
               {showEventDetail.activity.name}
             </div>
-            <h3 className="text-lg font-semibold mb-2">{showEventDetail.activity.name}</h3>
+            <h3 className="text-lg font-semibold mb-2">
+              {showEventDetail.activity.name}
+            </h3>
             <p className="text-sm text-slate-600 mb-2">
-              {new Date(showEventDetail.eventDate).toLocaleDateString()} • {showEventDetail.activity.startTime} – {showEventDetail.activity.endTime}
+              {new Date(showEventDetail.eventDate).toLocaleDateString()} •{" "}
+              {showEventDetail.activity.startTime} –{" "}
+              {showEventDetail.activity.endTime}
             </p>
             {showEventDetail.activity.description && (
               <p className="text-sm text-slate-500 mb-4 italic">
@@ -716,7 +1103,7 @@ export default function CronogramaActividadesPanel({ userRole = 'admin' }) {
               >
                 Cerrar
               </button>
-              {userRole === 'admin' && (
+              {userRole === "admin" && (
                 <button
                   className="btn btn-primary flex-1 text-sm"
                   onClick={() => editFromDetail(showEventDetail.activity)}

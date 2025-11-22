@@ -1,5 +1,6 @@
 // src/pages/dashboard/responsable/ControlFasesArea.jsx
 import EvaluacionesRepository from "@/infrastructure/http/Evaluacion/repository";
+import { Search } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -25,14 +26,23 @@ const MAX_MOTIVO_CHARS = 500;
 
 /* ===== Helpers HU11.2 (normalización + comparación) ===== */
 function nombreDe(r) {
-  return r?.nombre_completo || r?.competidor?.nombre_completo || r?.nombre || "";
+  return (
+    r?.nombre_completo || r?.competidor?.nombre_completo || r?.nombre || ""
+  );
 }
 function ciDe(r) {
   return r?.ci || r?.documento_identidad || r?.competidor?.ci || "";
 }
 function notaDe(r) {
   const raw = r?.nota_academica ?? r?.nota ?? r?.evaluacion?.nota ?? null;
-  if (raw === null || raw === undefined || raw === "" || raw === "Sin nota" || raw === "0-100") return null;
+  if (
+    raw === null ||
+    raw === undefined ||
+    raw === "" ||
+    raw === "Sin nota" ||
+    raw === "0-100"
+  )
+    return null;
   const n = Number(String(raw).replace(",", "."));
   return Number.isFinite(n) ? n : null;
 }
@@ -182,18 +192,22 @@ export default function ControlFasesArea({
   const fetchEvaluaciones = async (pageNum = 1) => {
     setLoading(true);
     try {
+      const params = {
+        busqueda: query,
+        page: pageNum,
+        perPage: 10,
+        ordenar_por: sort.by,
+        direccion: sort.dir,
+      };
+      console.log(params);
       const res = await EvaluacionesRepository.getEvaluaciones(
-        { page: pageNum, perPage: 10 },
+        params,
         idAreaNivelFase
       );
       const adaptedData = res.data.map((item) => ({
         id: item.id_evaluacion,
         nombre: item.nombre,
-        ci:
-          item.ci ||
-          item.documento_identidad ||
-          item?.competidor?.ci ||
-          "", // para búsqueda por CI
+        ci: item.ci || item.documento_identidad || item?.competidor?.ci || "", // para búsqueda por CI
         nota: item.nota || "Sin nota",
         categoria: item.estado_clasificado || "Sin categoria",
         observacion: item.descripcion || "Sin observacion",
@@ -214,8 +228,15 @@ export default function ControlFasesArea({
     if (estadoFase === "confirmado") setAvalGranted(true);
     fetchEvaluaciones(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [sort]);
 
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      fetchEvaluaciones(1);
+    }, 500); // espera 500ms después de que el usuario deja de escribir
+
+    return () => clearTimeout(delay);
+  }, [query]);
   const aprobar = async (r) => {
     await EvaluacionesRepository.updateEvaluacion(r.id, {
       estado_confirmacion: "aprobado",
@@ -303,7 +324,7 @@ export default function ControlFasesArea({
     if (!q) return rows;
     return rows.filter((r) => {
       const nom = nombreDe(r).toLowerCase();
-      const ci  = String(ciDe(r)).toLowerCase();
+      const ci = String(ciDe(r)).toLowerCase();
       return nom.includes(q) || ci.includes(q);
     });
   }, [rows, query]);
@@ -313,7 +334,8 @@ export default function ControlFasesArea({
     arr.sort((A, B) => {
       let cmp = 0;
       if (sort.by === "nota") {
-        const a = notaDe(A.x), b = notaDe(B.x);
+        const a = notaDe(A.x),
+          b = notaDe(B.x);
         if (a === null && b === null) cmp = 0;
         else if (a === null) cmp = -1;
         else if (b === null) cmp = 1;
@@ -396,10 +418,9 @@ export default function ControlFasesArea({
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Buscar por nombre o CI…"
                 className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2 pr-10 text-sm focus:border-sky-500 focus:outline-none"
-                disabled={loading}
               />
               <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
-                ⌕
+                <Search />
               </span>
             </div>
 
@@ -479,8 +500,8 @@ export default function ControlFasesArea({
                     Cargando evaluaciones...
                   </td>
                 </tr>
-              ) : rowsOrdenadas.length ? (
-                rowsOrdenadas.map((r) => (
+              ) : rows.length ? (
+                rows.map((r) => (
                   <tr
                     key={r.id}
                     className="border-t"
@@ -489,7 +510,9 @@ export default function ControlFasesArea({
                     <td className="px-5 py-3">
                       <div className="font-medium">{r.nombre}</div>
                       {r.ci ? (
-                        <div className="text-xs text-gray-500 mt-1">CI: {r.ci}</div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          CI: {r.ci}
+                        </div>
                       ) : null}
                     </td>
                     <td className="px-5 py-3">{r.nota}</td>

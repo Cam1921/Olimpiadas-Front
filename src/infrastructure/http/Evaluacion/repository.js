@@ -14,12 +14,7 @@ const EvaluacionesRepository = {
   async getEvaluaciones(params = {}, idAreaNivelFase) {
     try {
       const response = await api.get(`/evaluador/evaluaciones/${idAreaNivelFase}`, {
-        params: {
-          perPage: params.perPage ?? 10,
-          page: params.page ?? 1,
-          busqueda: params.busqueda ?? "",
-          estado_clasificado: params.estado_clasificado ?? "",
-        },
+        params
       });
       return response.data;
     } catch (error) {
@@ -76,6 +71,17 @@ const EvaluacionesRepository = {
       throw error.response?.data || error;
     }
   },
+  async exportClasificacionExcel(params = {}){
+    try {
+      const response = await api.get("/evaluador/evaluaciones/exportar", { params });
+      consolg.lo(response);
+      return response;
+      
+    } catch (error) {
+      console.error("Error al filtrar evaluaciones:", error);
+      throw error.response?.data || error;
+    }
+  }
 };
 
 export default EvaluacionesRepository;

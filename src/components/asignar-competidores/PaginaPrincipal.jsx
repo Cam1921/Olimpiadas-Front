@@ -1,10 +1,45 @@
-import React, { useMemo, useState } from "react";
+import React, { use, useEffect, useMemo, useState } from "react";
 import { Eye, SlidersHorizontal } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
+import { getAreasConNiveles } from "@/infrastructure/http/areas/areaRepostory";
+import { asignacionService } from "@/services/asignacionService";
+import AsignarEvaluadores from "./AsignarEvaluadores";
 
 export default function PaginaPrincipal() {
   const navigate = useNavigate();
+  const [allAreas, setAllAreas] = useState([]);
+  const [nivel, setNivel] = useState([]);
+  const [showAreas, setShowAreas] = useState(false);
+  const [showNiveles, setShowNiveles] = useState(false);
+
+  async function fetchAreas() {
+    try {
+      const areas = await getAreasConNiveles();
+      setAllAreas(areas);
+      console.log("Áreas cargadas:", areas);
+    } catch (err) {
+      console.error("Error al cargar áreas:", err);
+    }
+  }
+
+  useEffect(() => {
+    fetchAreas();
+  }, []);
+
+  const handleAreaChange = (id) => {
+    setAreaId(id); // guarda el área seleccionada
+
+    const areaSeleccionada = allAreas.find((a) => a.id === Number(id));
+
+    if (areaSeleccionada) {
+      setNivel(areaSeleccionada.niveles); // carga niveles del área seleccionada
+    } else {
+      setNivel([]);
+    }
+
+    setNivelId(""); // limpiar nivel al cambiar de área
+  };
+
   const areas = useMemo(
     () => [
       { id: "", nombre: "Selecciona un área…" },
@@ -25,83 +60,169 @@ export default function PaginaPrincipal() {
   );
 
   // Mock data
-  const [evaluadores] = useState([
-    { id: 1, nombre: "Carmen Vargas", area: "Matemática", nivel: "Primaria", cargaActual: 2 },
-    { id: 2, nombre: "Roberto Silva", area: "Matemática", nivel: "Primaria", cargaActual: 3 },
-    { id: 3, nombre: "Patricia Méndez", area: "Matemática", nivel: "Primaria", cargaActual: 5 },
-    { id: 4, nombre: "Luis Morales", area: "Matemática", nivel: "Primaria", cargaActual: 6 },
-    { id: 5, nombre: "Jorge Castro", area: "Matemática", nivel: "Primaria", cargaActual: 8 },
-  ]);
-
-  const [competidoresSinAsignar] = useState([
-  { id: 101, nombre: "Pedro Fernández", ci: "65676890", institucion: "Colegio Santo Domingo Savio", fase: "Clasificatoria" },
-  { id: 102, nombre: "Lucía Rodríguez", ci: "51234156", institucion: "Colegio Anglo-Americano", fase: "Final" },
-  { id: 103, nombre: "Miguel Torres", ci: "48900123", institucion: "Colegio Avaroa", fase: "Clasificatoria" },
-  ]);
-
+  const [evaluadores, setEvaludores] = useState([]);
+  /*  const [evaluadores] = useState([
+    {
+      id: 1,
+      nombre: "Carmen Vargas",
+      area: "Matemática",
+      nivel: "Primaria",
+      cargaActual: 2,
+    },
+    {
+      id: 2,
+      nombre: "Roberto Silva",
+      area: "Matemática",
+      nivel: "Primaria",
+      cargaActual: 3,
+    },
+    {
+      id: 3,
+      nombre: "Patricia Méndez",
+      area: "Matemática",
+      nivel: "Primaria",
+      cargaActual: 5,
+    },
+    {
+      id: 4,
+      nombre: "Luis Morales",
+      area: "Matemática",
+      nivel: "Primaria",
+      cargaActual: 6,
+    },
+    {
+      id: 5,
+      nombre: "Jorge Castro",
+      area: "Matemática",
+      nivel: "Primaria",
+      cargaActual: 8,
+    },
+  ]); */
 
   // Estado UI
   const [areaId, setAreaId] = useState("");
   const [nivelId, setNivelId] = useState("");
   const [limiteEvaluadoresActivos, setLimiteEvaluadoresActivos] = useState(3); // A: controla cuántos evaluadores quedan activos
-  const [limitePorEvaluador, setLimitePorEvaluador] = useState(10);            // B: máximo de competidores por evaluador
+  const [limitePorEvaluador, setLimitePorEvaluador] = useState(10); // B: máximo de competidores por evaluador
+  const [cantidadEvaluadores, setCantidadEvaluadores] = useState(1);
+  const [configLimite, setConfigLimite] = useState(0);
+  const [totalEvaluadores, setTotalEvaluadores] = useState(0);
   const [showConfig, setShowConfig] = useState(false);
 
+  async function fetchEvaluadores() {
+    try {
+      const params = {
+        id_area: areaId,
+        id_nivel: nivelId,
+      };
+      const res = await asignacionService.filtrarEvaluadores(params);
+      const data = res.data.map((e) => ({
+        id: e.id,
+        nombre: e.nombre,
+        area: e.area,
+        nivel: e.nivel,
+        estado: e.estado,
+        cargaActual: e.carga_actual,
+        espacios_disponibles: e.espacios_disponibles,
+      }));
+
+      setEvaludores(data);
+      console.log(res);
+      setLimitePorEvaluador(res.meta.limite_por_evaluador);
+      setCantidadEvaluadores(res.meta.limite_cantidad_evaluadores);
+      setTotalEvaluadores(res.meta.total_evaluadores);
+      console.log("Evaludores filtrados:", data);
+      console.log("Evaluadores:", res.data);
+      console.log("limiete", res.meta.limite_por_evaluador);
+    } catch (err) {
+      console.error("Error al cargar áreas:", err);
+    }
+  }
+  useEffect(() => {
+    fetchEvaluadores();
+  }, [areaId, nivelId]);
+
+  const handleReasignar = async () => {
+    try {
+      const data = {
+        id_area: areaId,
+        id_nivel: nivelId,
+        limite_por_evaluador: configLimite,
+        cantidad_evaluadores: cantidadEvaluadores,
+      };
+      const res = await asignacionService.asignarCompetidores(data);
+
+      fetchEvaluadores();
+
+      console.log("Asignacion:", res);
+    } catch (err) {
+      console.error("Error al cargar áreas:", err);
+    }
+  };
+
   const evaluadoresFiltrados = useMemo(() => {
-  return evaluadores.filter((e) => {
-    const nombreArea = areas.find((a) => a.id === areaId)?.nombre?.toLowerCase() ?? "";
-    const nombreNivel = niveles.find((n) => n.id === nivelId)?.nombre?.toLowerCase() ?? "";
+    return evaluadores.filter((e) => {
+      const nombreArea =
+        areas.find((a) => a.id === areaId)?.nombre?.toLowerCase() ?? "";
+      const nombreNivel =
+        niveles.find((n) => n.id === nivelId)?.nombre?.toLowerCase() ?? "";
 
-    const okArea = !areaId || e.area?.toLowerCase().includes(nombreArea);
-    const okNivel = !nivelId || e.nivel?.toLowerCase().includes(nombreNivel);
+      const okArea = !areaId || e.area?.toLowerCase().includes(nombreArea);
+      const okNivel = !nivelId || e.nivel?.toLowerCase().includes(nombreNivel);
 
-    return okArea && okNivel;
-  });
-}, [evaluadores, areaId, nivelId, areas, niveles]);
+      return okArea && okNivel;
+    });
+  }, [evaluadores, areaId, nivelId, areas, niveles]);
 
-const evaluadoresConEstado = useMemo(() => {
-  const activosHasta = Math.max(
-    0,
-    Math.min(limiteEvaluadoresActivos, evaluadoresFiltrados.length)
-  );
+  const evaluadoresConEstado = useMemo(() => {
+    const activosHasta = Math.max(
+      0,
+      Math.min(limiteEvaluadoresActivos, evaluadoresFiltrados.length)
+    );
 
-  return evaluadoresFiltrados.map((e, idx) => ({
-    ...e,
-    enCupo: idx < activosHasta,
-  }));
-}, [evaluadoresFiltrados, limiteEvaluadoresActivos]);
+    return evaluadoresFiltrados.map((e, idx) => ({
+      ...e,
+      enCupo: idx < activosHasta,
+    }));
+  }, [evaluadoresFiltrados, limiteEvaluadoresActivos]);
 
+  const puedePrevisualizar =
+    !!areaId && !!nivelId && limiteEvaluadoresActivos > 0;
 
-  const puedePrevisualizar = !!areaId && !!nivelId && limiteEvaluadoresActivos > 0;
-  
   const onPreview = () => {
-  navigate("/dashboard/asignacion-competidores/preview", {
-    state: {
-      areaId,
-      nivelId,
-      limiteEvaluadoresActivos,
-      limitePorEvaluador,
-    },
-  });
-};
+    navigate("/dashboard/asignacion-competidores/preview", {
+      state: {
+        areaId,
+        nivelId,
+        limiteEvaluadoresActivos,
+        limitePorEvaluador,
+      },
+    });
+  };
 
   return (
     <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 pb-10 mt-10 md:mt-14">
       {/* Encabezado */}
       <div className="flex items-center justify-between gap-2 pb-3">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-800">Asignar Evaluadores</h1>
+          <h1 className="text-2xl font-semibold text-slate-800">
+            Asignar Competidores
+          </h1>
           <p className="text-sm text-slate-500">
-            Selecciona área y nivel para gestionar la asignación de competidores a evaluadores
+            Selecciona área y nivel para gestionar la asignación de competidores
+            a evaluadores
           </p>
         </div>
         <button
-          onClick={() => setShowConfig(true)}
+          onClick={() => {
+            setShowConfig(true);
+            setConfigLimite(limitePorEvaluador);
+          }}
           className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm hover:border-sky-300 hover:text-sky-700"
           title="Configurar límite por evaluador (máximo de competidores por evaluador)"
         >
           <SlidersHorizontal className="h-4 w-4" />
-          Configurar límite por evaluador
+          Asignar competidores
         </button>
       </div>
 
@@ -110,45 +231,60 @@ const evaluadoresConEstado = useMemo(() => {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-12 items-end">
           {/* Área */}
           <div className="md:col-span-4">
-            <label className="block text-xs font-medium text-slate-600 mb-1">Seleccionar Área</label>
+            <label className="block text-xs font-medium text-slate-600 mb-1">
+              Seleccionar Área
+            </label>
             <div className="relative">
               <select
                 className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3 py-2 pr-8 text-sm outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-200"
                 value={areaId}
-                onChange={(e) => setAreaId(e.target.value)}
+                onChange={(e) => {
+                  handleAreaChange(e.target.value);
+                  setAreaId(e.target.value);
+                }}
               >
-                {areas.map((a) => (
+                <option value="">Selecciona un área…</option>
+                {allAreas.map((a) => (
                   <option key={a.id} value={a.id} disabled={a.id === ""}>
                     {a.nombre}
                   </option>
                 ))}
               </select>
-              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">▾</span>
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+                ▾
+              </span>
             </div>
           </div>
 
           {/* Nivel */}
           <div className="md:col-span-4">
-            <label className="block text-xs font-medium text-slate-600 mb-1">Seleccionar Nivel</label>
+            <label className="block text-xs font-medium text-slate-600 mb-1">
+              Seleccionar Nivel
+            </label>
             <div className="relative">
               <select
                 className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3 py-2 pr-8 text-sm outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-200"
                 value={nivelId}
                 onChange={(e) => setNivelId(e.target.value)}
               >
-                {niveles.map((n) => (
+                <option value="">Selecciona un nivel…</option>
+                {nivel.map((n) => (
                   <option key={n.id} value={n.id} disabled={n.id === ""}>
-                    {n.nombre}
+                    {n.nombre_nivel}
                   </option>
                 ))}
               </select>
-              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">▾</span>
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+                ▾
+              </span>
             </div>
           </div>
 
           {/* A: Límite de evaluadores activos */}
-          <div className="md:col-span-2">
-            <label className="block text-xs font-medium text-slate-600 mb-1">Límite de evaluadores activos</label>
+          {/*   <div className="md:col-span-2">
+            <label className="block text-xs font-medium text-slate-600 mb-1">
+              Límite de evaluadores activos
+            </label>
             <input
               type="number"
               min={0}
@@ -156,24 +292,17 @@ const evaluadoresConEstado = useMemo(() => {
               value={limiteEvaluadoresActivos}
               onChange={(e) => {
                 const n = Number(e.target.value);
-                const bounded = Math.max(0, Math.min(evaluadores.length, isNaN(n) ? 0 : n));
+                const bounded = Math.max(
+                  0,
+                  Math.min(evaluadores.length, isNaN(n) ? 0 : n)
+                );
                 setLimiteEvaluadoresActivos(bounded);
               }}
               className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-200"
             />
           </div>
-
+ */}
           {/* Previsualizar */}
-          <div className="md:col-span-2 flex md:justify-end">
-            <button
-              disabled={!puedePrevisualizar}
-              className="inline-flex items-center gap-2 rounded-xl bg-sky-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-60"
-              onClick={onPreview}
-            >
-              <Eye className="h-6 w-6" />
-              Previsualizar distribución
-            </button>
-          </div>
         </div>
       </div>
 
@@ -209,12 +338,12 @@ const evaluadoresConEstado = useMemo(() => {
                   </div>
                   <span
                     className={`text-xs rounded-full px-2 py-0.5 font-medium ${
-                      !fueraDeLimite
+                      e.estado === "Activo"
                         ? "bg-sky-100 text-sky-700"
                         : "bg-slate-100 text-slate-500"
                     }`}
                   >
-                    {!fueraDeLimite ? "Activo" : "Inactivo"}
+                    {e.estado === "Activo" ? "Activo" : "Inactivo"}
                   </span>
                 </div>
 
@@ -239,7 +368,8 @@ const evaluadoresConEstado = useMemo(() => {
                   )}
 
                   <p className="mt-2 text-xs text-slate-500">
-                    {Math.max(0, limitePorEvaluador - e.cargaActual)} espacios disponibles
+                    {Math.max(0, limitePorEvaluador - e.cargaActual)} espacios
+                    disponibles
                   </p>
                 </div>
               </div>
@@ -248,66 +378,55 @@ const evaluadoresConEstado = useMemo(() => {
         </div>
       )}
 
-
-      {/* Tabla: Competidores sin asignar (debajo) */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm mt-6">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-slate-700">Competidores sin asignar</h2>
-          <span className="text-xs rounded-full bg-amber-100 text-amber-700 px-2 py-0.5 font-medium">
-            {competidoresSinAsignar.length} sin asignar
-          </span>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="min-w-full table-auto text-sm">
-            <thead>
-              <tr className="text-left text-slate-500">
-                <th className="py-2 pr-3">Nombre</th>
-                <th className="py-2 pr-3">CI</th>
-                <th className="py-2 pr-3">Institución</th>
-                <th className="py-2 pr-3">Fase actual</th>
-              </tr>
-            </thead>
-            <tbody>
-              {competidoresSinAsignar.map((c, idx) => (
-                <tr key={c.id} className={idx % 2 ? "bg-slate-50" : "bg-white"}>
-                  <td className="py-2 pr-3 text-slate-800">{c.nombre}</td>
-                  <td className="py-2 pr-3 text-slate-700">{c.ci}</td>
-                  <td className="py-2 pr-3 text-slate-700">{c.institucion}</td>
-                  <td className="py-2 pr-3">
-                    {c.fase === "Clasificatoria" ? (
-                      <span className="text-xs rounded-full bg-sky-100 text-sky-700 px-2 py-0.5">
-                        Clasificatoria
-                      </span>
-                    ) : (
-                      <span className="text-xs rounded-full bg-purple-100 text-purple-700 px-2 py-0.5">
-                        Final
-                      </span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      {/*    <AsignarEvaluadores /> */}
 
       {/* Modal: B – Límite por evaluador */}
       {showConfig && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
           <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
-            <h3 className="text-lg font-semibold text-slate-800">Configurar límite por evaluador</h3>
+            <h3 className="text-lg font-semibold text-slate-800">
+              Configurar Asingnacion de evaluadores
+            </h3>
             <p className="text-sm text-slate-500 mt-1">
-              Define el <strong>máximo de competidores</strong> por evaluador. Esto es independiente del
-              campo <em>“Límite de evaluadores activos”</em>.
+              Define el <strong>máximo de competidores</strong> por evaluador.
+              Esto es independiente del campo{" "}
+              <em>“Límite de evaluadores activos”</em>.
             </p>
             <div className="mt-4">
-              <label className="block text-xs font-medium text-slate-600 mb-1">Máximo por evaluador</label>
+              <label className="block text-xs font-medium text-slate-600 mb-1">
+                Cantidad evaluadores
+              </label>
               <input
                 type="number"
                 min={1}
-                value={limitePorEvaluador}
-                onChange={(e) => setLimitePorEvaluador(Math.max(1, Number(e.target.value)))}
+                max={totalEvaluadores}
+                disabled={!cantidadEvaluadores}
+                value={cantidadEvaluadores}
+                onChange={(e) => {
+                  const value = Number(e.target.value);
+
+                  // Controla que nunca supere el total de evaluadores
+                  if (value > totalEvaluadores) {
+                    setCantidadEvaluadores(totalEvaluadores);
+                  } else {
+                    setCantidadEvaluadores(Math.max(1, value));
+                  }
+                }}
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-200"
+              />
+            </div>
+            <div className="mt-4">
+              <label className="block text-xs font-medium text-slate-600 mb-1">
+                Máximo por evaluador
+              </label>
+              <input
+                type="number"
+                min={1}
+                disabled={!configLimite}
+                value={configLimite}
+                onChange={(e) =>
+                  setConfigLimite(Math.max(1, Number(e.target.value)))
+                }
                 className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-200"
               />
             </div>
@@ -319,10 +438,19 @@ const evaluadoresConEstado = useMemo(() => {
                 Cancelar
               </button>
               <button
-                onClick={() => setShowConfig(false)}
-                className="rounded-xl bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700"
+                onClick={() => {
+                  handleReasignar();
+                  setShowConfig(false);
+                }}
+                disabled={!cantidadEvaluadores || !configLimite}
+                className={`rounded-xl px-4 py-2 text-sm font-medium 
+    ${
+      !cantidadEvaluadores || !configLimite
+        ? "bg-gray-400 cursor-not-allowed"
+        : "bg-sky-600 hover:bg-sky-700 text-white"
+    }`}
               >
-                Guardar
+                Asignar
               </button>
             </div>
           </div>

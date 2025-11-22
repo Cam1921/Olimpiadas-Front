@@ -4,6 +4,7 @@ import { useLocation } from "react-router-dom";
 import api from "@/lib/api";
 import EvaluacionesTableClasificacion from "@/pages/dashboard/evaluador/components/EvaluacionesTableClasificacion.jsx";
 import EvaluacionesRepository from "@/infrastructure/http/Evaluacion/repository.js";
+import { Search } from "lucide-react";
 
 export default function ClasificacionHome() {
   // Filtros UI
@@ -25,8 +26,9 @@ export default function ClasificacionHome() {
 
   // 1) Usa lo que venga por state o lo último guardado; si no hay, autodetecta el primer nivel asignado
   useEffect(() => {
-    const sId    = state?.idAreaNivelFase ?? sessionStorage.getItem("idAreaNivelFase");
-    const sEst   = state?.estadoNivel ?? sessionStorage.getItem("estadoNivel");
+    const sId =
+      state?.idAreaNivelFase ?? sessionStorage.getItem("idAreaNivelFase");
+    const sEst = state?.estadoNivel ?? sessionStorage.getItem("estadoNivel");
     const sTitle = state?.headerTitle ?? sessionStorage.getItem("headerTitle");
 
     if (sId) {
@@ -49,9 +51,9 @@ export default function ClasificacionHome() {
         }
         // toma el primero (ajústalo si requieres otro criterio)
         const first = list[0];
-        const id    = first.id_area_nivel_fase;
+        const id = first.id_area_nivel_fase;
         const title = `${first.area} • ${first.nivel} • ${first.fase}`;
-        const est   = (first.estado ?? "en_evaluacion").toLowerCase();
+        const est = (first.estado ?? "en_evaluacion").toLowerCase();
 
         setIdAreaNivelFase(id);
         setEstadoNivel(est);
@@ -69,7 +71,10 @@ export default function ClasificacionHome() {
   }, [state]);
 
   // Map chip → parámetro backend
-  const opcionTabla = useMemo(() => (estado === "todos" ? "" : estado), [estado]);
+  const opcionTabla = useMemo(
+    () => (estado === "todos" ? "" : estado),
+    [estado]
+  );
 
   const opciones = [
     { label: "Todos", value: "todos" },
@@ -79,7 +84,7 @@ export default function ClasificacionHome() {
   ];
 
   const active = (by) => sort.by === by;
-  const arrow  = sort.dir === "asc" ? "▲" : "▼";
+  const arrow = sort.dir === "asc" ? "▲" : "▼";
   const toggleSort = (by) => {
     const next =
       sort.by === by
@@ -90,34 +95,35 @@ export default function ClasificacionHome() {
 
   // ======== Exportar listas (Excel) ========
   const handleExport = async () => {
-    if (!idAreaNivelFase || exporting) return;
-    setExporting(true);
     try {
-      // Llama al repo (GET blob). Ajusta la URL en repository.js si tu backend usa otra ruta/params
-      const blob = await EvaluacionesRepository.exportClasificacionExcel(
-        idAreaNivelFase,
-        { estado_clasificado: opcionTabla || undefined, q: query || undefined, sort_by: sort.by, sort_dir: sort.dir }
+      const params = {};
+      if (estado && estado !== "todos") params.estado_clasificado = estado;
+      if (idAreaNivelFase) params.idAreaNivelFase = idAreaNivelFase; // ✅ enviar ID de área-nivel-fase
+      if (sort.by) params.ordenar_por = sort.by;
+      if (sort.dir) params.direccion = sort.dir;
+      if (query) params.busqueda = query;
+      console.log(params);
+      const response = await api.get("/evaluador/evaluaciones/exportar", {
+        params,
+        responseType: "blob", // clave para descarga Excel
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `evaluaciones_${estado}_${new Date()
+          .toISOString()
+          .slice(0, 19)
+          .replace("T", "_")}.xlsx`
       );
-
-      const nombreEstado = estado === "todos" ? "todos" : estado;
-      const nombreBase   = (headerTitle || "clasificacion").replace(/[^\w\-]+/g, "_");
-      const filename     = `${nombreBase}_${nombreEstado}.xlsx`;
-
-      const url = URL.createObjectURL(new Blob([blob], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      }));
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-    } catch (e) {
-      alert("No se pudo exportar las listas.");
-      console.error(e);
-    } finally {
-      setExporting(false);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error("Error al descargar el Excel:", error);
+      alert("Hubo un problema al exportar las evaluaciones.");
     }
   };
 
@@ -130,7 +136,8 @@ export default function ClasificacionHome() {
 
   const handleConcluir = async () => {
     if (!idAreaNivelFase || concluding || !puedeConcluir) return;
-    if (!confirm("¿Marcar como CONCLUIDA la calificación de este Área/Nivel?")) return;
+    if (!confirm("¿Marcar como CONCLUIDA la calificación de este Área/Nivel?"))
+      return;
 
     setConcluding(true);
     try {
@@ -155,7 +162,8 @@ export default function ClasificacionHome() {
               {headerTitle ? `Clasificación - ${headerTitle}` : "Clasificación"}
             </h1>
             <p className="text-gray-500">
-              Visualiza las listas de competidores clasificados, no clasificados y descalificados.
+              Visualiza las listas de competidores clasificados, no clasificados
+              y descalificados.
             </p>
           </div>
 
@@ -172,7 +180,9 @@ export default function ClasificacionHome() {
 
             <button
               onClick={handleConcluir}
-              disabled={!idAreaNivelFase || !puedeConcluir || concluding || ctxLoading}
+              disabled={
+                !idAreaNivelFase || !puedeConcluir || concluding || ctxLoading
+              }
               className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 disabled:opacity-60"
               title="Marcar calificación como Concluida"
             >
@@ -209,13 +219,21 @@ export default function ClasificacionHome() {
               placeholder="Buscar por nombre o CI…"
               className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2 pr-10 text-sm focus:border-sky-500 focus:outline-none"
             />
-            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">⌕</span>
+            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+              <Search size={15} />
+            </span>
           </div>
 
           <span className="text-sm text-gray-600">Ordenar por:</span>
           <button
             type="button"
-            onClick={() => setSort((s) => (s.by === "nombre" ? { by: "nombre", dir: s.dir === "asc" ? "desc" : "asc" } : { by: "nombre", dir: "asc" }))}
+            onClick={() =>
+              setSort((s) =>
+                s.by === "nombre"
+                  ? { by: "nombre", dir: s.dir === "asc" ? "desc" : "asc" }
+                  : { by: "nombre", dir: "asc" }
+              )
+            }
             aria-pressed={active("nombre")}
             className={[
               "flex items-center gap-1 rounded-lg border px-3 py-1.5 text-sm transition",
@@ -230,7 +248,13 @@ export default function ClasificacionHome() {
 
           <button
             type="button"
-            onClick={() => setSort((s) => (s.by === "nota" ? { by: "nota", dir: s.dir === "asc" ? "desc" : "asc" } : { by: "nota", dir: "desc" }))}
+            onClick={() =>
+              setSort((s) =>
+                s.by === "nota"
+                  ? { by: "nota", dir: s.dir === "asc" ? "desc" : "asc" }
+                  : { by: "nota", dir: "desc" }
+              )
+            }
             aria-pressed={active("nota")}
             className={[
               "flex items-center gap-1 rounded-lg border px-3 py-1.5 text-sm transition",

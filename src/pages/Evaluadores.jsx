@@ -17,9 +17,6 @@ import { evaluadoresRepo } from "../infrastructure/http/evaluadores/repository";
 import api from "@/lib/api";
 
 export default function Evaluadores({ onBackToResponsables }) {
-  // ==============================
-  // ESTADOS
-  // ==============================
   const [rows, setRows] = useState([]);
 
   // modal registrar evaluador
@@ -43,10 +40,6 @@ export default function Evaluadores({ onBackToResponsables }) {
   // áreas disponibles para asignar
   const [allAreas, setAllAreas] = useState([]);
 
-  // ==============================
-  // DERIVADOS / MÉTRICAS
-  // ==============================
-  // esto genera [{ area, nivel }, ...] para validar áreas ocupadas
   const takenAreas = useMemo(
     () => rows.map((r) => ({ area: r.area, nivel: r.nivel })),
     [rows]
@@ -68,9 +61,6 @@ export default function Evaluadores({ onBackToResponsables }) {
   const { form, setField, errors, submitting, submit, resetForm, setErrors } =
     useRegisterEvaluador(takenAreas);
 
-  // ==============================
-  // CARGA DE EVALUADORES (GET)
-  // ==============================
   const fetchEvaluadores = async () => {
     try {
       const response = await api.get("/evaluador"); // baseURL ya está en api
@@ -95,9 +85,6 @@ export default function Evaluadores({ onBackToResponsables }) {
     }
   };
 
-  // ==============================
-  // ELIMINAR EVALUADOR
-  // ==============================
   const handleDelete = async (id) => {
     try {
       await evaluadoresRepo.remove(id); // <- esto llama tu backend DELETE
@@ -111,9 +98,6 @@ export default function Evaluadores({ onBackToResponsables }) {
     }
   };
 
-  // ==============================
-  // CARGA DE ÁREAS
-  // ==============================
   async function fetchAreas() {
     try {
       const areas = await getAreasConNiveles();
@@ -124,9 +108,6 @@ export default function Evaluadores({ onBackToResponsables }) {
     }
   }
 
-  // ==============================
-  // USEEFFECT INICIAL
-  // ==============================
   useEffect(() => {
     fetchAreas();
     fetchEvaluadores();
