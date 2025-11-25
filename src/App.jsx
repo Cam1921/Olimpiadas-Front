@@ -35,6 +35,14 @@ import PreviewDistribucion from "./components/asignar-competidores/PreviewDistri
 // NUEVO: HU13 – Medallero / Parametrización (ruta /dashboard/medallero-premiacion)
 import ParametrizarMedallero from "./pages/dashboard/medallero/ParametrizarMedallero.jsx";
 
+// Nuevo: HU 22.1 – Panel Principal Evaluador
+import EvaluadorPanelPrincipal from "./pages/dashboard/evaluador/pages/EvaluadorPanelPrincipal";
+// Importa SideMenu para el layout temporal
+import SideMenu from "./components/SideMenu";
+
+//Nuevo: HU 22.2 - Panel de Fases Responsable
+import ResponsablePanelFases from "./pages/dashboard/responsable/ResponsablePanelFases";
+
 export default function App() {
   return (
     <Routes>
@@ -117,6 +125,11 @@ export default function App() {
           path="gestion-inscripciones"
           element={<GestionInscripciones />}
         />
+        {/* Evaluador HU:22.1*/}
+        <Route path="panel-evaluador" element={<EvaluadorPanelPrincipal />} />
+
+        {/* Responsable Fases HU:22.2*/}
+       <Route path="control-fases" element={<ResponsablePanelFases />} />
       </Route>
 
       {/* Rutas de prueba (accesibles sin login) */}
