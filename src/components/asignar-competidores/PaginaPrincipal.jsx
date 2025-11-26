@@ -378,7 +378,7 @@ export default function PaginaPrincipal() {
         </div>
       )}
 
-      {/*    <AsignarEvaluadores /> */}
+        <AsignarEvaluadores /> 
 
       {/* Modal: B – Límite por evaluador */}
       {showConfig && (
