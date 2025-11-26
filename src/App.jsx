@@ -22,6 +22,9 @@ import EstablecerContraseñaPage from "@/pages/auth/EstablecerContraseñaPage";
 import EntornoFinal from "./components/EntornoFinal.jsx";
 import OfficialListPage from "./components/OfficialListPage";
 
+import ResultsPage from './pages/ResultsPage.jsx';
+
+
 // HU10 – Publicación
 import PublicacionPage from "./pages/dashboard/Publicacion";
 
@@ -39,7 +42,8 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
-
+ 
+      <Route path="/results" element={<ResultsPage />} />
       {/* Ruta directa para probar Evaluador SIN login */}
       <Route path="/activar" element={<EstablecerContraseñaPage />} />
 
