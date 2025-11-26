@@ -24,3 +24,4 @@ dist-ssr
 *.sw?
 # Ignorar archivos de configuración de Windows
 desktop.ini
+build/
