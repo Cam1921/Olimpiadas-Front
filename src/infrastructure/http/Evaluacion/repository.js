@@ -13,7 +13,7 @@ const EvaluacionesRepository = {
    */
   async getEvaluaciones(params = {}, idAreaNivelFase) {
     try {
-      const response = await api.get(`/evaluador/evaluaciones/${idAreaNivelFase}`, {
+      const response = await api.get(`/evaluaciones/mis-evaluaciones/area-nivel-fase/${idAreaNivelFase}`, {
         params
       });
       return response.data;
@@ -31,7 +31,7 @@ const EvaluacionesRepository = {
    */
   async updateEvaluacion(id, data) {
     try {
-      const response = await api.put(`evaluador/evaluaciones/${id}`, data);
+      const response = await api.put(`/evaluaciones/${id}`, data);
       return response.data;
     } catch (error) {
       console.error("Error al actualizar evaluación:", error);
@@ -41,7 +41,7 @@ const EvaluacionesRepository = {
 
  async otorgarAval(idAreaNivelFase) {
   try {
-    const res = await api.post(`evaluador/evaluaciones/otorgar-aval/${idAreaNivelFase}`);
+    const res = await api.post(`/evaluaciones/otorgar-aval/${idAreaNivelFase}`);
     return res.data; // ✅ ahora sí retornamos la respuesta correcta
   } catch (error) {
     console.error("Error al otorgar aval:", error);
@@ -73,7 +73,7 @@ const EvaluacionesRepository = {
   },
   async exportClasificacionExcel(params = {}){
     try {
-      const response = await api.get("/evaluador/evaluaciones/exportar", { params });
+      const response = await api.get("evaluaciones/exportar", { params });
       consolg.lo(response);
       return response;
       

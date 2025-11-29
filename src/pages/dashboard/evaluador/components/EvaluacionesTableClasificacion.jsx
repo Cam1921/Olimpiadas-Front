@@ -39,6 +39,7 @@ export default function EvaluacionesTableClasificacion({
         ordenar_por: sort.by,
         direccion: sort.dir,
       };
+      console.log(params);
       const res = await EvaluacionesRepository.getEvaluaciones(
         params,
         idAreaNivelFase

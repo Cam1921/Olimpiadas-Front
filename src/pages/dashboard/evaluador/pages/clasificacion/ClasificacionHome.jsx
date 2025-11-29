@@ -43,7 +43,7 @@ export default function ClasificacionHome() {
       setCtxLoading(true);
       setCtxError("");
       try {
-        const res = await api.get("/evaluador/niveles");
+        const res = await api.get("/avaluaciones/mis-niveles");
         const list = Array.isArray(res?.data?.data) ? res.data.data : [];
         if (!list.length) {
           setCtxError("No tienes niveles asignados.");
@@ -103,10 +103,13 @@ export default function ClasificacionHome() {
       if (sort.dir) params.direccion = sort.dir;
       if (query) params.busqueda = query;
       console.log(params);
-      const response = await api.get("/evaluador/evaluaciones/exportar", {
-        params,
-        responseType: "blob", // clave para descarga Excel
-      });
+      const response = await api.get(
+        "/evaluaciones/mis-evaluaciones/exportar",
+        {
+          params,
+          responseType: "blob", // clave para descarga Excel
+        }
+      );
 
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");

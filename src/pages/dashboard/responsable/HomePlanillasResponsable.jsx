@@ -17,7 +17,7 @@ export default function HomePlanillasResponsable() {
   const fetchNiveles = async () => {
     setLoading(true);
     try {
-      const response = await api.get("/evaluador/niveles");
+      const response = await api.get("/evaluaciones/mis-niveles");
 
       // Protegemos contra respuestas no esperadas
       const data = Array.isArray(response.data.data) ? response.data.data : [];
