@@ -451,26 +451,29 @@ export default function EditEvaluadorModal({
               </div>
             )} */}
             {showAreas && (
-              <div className="absolute z-10 mt-1 w-full max-h-48 overflow-auto card p-0 shadow-lg">
-                <ul className="max-h-56 overflow-auto">
-                  {areasConNiveles.map((a) => (
-                    <li key={a.id}>
-                      <button
-                        className="w-full text-left px-4 py-3 hover:bg-slate-50"
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={() => {
-                          handleFieldChange("area", a.nombre);
-                          handleFieldChange("nivel", "");
-                          setShowAreas(false);
-                        }}
-                      >
-                        {a.nombre}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+  <div
+    className="absolute z-50 mt-1 w-full max-h-48 overflow-auto bg-white border border-slate-200 rounded shadow-lg"
+    style={{ top: '100%', left: 0, right: 0 }}
+  >
+    <ul className="max-h-56 overflow-auto">
+      {areasConNiveles.map((a) => (
+        <li key={a.id}>
+          <button
+            className="w-full text-left px-4 py-3 hover:bg-slate-50"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => {
+              handleFieldChange("area", a.nombre);
+              handleFieldChange("nivel", "");
+              setShowAreas(false);
+            }}
+          >
+            {a.nombre}
+          </button>
+        </li>
+      ))}
+    </ul>
+  </div>
+)}
             {errors.area && (
               <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
                 <ExclamationTriangleIcon className="w-4 h-4" />
@@ -521,33 +524,36 @@ export default function EditEvaluadorModal({
               </div>
             )} */}
             {showNiveles && (
-              <div className="absolute z-10 mt-1 w-full max-h-48 overflow-auto card p-0 shadow-lg">
-                <ul className="max-h-56 overflow-auto">
-                  {availableNiveles.length > 0 ? (
-                    availableNiveles.map((n) => (
-                      <li key={n.id}>
-                        <button
-                          className="w-full text-left px-4 py-3 hover:bg-slate-50"
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={() => {
-                            handleFieldChange("nivel", n.nombre_nivel);
-                            setShowNiveles(false);
-                          }}
-                        >
-                          {n.nombre_nivel}
-                        </button>
-                      </li>
-                    ))
-                  ) : (
-                    <li>
-                      <p className="px-4 py-3 text-slate-400">
-                        Todos los niveles para esta área ya están asignados.
-                      </p>
-                    </li>
-                  )}
-                </ul>
-              </div>
-            )}
+  <div
+    className="absolute z-50 mt-1 w-full max-h-48 overflow-auto bg-white border border-slate-200 rounded shadow-lg"
+    style={{ top: '100%', left: 0, right: 0 }}
+  >
+    <ul className="max-h-56 overflow-auto">
+      {availableNiveles.length > 0 ? (
+        availableNiveles.map((n) => (
+          <li key={n.id}>
+            <button
+              className="w-full text-left px-4 py-3 hover:bg-slate-50"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                handleFieldChange("nivel", n.nombre_nivel);
+                setShowNiveles(false);
+              }}
+            >
+              {n.nombre_nivel}
+            </button>
+          </li>
+        ))
+      ) : (
+        <li>
+          <p className="px-4 py-3 text-slate-400">
+            Todos los niveles para esta área ya están asignados.
+          </p>
+        </li>
+      )}
+    </ul>
+  </div>
+)}
             {errors.nivel && (
               <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
                 <ExclamationTriangleIcon className="w-4 h-4" />

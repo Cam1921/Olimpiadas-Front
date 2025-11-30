@@ -7,6 +7,7 @@ import { GrTrophy } from "react-icons/gr";
 import { HiAdjustmentsVertical } from "react-icons/hi2";
 import { FiDownload } from "react-icons/fi";
 import olimpiadas from "@/assets/olimpiadas.png";
+import { Link } from 'react-router-dom';
 
 export default function Home() {
   const [open, setOpen] = useState(false);
@@ -49,20 +50,20 @@ export default function Home() {
           </div>
           {/* Botones */}
           <div className="mt-4 md:mt-6 flex gap-3 flex-wrap md:flex-nowrap">
-            <a
-              href="#"
-              className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 md:px-5 md:py-3
-                           border border-[var(--primary)] text-[var(--primary)] bg-white
-                           hover:bg-[#ebf4f8] hover:text-black
-                           active:bg-[var(--primary)] active:text-white active:border-[var(--primary)]
-                           focus:bg-[var(--primary)] focus:text-white focus:border-[var(--primary)]
-                           focus:hover:bg-[var(--primary)] focus:hover:text-white
-                           focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-offset-2
-                           transition select-none whitespace-nowrap"
-            >
-              <GrTrophy size={18} className="shrink-0" />
-              <span className="font-medium">Ver Resultados Oficiales</span>
-            </a>
+<Link
+  to="/results"
+  className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 md:px-5 md:py-3
+               border border-[var(--primary)] text-[var(--primary)] bg-white
+               hover:bg-[#ebf4f8] hover:text-black
+               active:bg-[var(--primary)] active:text-white active:border-[var(--primary)]
+               focus:bg-[var(--primary)] focus:text-white focus:border-[var(--primary)]
+               focus:hover:bg-[var(--primary)] focus:hover:text-white
+               focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-offset-2
+               transition select-none whitespace-nowrap"
+>
+  <GrTrophy size={18} className="shrink-0" />
+  <span className="font-medium">Ver Resultados Oficiales</span>
+</Link>
 
             <a
               href="#"
