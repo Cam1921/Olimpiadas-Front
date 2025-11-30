@@ -22,12 +22,14 @@
       { icon: "IoTimeOutline", label: "Trazabilidad/Log", path: "trazabilidad-log" },
     ],
     [ROLE_NAMES.EVALUADOR]: [
-      { icon: "BsPersonCheck", label: "Información Personal", path: "informacion-personal" },
+      { icon: "BiHome", label: "Panel Principal", path: "panel-evaluador" },
       { icon: "HiOutlinePencilSquare", label: "Registrar Notas", path: "registrar-notas" },
       { icon: "BiCategoryAlt", label: "Clasificación", path: "clasificacion" },
+      { icon: "BsPersonCheck", label: "Información Personal", path: "informacion-personal" },
     ],
     [ROLE_NAMES.RESPONSABLE_DE_AREA]: [
-      { icon: "BsPersonCheck", label: "Información Personal", path: "informacion-personal" },
+      { icon: "BiHome", label: "Panel Principal", path: "control-fases" },
       { icon: "BsSliders2", label: "Control de Fases de mi Área", path: "control-fases-area" },
+      { icon: "BsPersonCheck", label: "Información Personal", path: "informacion-personal" },
     ],
   };
