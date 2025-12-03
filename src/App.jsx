@@ -34,6 +34,8 @@ import PreviewDistribucion from "./components/asignar-competidores/PreviewDistri
 
 // NUEVO: HU13 – Medallero / Parametrización (ruta /dashboard/medallero-premiacion)
 import ParametrizarMedallero from "./pages/dashboard/medallero/ParametrizarMedallero.jsx";
+// NUEVO: HU -– Tabla Resultados Finales (componente ResultsFinalTable)
+import ResultsFinalTable from './pages/dashboard/Publicacion/components/ResultsFinalTable';
 
 export default function App() {
   return (
