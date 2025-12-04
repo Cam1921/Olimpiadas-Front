@@ -35,101 +35,126 @@ import PreviewDistribucion from "./components/asignar-competidores/PreviewDistri
 // NUEVO: HU13 – Medallero / Parametrización (ruta /dashboard/medallero-premiacion)
 import ParametrizarMedallero from "./pages/dashboard/medallero/ParametrizarMedallero.jsx";
 
+// 🔔 Corrección de Notas – Modal y Toast
+import CorreccionNotificationsModal from "./components/correccion-notificaciones/CorreccionNotificationsModal.jsx";
+import CorreccionNotificationToast from "./components/correccion-notificaciones/CorreccionNotificationToast.jsx";
+
 export default function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Home />} />
+    <>
+      <Routes>
+        <Route path="/" element={<Home />} />
 
-      {/* Ruta directa para probar Evaluador SIN login */}
-      <Route path="/activar" element={<EstablecerContraseñaPage />} />
+        {/* Ruta directa para probar Evaluador SIN login */}
+        <Route path="/activar" element={<EstablecerContraseñaPage />} />
 
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<RoleIndexRedirect />} />
-        {/* Admin */}
-        <Route path="panel-principal" element={<PanelPrincipal />} />
-        <Route path="gestion-roles" element={<ResponsablesAcademicos />} />
-        <Route path="asignacion-competidores" element={<PaginaPrincipal />} />
-        //asignacion-competidores
         <Route
-          path="asignacion-competidores/preview"
-          element={<PreviewDistribucion />}
-        />
-        <Route path="notificaciones" element={<NotificacionesPage />} />
-        <Route path="evaluadores" element={<Evaluadores />} />
-        {/*   <Route path="registrar-notas" element={<EvaluadorHome />} /> */}
-        <Route path="control-fases" element={<TestControlFases />} />
-        <Route path="resultados-reportes" element={<TestFlujoPublicacion />} />
-        <Route
-          path="gestion-inscripciones"
-          element={<GestionInscripciones />}
-        />
-        <Route path="informacion-personal" element={<InformacionPersonal />} />
-        <Route
-          path="gestion-inscripciones"
-          element={<GestionInscripciones />}
-        />
-        {/* Publicación HU10 */}
-        <Route path="publicacion" element={<PublicacionPage />} />
-        {/* Evaluador / Responsable */}
-        <Route path="informacion-personal" element={<InformacionPersonal />} />
-        {/* HU05 – Responsable / Control de Fases */}
-        <Route
-          path="responsable/control-fases"
-          element={<ControlFasesArea />}
-        />
-        {/* (Esta ruta ya está arriba, puedes dejar solo una si quieres) */}
-        <Route
-          path="gestion-inscripciones"
-          element={<GestionInscripciones />}
-        />
-        <Route path="gestion-cronograma" element={<TestCronograma />} />
-        {/* 🔁 Alias para las variaciones que usa tu menú */}
-        <Route path="responsable" element={<ControlFasesArea />} />
-        <Route path="control-fases" element={<ControlFasesArea />} />
-        <Route path="controlfases" element={<ControlFasesArea />} />
-        {/*   <Route path="responsable/controlFases" element={<ControlFasesArea />} /> */}
-        {/*  <Route path="control-fases-area" element={<ControlFasesArea />} />{" "} */}
-        <Route path="entorno-final" element={<EntornoFinal />} />
-        <Route path="registrar-notas" element={<HomePlanillas />} />
-        <Route
-          path="control-fases-area"
-          element={<HomePlanillasResponsable />}
-        />
-        {/* NUEVO: Medallero y Premiación */}
-        <Route
-          path="medallero-premiacion"
-          element={<ParametrizarMedallero />}
-        />
-        <Route path="clasificacion" element={<ClasificacionHome />} />
-        <Route
-          path="control-fases-area"
-          element={<HomePlanillasResponsable />}
-        />
-        {/* Compatibilidad */}
-        <Route
-          path="gestion-inscripciones"
-          element={<GestionInscripciones />}
-        />
-      </Route>
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<RoleIndexRedirect />} />
+          {/* Admin */}
+          <Route path="panel-principal" element={<PanelPrincipal />} />
+          <Route path="gestion-roles" element={<ResponsablesAcademicos />} />
+          <Route path="asignacion-competidores" element={<PaginaPrincipal />} />
+          {/* asignacion-competidores */}
+          <Route
+            path="asignacion-competidores/preview"
+            element={<PreviewDistribucion />}
+          />
+          <Route path="notificaciones" element={<NotificacionesPage />} />
+          <Route path="evaluadores" element={<Evaluadores />} />
+          {/*   <Route path="registrar-notas" element={<EvaluadorHome />} /> */}
+          <Route path="control-fases" element={<TestControlFases />} />
+          <Route
+            path="resultados-reportes"
+            element={<TestFlujoPublicacion />}
+          />
+          <Route
+            path="gestion-inscripciones"
+            element={<GestionInscripciones />}
+          />
+          <Route
+            path="informacion-personal"
+            element={<InformacionPersonal />}
+          />
+          <Route
+            path="gestion-inscripciones"
+            element={<GestionInscripciones />}
+          />
+          {/* Publicación HU10 */}
+          <Route path="publicacion" element={<PublicacionPage />} />
+          {/* Evaluador / Responsable */}
+          <Route
+            path="informacion-personal"
+            element={<InformacionPersonal />}
+          />
+          {/* HU05 – Responsable / Control de Fases */}
+          <Route
+            path="responsable/control-fases"
+            element={<ControlFasesArea />}
+          />
+          {/* (Esta ruta ya está arriba, puedes dejar solo una si quieres) */}
+          <Route
+            path="gestion-inscripciones"
+            element={<GestionInscripciones />}
+          />
+          <Route path="gestion-cronograma" element={<TestCronograma />} />
+          {/* 🔁 Alias para las variaciones que usa tu menú */}
+          <Route path="responsable" element={<ControlFasesArea />} />
+          <Route path="control-fases" element={<ControlFasesArea />} />
+          <Route path="controlfases" element={<ControlFasesArea />} />
+          {/*   <Route path="responsable/controlFases" element={<ControlFasesArea />} /> */}
+          {/*  <Route path="control-fases-area" element={<ControlFasesArea />} />{" "} */}
+          <Route path="entorno-final" element={<EntornoFinal />} />
+          <Route path="registrar-notas" element={<HomePlanillas />} />
+          <Route
+            path="control-fases-area"
+            element={<HomePlanillasResponsable />}
+          />
+          {/* NUEVO: Medallero y Premiación */}
+          <Route
+            path="medallero-premiacion"
+            element={<ParametrizarMedallero />}
+          />
+          <Route path="clasificacion" element={<ClasificacionHome />} />
+          <Route
+            path="control-fases-area"
+            element={<HomePlanillasResponsable />}
+          />
+          {/* Compatibilidad */}
+          <Route
+            path="gestion-inscripciones"
+            element={<GestionInscripciones />}
+          />
+        </Route>
 
-      {/* Rutas de prueba (accesibles sin login) */}
-      <Route path="/responsables-test" element={<ResponsablesAcademicos />} />
-      <Route path="/evaluadores-test" element={<Evaluadores />} />
-      {/* Rutas de prueba (accesibles sin login) */}
-      <Route path="/responsables-test" element={<ResponsablesAcademicos />} />
-      <Route path="/evaluadores-test" element={<Evaluadores />} />
+        {/* Rutas de prueba (accesibles sin login) */}
+        <Route
+          path="/responsables-test"
+          element={<ResponsablesAcademicos />}
+        />
+        <Route path="/evaluadores-test" element={<Evaluadores />} />
+        {/* Rutas de prueba (accesibles sin login) */}
+        <Route
+          path="/responsables-test"
+          element={<ResponsablesAcademicos />}
+        />
+        <Route path="/evaluadores-test" element={<Evaluadores />} />
 
-      {/* 🔹 Rutas para Entorno Final y Lista Oficial (pruebas visuales) */}
-      <Route path="/lista-oficial" element={<OfficialListPage />} />
+        {/* 🔹 Rutas para Entorno Final y Lista Oficial (pruebas visuales) */}
+        <Route path="/lista-oficial" element={<OfficialListPage />} />
 
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+
+      {/* 🔔 Modal y Toast globales para Notificación de Corrección de Notas */}
+      <CorreccionNotificationsModal />
+      <CorreccionNotificationToast />
+    </>
   );
 }

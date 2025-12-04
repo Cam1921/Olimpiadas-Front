@@ -1,4 +1,5 @@
 // src/components/ui/Header.jsx
+import CorreccionNotificationBell from "../correccion-notificaciones/CorreccionNotificationBell.jsx";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   FiSidebar,
@@ -73,12 +74,6 @@ export default function Header(props) {
 
   // Extraer info de la nueva estructura
   const persona = userData?.user?.personas?.[0];
-  const rolPersona =
-    persona?.rols?.[0]?.nombre?.toLowerCase() ||
-    userData?.rol?.[0]?.toLowerCase() ||
-    "";
-
-  const isAdmin = rolPersona.includes("admin");
 
   const displayName = useMemo(() => {
     if (!persona) return userData?.user?.name || "—";
@@ -165,44 +160,50 @@ export default function Header(props) {
         )}
 
         {right ? (
-          <div className="min-h-9 min-w-9 flex items-center justify-center">
+          <div className="relative" ref={dropdownRef}>
             {right}
           </div>
         ) : showUser ? (
-          <div className="relative" ref={dropdownRef}>
-            <button
-              type="button"
-              className="flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-1.5 hover:bg-gray-50"
-              onClick={() => setOpenUser((s) => !s)}
-            >
-              <div className="h-7 w-7 rounded-full bg-[var(--primary)] flex items-center justify-center">
-                <FiUser className="text-white" />
-              </div>
-              <div className="hidden sm:flex flex-col items-start leading-4">
-                <span className="text-xs font-semibold text-gray-900 max-w-[180px] truncate">
-                  {displayName}
-                </span>
-                <span className="text-[10px] uppercase tracking-wide text-gray-500 max-w-[180px] truncate">
-                  {roleName}
-                </span>
-              </div>
-              <FiChevronDown className="text-gray-600" />
-            </button>
+          <div className="flex items-center gap-3" ref={dropdownRef}>
+            {/* 🔔 Campanita de notificaciones */}
+            <CorreccionNotificationBell />
 
-            {openUser && (
-              <div className="absolute right-0 mt-2 w-56 rounded-xl border border-gray-200 bg-white shadow-md overflow-hidden">
-                <div className="px-3 py-2 text-xs text-gray-500 border-b">
-                  Sesión activa
+            {/* Menú de usuario */}
+            <div className="relative">
+              <button
+                type="button"
+                className="flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-1.5 hover:bg-gray-50"
+                onClick={() => setOpenUser((s) => !s)}
+              >
+                <div className="h-7 w-7 rounded-full bg-[var(--primary)] flex items-center justify-center">
+                  <FiUser className="text-white" />
                 </div>
-                <button
-                  type="button"
-                  className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-50"
-                  onClick={onLogout}
-                >
-                  <FiLogOut /> Cerrar sesión
-                </button>
-              </div>
-            )}
+                <div className="hidden sm:flex flex-col items-start leading-4">
+                  <span className="text-xs font-semibold text-gray-900 max-w-[180px] truncate">
+                    {displayName}
+                  </span>
+                  <span className="text-[10px] uppercase tracking-wide text-gray-500 max-w-[180px] truncate">
+                    {roleName}
+                  </span>
+                </div>
+                <FiChevronDown className="text-gray-600" />
+              </button>
+
+              {openUser && (
+                <div className="absolute right-0 mt-2 w-56 rounded-xl border border-gray-200 bg-white shadow-md overflow-hidden">
+                  <div className="px-3 py-2 text-xs text-gray-500 border-b">
+                    Sesión activa
+                  </div>
+                  <button
+                    type="button"
+                    className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-50"
+                    onClick={onLogout}
+                  >
+                    <FiLogOut /> Cerrar sesión
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         ) : (
           <div className="h-9 w-9" aria-hidden />
