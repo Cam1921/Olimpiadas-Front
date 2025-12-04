@@ -75,6 +75,12 @@ export default function Header(props) {
   // Extraer info de la nueva estructura
   const persona = userData?.user?.personas?.[0];
 
+  // 👇 AQUÍ DEFINIMOS rolPersona
+  const rolPersona =
+    persona?.rols?.[0]?.nombre?.toLowerCase() ||
+    userData?.rol?.[0]?.toLowerCase() ||
+    "";
+
   const displayName = useMemo(() => {
     if (!persona) return userData?.user?.name || "—";
 
@@ -165,8 +171,10 @@ export default function Header(props) {
           </div>
         ) : showUser ? (
           <div className="flex items-center gap-3" ref={dropdownRef}>
-            {/* 🔔 Campanita de notificaciones */}
-            <CorreccionNotificationBell />
+            {/* 🔔 Campanita de notificaciones: SOLO EVALUADOR */}
+            {rolPersona.includes("evaluador") && (
+              <CorreccionNotificationBell />
+            )}
 
             {/* Menú de usuario */}
             <div className="relative">
