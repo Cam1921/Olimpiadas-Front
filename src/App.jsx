@@ -22,8 +22,7 @@ import EstablecerContraseñaPage from "@/pages/auth/EstablecerContraseñaPage";
 import EntornoFinal from "./components/EntornoFinal.jsx";
 import OfficialListPage from "./components/OfficialListPage";
 
-import ResultsPage from './pages/ResultsPage.jsx';
-
+import ResultsPage from "./pages/ResultsPage.jsx";
 
 // HU10 – Publicación
 import PublicacionPage from "./pages/dashboard/Publicacion";
@@ -35,14 +34,17 @@ import HomePlanillasResponsable from "./pages/dashboard/responsable/HomePlanilla
 import PaginaPrincipal from "./components/asignar-competidores/PaginaPrincipal";
 import PreviewDistribucion from "./components/asignar-competidores/PreviewDistribucion";
 
-// NUEVO: HU13 – Medallero / Parametrización (ruta /dashboard/medallero-premiacion)
+// NUEVO: HU13 – Medallero / Parametrización
 import ParametrizarMedallero from "./pages/dashboard/medallero/ParametrizarMedallero.jsx";
+
+// ➕ NUEVO: HU15 – Certificados
+import CertificadosPage from "./pages/dashboard/certificados/certificados.jsx";
 
 export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
- 
+
       <Route path="/results" element={<ResultsPage />} />
       {/* Ruta directa para probar Evaluador SIN login */}
       <Route path="/activar" element={<EstablecerContraseñaPage />} />
@@ -60,7 +62,7 @@ export default function App() {
         <Route path="panel-principal" element={<PanelPrincipal />} />
         <Route path="gestion-roles" element={<ResponsablesAcademicos />} />
         <Route path="asignacion-competidores" element={<PaginaPrincipal />} />
-        //asignacion-competidores
+        {/*asignacion-competidores*/}
         <Route
           path="asignacion-competidores/preview"
           element={<PreviewDistribucion />}
@@ -70,29 +72,17 @@ export default function App() {
         {/*   <Route path="registrar-notas" element={<EvaluadorHome />} /> */}
         <Route path="control-fases" element={<TestControlFases />} />
         <Route path="resultados-reportes" element={<TestFlujoPublicacion />} />
-        <Route
-          path="gestion-inscripciones"
-          element={<GestionInscripciones />}
-        />
+        <Route path="gestion-inscripciones" element={<GestionInscripciones />} />
         <Route path="informacion-personal" element={<InformacionPersonal />} />
-        <Route
-          path="gestion-inscripciones"
-          element={<GestionInscripciones />}
-        />
+        <Route path="gestion-inscripciones" element={<GestionInscripciones />} />
         {/* Publicación HU10 */}
         <Route path="publicacion" element={<PublicacionPage />} />
         {/* Evaluador / Responsable */}
         <Route path="informacion-personal" element={<InformacionPersonal />} />
         {/* HU05 – Responsable / Control de Fases */}
-        <Route
-          path="responsable/control-fases"
-          element={<ControlFasesArea />}
-        />
+        <Route path="responsable/control-fases" element={<ControlFasesArea />} />
         {/* (Esta ruta ya está arriba, puedes dejar solo una si quieres) */}
-        <Route
-          path="gestion-inscripciones"
-          element={<GestionInscripciones />}
-        />
+        <Route path="gestion-inscripciones" element={<GestionInscripciones />} />
         <Route path="gestion-cronograma" element={<TestCronograma />} />
         {/* 🔁 Alias para las variaciones que usa tu menú */}
         <Route path="responsable" element={<ControlFasesArea />} />
@@ -102,25 +92,16 @@ export default function App() {
         {/*  <Route path="control-fases-area" element={<ControlFasesArea />} />{" "} */}
         <Route path="entorno-final" element={<EntornoFinal />} />
         <Route path="registrar-notas" element={<HomePlanillas />} />
-        <Route
-          path="control-fases-area"
-          element={<HomePlanillasResponsable />}
-        />
-        {/* NUEVO: Medallero y Premiación */}
-        <Route
-          path="medallero-premiacion"
-          element={<ParametrizarMedallero />}
-        />
+        <Route path="control-fases-area" element={<HomePlanillasResponsable />} />
+        {/* Medallero y Premiación */}
+        <Route path="medallero-premiacion" element={<ParametrizarMedallero />} />
         <Route path="clasificacion" element={<ClasificacionHome />} />
-        <Route
-          path="control-fases-area"
-          element={<HomePlanillasResponsable />}
-        />
+        <Route path="control-fases-area" element={<HomePlanillasResponsable />} />
         {/* Compatibilidad */}
-        <Route
-          path="gestion-inscripciones"
-          element={<GestionInscripciones />}
-        />
+        <Route path="gestion-inscripciones" element={<GestionInscripciones />} />
+
+        {/* ➕ NUEVO: ruta visible en el menú */}
+        <Route path="certificados" element={<CertificadosPage />} />
       </Route>
 
       {/* Rutas de prueba (accesibles sin login) */}
