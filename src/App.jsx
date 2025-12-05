@@ -34,7 +34,7 @@ import HomePlanillasResponsable from "./pages/dashboard/responsable/HomePlanilla
 /* import PaginaPrincipal from "./components/asignar-competidores/PaginaPrincipal"; */
 /* import PreviewDistribucion from "./components/asignar-competidores/PreviewDistribucion"; */
 
-// NUEVO: HU13 – Medallero / Parametrización (ruta /dashboard/medallero-premiacion)
+// NUEVO: HU13 – Medallero / Parametrización
 import ParametrizarMedallero from "./pages/dashboard/medallero/ParametrizarMedallero.jsx";
 
 // Nuevo: HU 22.1 – Panel Principal Evaluador
@@ -46,6 +46,8 @@ import SideMenu from "./components/SideMenu";
 import ResponsablePanelFases from "./pages/dashboard/responsable/ResponsablePanelFases";
 import PaginaPrincipal from "./pages/dashboard/asignar-competidores/PaginaPrincipal";
 import PreviewDistribucion from "./pages/dashboard/asignar-competidores/PreviewDistribucion";
+// ➕ NUEVO: HU15 – Certificados
+import CertificadosPage from "./pages/dashboard/certificados/certificados.jsx";
 
 export default function App() {
   return (
@@ -70,6 +72,7 @@ export default function App() {
         <Route path="gestion-roles" element={<ResponsablesAcademicos />} />
         <Route path="asignacion-competidores" element={<PaginaPrincipal />} />
 
+        {/*asignacion-competidores*/}
         <Route
           path="asignacion-competidores/preview"
           element={<PreviewDistribucion />}
@@ -115,7 +118,7 @@ export default function App() {
           path="control-fases-area"
           element={<HomePlanillasResponsable />}
         />
-        {/* NUEVO: Medallero y Premiación */}
+        {/* Medallero y Premiación */}
         <Route
           path="medallero-premiacion"
           element={<ParametrizarMedallero />}
@@ -135,6 +138,13 @@ export default function App() {
 
         {/* Responsable Fases HU:22.2*/}
         <Route path="control-fases" element={<ResponsablePanelFases />} />
+        <Route
+          path="gestion-inscripciones"
+          element={<GestionInscripciones />}
+        />
+
+        {/* ➕ NUEVO: ruta visible en el menú */}
+        <Route path="certificados" element={<CertificadosPage />} />
       </Route>
 
       {/* Rutas de prueba (accesibles sin login) */}
