@@ -36,6 +36,8 @@ import HomePlanillasResponsable from "./pages/dashboard/responsable/HomePlanilla
 
 // NUEVO: HU13 – Medallero / Parametrización
 import ParametrizarMedallero from "./pages/dashboard/medallero/ParametrizarMedallero.jsx";
+// NUEVO: HU -– Tabla Resultados Finales (componente ResultsFinalTable)
+import ResultsFinalTable from './pages/dashboard/Publicacion/components/ResultsFinalTable';
 
 // Nuevo: HU 22.1 – Panel Principal Evaluador
 import EvaluadorPanelPrincipal from "./pages/dashboard/evaluador/pages/EvaluadorPanelPrincipal";
