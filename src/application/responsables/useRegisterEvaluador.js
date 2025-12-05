@@ -1,9 +1,8 @@
 // src/application/responsables/useRegisterEvaluador.js
 import { useState, useCallback, useEffect } from 'react';
-import { getAreasConNiveles } from "../../infrastructure/http/areas/areaRepostory";
 import api from "../../lib/api";
 
-export function useRegisterEvaluador(takenAreas = []) {
+export function useRegisterEvaluador(takenAreas = [], areas = []) {
   const [form, setForm] = useState({
     nombre: '',
     apellidos: '',
@@ -11,11 +10,10 @@ export function useRegisterEvaluador(takenAreas = []) {
     telefono: '',
     ci: '',
     area: '',
-    nivel: '',
+    id_area: null,
   });
   const [errors, setErrors] = useState({});
-  const [submitting, setSubmitting] = useState(false);
- const [allAreas, setAllAreas] = useState([]);
+  const [submitting, setSubmitting] = useState(false); 
   const setField = useCallback((name, value) => {
     setForm(prev => ({ ...prev, [name]: value }));
     setErrors(prev => {
@@ -32,21 +30,10 @@ export function useRegisterEvaluador(takenAreas = []) {
       telefono: '',
       ci: '',
       area: '',
-      nivel: '',
+      id_area: null,      
     });
     setErrors({});
-  }, []);
-
-    useEffect(() => {
-     
-      async function fetchAreas() {
-        const areas = await getAreasConNiveles();
-        setAllAreas(areas);
-        console.log(areas);
-      }
-      fetchAreas();
-    }, []);
-
+  }, []);    
   // Validación en tiempo real (solo si el campo tiene valor)
   useEffect(() => {
     const newErrors = {};
@@ -58,10 +45,10 @@ export function useRegisterEvaluador(takenAreas = []) {
     }
     if (form.correo) {
   const correoValido = /^[a-zA-Z0-9._%+-]+@(gmail\.com|est\.umss\.edu)$/i.test(form.correo);
-  if (!correoValido) {
+    if (!correoValido) {
     newErrors.correo = 'Solo se permiten correos @gmail.com o @est.umss.edu';
-  }
-}
+    }
+    }
     if (form.telefono && !/^[67]\d{7}$/.test(form.telefono.replace(/\D/g, ''))) {
       newErrors.telefono = 'El teléfono debe tener 8 dígitos y comenzar con 6 o 7. Ej: 71234567';
     }
@@ -99,12 +86,13 @@ export function useRegisterEvaluador(takenAreas = []) {
     else if (!/^[67]\d{7}$/.test(data.telefono.replace(/\D/g, ''))) newErrors.telefono = 'El teléfono debe tener 8 dígitos y comenzar con 6 o 7.';
     if (!data.ci?.trim()) newErrors.ci = 'El CI es obligatorio.';
     else if (!/^\d{6,10}$/.test(data.ci.replace(/\D/g, ''))) newErrors.ci = 'El CI debe tener entre 6 y 10 dígitos.';
-    if (!data.area) newErrors.area = 'Selecciona un área.';
-    if (!data.nivel) newErrors.nivel = 'Selecciona un nivel.';
+    if (!data.id_area) newErrors.area = 'Selecciona un área.';
+    
+   /*  if (!data.nivel) newErrors.nivel = 'Selecciona un nivel.'; */
     /* else if (!['Primaria', 'Secundaria'].includes(data.nivel)) newErrors.nivel = 'El nivel debe ser "Primaria" o "Secundaria".'; */
-    if (!data.nivel) {
+    /* if (!data.nivel) {
       newErrors.nivel = 'Selecciona un nivel.';
-    } /* else {
+    }  *//* else {
       // ✅ Validación flexible del nivel basada en el área
       const nivelesValidos = getNivelesByArea(data.area);
       if (!nivelesValidos.includes(data.nivel)) {
@@ -113,37 +101,13 @@ export function useRegisterEvaluador(takenAreas = []) {
     } */
 
     // Verifica combinación única (área + nivel)
-    if (data.area && data.nivel) {
-      const combinationExists = takenAreas.some(a => a.area === data.area && a.nivel === data.nivel);
-      if (combinationExists) {
-        newErrors.area = 'Ya existe un evaluador para esta combinación de área y nivel.';
-      }
-    }
+   
 
     return newErrors;
   }, []);
-
-  function obtenerIds(areas, nombreArea, nombreNivel) {
-  const area = areas.find(
-    (a) => a.nombre.toLowerCase() === nombreArea.toLowerCase()
-  );
-
-  if (!area) {
-    return { error: `No se encontró el área "${nombreArea}".` };
-  }
-
-  const nivel = area.niveles.find(
-    (n) => n.nombre_nivel.toLowerCase() === nombreNivel.toLowerCase()
-  );
-
-  if (!nivel) {
-    return { error: `No se encontró el nivel "${nombreNivel}" en el área "${nombreArea}".` };
-  }
-
-  return { id_area: area.id, id_nivel: nivel.id };
-}
+  
 const submit = useCallback(async () => {
-  const newErrors = validate(form, takenAreas);
+  const newErrors = validate(form);
   setErrors(newErrors);
 
   // ✅ Validación local antes de enviar
@@ -152,17 +116,15 @@ const submit = useCallback(async () => {
   }
 
   setSubmitting(true);
-  const asignacion = obtenerIds(allAreas, form.area, form.nivel);
-
   try {
     // ✅ Axios ya agrega el token y baseURL automáticamente
-    const response = await api.post("/evaluador", {
+    const response = await api.post("/evaluadores", {
       nombre: form.nombre,
       apellidos: form.apellidos,
       email: form.correo,
       telefono: form.telefono,
       ci: form.ci,
-      asignaciones: [asignacion],
+      id_area: form.id_area,
     });
 
     // ✅ Axios lanza error si el status no es 2xx
@@ -185,7 +147,7 @@ const submit = useCallback(async () => {
     }
   }finally {
     setSubmitting(false);
-  }}, [form, takenAreas, validate]);
+  }}, [form, validate]);
 
   return {
     form,

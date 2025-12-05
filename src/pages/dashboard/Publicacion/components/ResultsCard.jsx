@@ -72,7 +72,10 @@ export default function ResultsCard({
                       <td className="p-3 truncate">{r.nombre}</td>
                       <td className="p-3 truncate">{r.area}</td>
                       <td className="p-3 truncate">{r.nivel}</td>
-                      <td className="p-3">{r.puntaje} pts</td>
+                      <td className="p-3">
+                        {" "}
+                        {r.puntaje ? r.puntaje + "pts" : ""}
+                      </td>
                       <td className="p-3">{r.estado}</td>
                     </tr>
                   ))}

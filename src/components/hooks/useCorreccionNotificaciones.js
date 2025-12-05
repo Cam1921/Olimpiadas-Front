@@ -1,5 +1,5 @@
+import { personaRepo } from "@/infrastructure/http/persona/repositorio";
 import { useState, useEffect } from "react";
-import axios from "../application/api"; // Ajusta la ruta según tu proyecto
 
 export function useCorreccionNotificaciones() {
   const [notificaciones, setNotificaciones] = useState([]);
@@ -11,7 +11,7 @@ export function useCorreccionNotificaciones() {
   const fetchNotificaciones = async () => {
     setLoading(true);
     try {
-      const { data } = await axios.get("/notificaciones/correccion");
+      const { data } = await personaRepo.getNotificaciones();     
       setNotificaciones(data || []);
     } catch (error) {
       console.error("Error cargando notificaciones:", error);
@@ -33,15 +33,15 @@ export function useCorreccionNotificaciones() {
   };
 
   // Enviar acción
-  const enviarCorreccion = async (id, estado) => {
+/*   const enviarCorreccion = async (id, estado) => {
     try {
-      await axios.post(`/notificaciones/correccion/${id}`, { estado });
+      await api.post(`/notificaciones/correccion/${id}`, { estado });
       await fetchNotificaciones(); 
       cerrarModal();
     } catch (error) {
       console.error("Error al enviar corrección:", error);
     }
-  };
+  }; */
 
   // Inicializar
   useEffect(() => {
@@ -54,8 +54,7 @@ export function useCorreccionNotificaciones() {
     selected,
     modalOpen,
     abrirModal,
-    cerrarModal,
-    enviarCorreccion,
+    cerrarModal,    
   };
 }
 

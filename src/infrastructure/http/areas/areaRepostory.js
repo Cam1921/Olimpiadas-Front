@@ -3,12 +3,10 @@ import api from "@/lib/api";
 
 export async function getAreasConNiveles() {
   try {
-    const response = await api.get("catalogos/area-niveles");
-    if (response.data.status === "success") {
-      return response.data.data; // Suponiendo que los datos están en response.data.data
-    } else {
-      throw new Error("Error al obtener áreas y niveles");
-    }
+    const response = await api.get("/catalogos/area-niveles");
+    console.log("esto es la respuesta",response);
+    return response.data.data; 
+
   } catch (error) {
     console.error("Error en getAreasConNiveles:", error);
     return [];

@@ -53,7 +53,10 @@ export default function EvaluacionesTableClasificacion({
       setLoading(false);
     }
   };
-
+  useEffect(() => {
+    console.log("esta entrando");
+    fetchEvaluaciones(1);
+  }, []);
   // recarga cuando cambia chip de estado o el contexto (id)
   useEffect(() => {
     fetchEvaluaciones(1);

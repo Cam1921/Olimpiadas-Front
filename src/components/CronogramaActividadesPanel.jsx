@@ -13,12 +13,13 @@ import { actividadService } from "@/services/actividadService";
 import { faseService } from "@/services/faseService";
 import Dropdown from "./Dropdown";
 import { FaChevronDown } from "react-icons/fa";
+
 export default function CronogramaActividadesPanel({ userRole = "admin" }) {
   const [showDescriptionModal, setShowDescriptionModal] = useState(null);
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [showEditDateModal, setShowEditDateModal] = useState(null); 
+
   const [selectedDates, setSelectedDates] = useState([]);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [showAddActivity, setShowAddActivity] = useState(false);
@@ -58,14 +59,10 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
       }));
       SetActividades(adaptedData);
       setLoading(false);
-   } catch (error) {
-  const message =
-    error.response?.data?.message ||
-    error.message ||
-    "Error desconocido al cargar los datos";
-  setError(message); // ✅ Solo un string
-  setLoading(false);
-}
+    } catch (error) {
+      setError(error);
+      setLoading(false);
+    }
   };
   const fetchFases = async () => {
     try {
@@ -82,13 +79,9 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
       setFases(adaptedData);
       setLoading(false);
     } catch (error) {
-  const message =
-    error.response?.data?.message ||
-    error.message ||
-    "Error desconocido al cargar los datos";
-  setError(message); // ✅ Solo un string
-  setLoading(false);
-}
+      setError(error);
+      setLoading(false);
+    }
   };
   const fetchAllfases = async () => {
     try {
@@ -128,60 +121,54 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
       setActivities(adaptedData);
       setLoading(false);
     } catch (error) {
-  const message =
-    error.response?.data?.message ||
-    error.message ||
-    "Error desconocido al cargar las fases";
-  setError(message); // ✅ Solo un string
-  setLoading(false);
-}
+      setError(error);
+      setLoading(false);
+    }
   };
 
   const fetchAllActividades = async () => {
-  try {
-    setLoading(true);
-    const res = await actividadService.getAll();
-    const data = res.data;
-    const adaptedData = data
-      .filter((item) => item.fecha_inicio || item.fecha_fin)
-      .map((item) => ({
-        id: item.id,
-        name: `${item.nombre} - ${item.fase}`,
-        description: item.descripcion,
-        fase: item.fase,
-        fase_id: item.fase_id,
-        color: getRandomColor(),
-        published: item.estado_publicado,
-        dates: [
-          item.fecha_inicio
-            ? {
-                date: item.fecha_inicio.split("T")[0],
-                startTime: item.hora_inicio_ini,
-                endTime: item.hora_fin_ini,
-              }
-            : null,
-          item.fecha_fin
-            ? {
-                date: item.fecha_fin.split("T")[0],
-                startTime: item.hora_inicio_fin,
-                endTime: item.hora_fin_fin,
-              }
-            : null,
-        ].filter(Boolean),
-      }));
-    setActivities((prev) => [...prev, ...adaptedData]);
-    setLoading(false);
-  } catch (error) {
-    console.error("Error en fetchAllActividades:", error);
-    // ✅ Extrae un mensaje amigable
-    const message =
-      error.response?.data?.message ||
-      error.message ||
-      "Error al cargar las actividades";
-    setError(message); // ← solo un string
-    setLoading(false);
-  }
-};
+    try {
+      setLoading(true);
+      const res = await actividadService.getAll();
+      const data = res.data;
+      console.log(data);
+      // adaptamos el backend a lo que la tabla necesita
+      const adaptedData = data
+        .filter((item) => item.fecha_inicio || item.fecha_fin)
+        .map((item) => ({
+          id: item.id,
+          name: `${item.nombre} - ${item.fase}`,
+          description: item.descripcion,
+          fase: item.fase,
+          fase_id: item.fase_id,
+          color: getRandomColor(),
+          published: item.estado_publicado,
+          dates: [
+            item.fecha_inicio
+              ? {
+                  date: item.fecha_inicio.split("T")[0],
+                  startTime: item.hora_inicio_ini,
+                  endTime: item.hora_fin_ini,
+                }
+              : null,
+            item.fecha_fin
+              ? {
+                  date: item.fecha_fin.split("T")[0],
+                  startTime: item.hora_inicio_fin,
+                  endTime: item.hora_fin_fin,
+                }
+              : null,
+          ].filter(Boolean),
+        }));
+
+      setActivities((prev) => [...prev, ...adaptedData]);
+
+      setLoading(false);
+    } catch (error) {
+      setError(error);
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchAllfases();
@@ -450,50 +437,7 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
       setLoading(false);
     }
   };
-const handleEditDateOnly = async () => {
-  if (!showEditDateModal || selectedDates.length === 0) return;
 
-  const { activity, date } = showEditDateModal;
-  setLoading(true);
-
-  try {
-    // Asumiendo que `selectedDates[0]` es la única fecha seleccionada (ya que solo queremos editar una)
-    const data = {
-      fecha_inicio: selectedDates[0].date,
-      fecha_fin: selectedDates[0].date, // Mismo día
-      hora_inicio_ini: selectedDates[0].startTime,
-      hora_fin_ini: selectedDates[0].endTime,
-      hora_inicio_fin: selectedDates[0].startTime, // Mismo horario
-      hora_fin_fin: selectedDates[0].endTime,
-      // No cambiamos nombre, descripción, fase, etc.
-    };
-
-    let res;
-    if (activity.fase) {
-      res = await actividadService.update(activity.id, data);
-    } else {
-      res = await faseService.update(activity.id, data);
-    }
-
-    fetchAllfases();
-    fetchAllActividades();
-
-    setSuccessTitle("Fecha Actualizada");
-    setSuccessSubtitle("La hora de la actividad ha sido modificada");
-    setSuccessMessage(
-      `"${activity.name}" ahora se realiza el ${new Date(selectedDates[0].date).toLocaleDateString()} de ${selectedDates[0].startTime} a ${selectedDates[0].endTime}.`
-    );
-    setShowSuccess(true);
-    setShowEditDateModal(null);
-    setSelectedDates([]); // Limpiar selección
-
-  } catch (error) {
-    console.log("Error al actualizar la fecha:", error);
-    setError(error.response?.data?.message || "Error al actualizar la fecha.");
-  } finally {
-    setLoading(false);
-  }
-};
   const confirmDeleteActivity = async (activity) => {
     try {
       const first = selectedDates?.[0];
@@ -594,145 +538,154 @@ const handleEditDateOnly = async () => {
       setEditingActivity(true);
     }
   };
- const renderAdminView = () => (
-  <>
-    <div className="flex justify-between items-start mb-4">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-800">
-          Cronograma de Actividades
-        </h1>
-        <p className="text-sm text-slate-500 mt-1">
-          Gestiona tus actividades con fechas y horarios.
-        </p>
-      </div>
-      <div className="flex gap-3">
-        <button
-          className="btn btn-outline flex items-center gap-2"
-          onClick={() => {
+  const renderAdminView = () => (
+    <>
+      <div className="flex justify-between items-start mb-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800">
+            Cronograma de Actividades
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">
+            Selecciona fechas y asígnalas a una actividad.
+          </p>
+        </div>
+        <div className="flex gap-3">
+          <button
+            className="btn btn-outline flex items-center gap-2"
+            onClick={() => {
               setEditingActivity(null);
-            setFase(null);
-            setActividad(null);
-            setNewActivityName(null);
-            setNewActivityDescription("");
-            setSelectedDates([]);
-            setShowAddActivity(true);
-          }}
-        >
-          <PlusIcon className="w-4 h-4" /> Nueva Actividad
-        </button>
-        <button
-          className={`btn btn-primary flex items-center gap-2 ${
-            activities.length === 0 ? "opacity-50 cursor-not-allowed" : ""
-          }`}
-          onClick={() => setShowConfirmPublish(true)}
-          disabled={activities.length === 0}
-        >
- <ArrowUpTrayIcon className="w-4 h-4" /> Publicar Cronograma
-        </button>
+
+              setNewActivityName(null);
+              setNewActivityName("");
+              setNewActivityDescription("");
+              setShowAddActivity(true);
+            }}
+          >
+            <PlusIcon className="w-4 h-4" /> Nueva Actividad
+          </button>
+          <button
+            className={`btn btn-primary flex items-center gap-2 ${
+              activities.length === 0 ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+            onClick={() => setShowConfirmPublish(true)}
+            disabled={activities.length === 0}
+          >
+            <ArrowUpTrayIcon className="w-4 h-4" /> Publicar Cronograma
+          </button>
+        </div>
       </div>
-    </div>
 
       <div className="card p-3 mb-4 flex flex-col sm:flex-row gap-3">
-      <div className="flex items-center gap-2">
-        <label className="text-xs font-medium text-slate-700">Año:</label>
-        <select
-          value={selectedYear}
-          onChange={(e) => setSelectedYear(Number(e.target.value))}
-          className="border border-slate-300 rounded px-2 py-1 text-xs w-20"
-        >
+        <div className="flex items-center gap-2">
+          <label className="text-xs font-medium text-slate-700">Año:</label>
+          <select
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(Number(e.target.value))}
+            className="border border-slate-300 rounded px-2 py-1 text-xs w-20"
+          >
             {generateYears().map((year) => (
-            <option key={year} value={year}>
-              {year}
-            </option>
-          ))}
-        </select>
-      </div>
-       <div className="flex items-center gap-2">
-        <label className="text-xs font-medium text-slate-700">Mes:</label>
-        <select
-          value={selectedMonth}
-          onChange={(e) => setSelectedMonth(Number(e.target.value))}
-          className="border border-slate-300 rounded px-2 py-1 text-xs w-24"
-        >
+              <option key={year} value={year}>
+                {year}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-xs font-medium text-slate-700">Mes:</label>
+          <select
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(Number(e.target.value))}
+            className="border border-slate-300 rounded px-2 py-1 text-xs w-24"
+          >
             {monthNames.map((name, index) => (
-            <option key={index} value={index}>
-              {name}
-            </option>
-          ))}
-        </select>
-      </div>
-    </div>
-
-     <div className="card p-4 mb-6">
-      <div className="flex justify-between items-center mb-4">
-        <button onClick={goToPreviousMonth} className="btn btn-sm btn-outline">
-          {"<"}
-        </button>
-        <h3 className="text-lg font-medium">
-          {monthNames[selectedMonth]} de {selectedYear}
-        </h3>
-        <button onClick={goToNextMonth} className="btn btn-sm btn-outline">
-          {">"}
-        </button>
-      </div>
-      <div className="grid grid-cols-7 gap-1 text-xs font-medium text-slate-500">
-        {["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"].map((day) => (
-          <div key={day} className="text-center py-2">
-            {day}
-          </div>
-        ))}
+              <option key={index} value={index}>
+                {name}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
-              <div className="grid grid-cols-7 gap-1 mt-2">
-        {days.map((date, idx) => {
-          const isValidDate = date instanceof Date && !isNaN(date.getTime());
-          const info = isValidDate ? getActivityInfo(date) : null;
-          return (
-            <div
+      <div className="card p-4 mb-6">
+        <div className="flex justify-between items-center mb-4">
+          <button
+            onClick={goToPreviousMonth}
+            className="btn btn-sm btn-outline"
+          >
+            {"<"}
+          </button>
+          <h3 className="text-lg font-medium">
+            {monthNames[selectedMonth]} de {selectedYear}
+          </h3>
+          <button onClick={goToNextMonth} className="btn btn-sm btn-outline">
+            {">"}
+          </button>
+        </div>
 
-   key={idx}
-              className={`flex flex-col items-center justify-center text-xs rounded-md p-1 transition-colors ${
-                !isValidDate
-                  ? ""
-                  : !isFutureOrToday(date)
-                  ? "text-slate-300 bg-slate-50 cursor-not-allowed"
-                  : info
-                  ? "bg-white border border-slate-200 cursor-pointer"
-                  : "bg-white hover:bg-slate-50 cursor-default"
-              }`}
-              onClick={(e) => {
-   e.stopPropagation();
-                if (isValidDate && isFutureOrToday(date) && info) {
-                  // Solo si hay evento: abrir modal de edición completa
-                  const firstEvent = info[0];
-                  editFromDetail(firstEvent);
-                }
-                // Si no hay evento, no hacer nada (la creación se inicia desde el botón)
-              }}
-            >
-      {isValidDate ? date.getDate() : ""}
-              {isValidDate && info && (
-                <div className="mt-1 space-y-1 w-full">
-                  {info.map((event, i) => (
-                    <div
-                      key={i}
-                      className={`px-1 py-0.5 text-[10px] rounded truncate ${event.color} text-xs cursor-pointer`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openEventDetail(event, date);
-                      }}
-                    >
-                      {event.name}
-                    </div>
-                  ))}
-                </div>
-              )}
+        <div className="grid grid-cols-7 gap-1 text-xs font-medium text-slate-500">
+          {["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"].map((day) => (
+            <div key={day} className="text-center py-2">
+              {day}
             </div>
-          );
+          ))}
+        </div>
+
+        <div className="grid grid-cols-7 gap-1 mt-2">
+          {days.map((date, idx) => {
+            const isValidDate = date instanceof Date && !isNaN(date.getTime());
+
+            const info = isValidDate ? getActivityInfo(date) : null;
+
+            return (
+              <div
+                key={idx}
+                className={` flex flex-col items-center justify-center text-xs rounded-md p-1 transition-colors ${
+                  !isValidDate
+                    ? ""
+                    : !isFutureOrToday(date)
+                    ? "text-slate-300 bg-slate-50 cursor-not-allowed"
+                    : isSelected(date)
+                    ? "bg-blue-200 border border-blue-400 cursor-pointer"
+                    : info
+                    ? "bg-white border border-slate-200 cursor-pointer"
+                    : "hover:bg-slate-100 cursor-pointer"
+                } ${showAddActivity ? "pointer-events-none opacity-70" : ""}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (
+                    isValidDate &&
+                    isFutureOrToday(date) &&
+                    !showAddActivity
+                  ) {
+                    toggleDate(date);
+                    console.log(selectedDates.length);
+                    console.log(selectedDates);
+                    console.log(date);
+                  }
+                }}
+              >
+                {isValidDate ? date.getDate() : ""}
+                {isValidDate && info && (
+                  <div className="mt-1 space-y-1 w-full">
+                    {info.map((event, i) => (
+                      <div
+                        key={i}
+                        className={`px-1 py-0.5 text-[10px] rounded truncate ${event.color} text-xs cursor-pointer`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openEventDetail(event, date);
+                        }}
+                      >
+                        {event.name}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
           })}
+        </div>
       </div>
-    </div>
-                
 
       <div className="space-y-4">
         <h2 className="text-xl font-semibold text-slate-800">
@@ -944,237 +897,12 @@ const handleEditDateOnly = async () => {
       )}
     </div>
   );
-{/* Modal: Editar solo fecha/hora */}
-{showEditDateModal && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-    <div className="bg-white rounded-lg p-5 w-full max-w-sm">
-      <h2 className="text-xl font-bold mb-3">Editar Fecha y Hora</h2>
-      <p className="text-sm text-slate-600 mb-4">
-        Actividad: <strong>{showEditDateModal.activity.name}</strong>
-      </p>
-
-      {/* Mostrar la fecha seleccionada */}
-      <div className="mb-3">
-        <label className="block text-xs font-medium text-slate-700 mb-1">
-          Fecha
-        </label>
-        <input
-          type="date"
-          value={selectedDates[0]?.date || ""}
-          onChange={(e) => {
-            const newSelected = [...selectedDates];
-            newSelected[0].date = e.target.value;
-            setSelectedDates(newSelected);
-          }}
-          className="w-full p-2 border border-slate-300 rounded text-sm"
-        />
-      </div>
-
-      {/* Horario */}
-      <div className="flex gap-2 mb-3">
-        <div className="flex-1">
-          <label className="block text-xs font-medium text-slate-700 mb-1">
-            Hora Inicio
-          </label>
-          <input
-            type="time"
-            value={selectedDates[0]?.startTime || "09:00"}
-            onChange={(e) => {
-              const newSelected = [...selectedDates];
-              newSelected[0].startTime = e.target.value;
-              setSelectedDates(newSelected);
-            }}
-            className="w-full p-2 border border-slate-300 rounded text-sm"
-          />
-        </div>
-        <div className="flex-1">
-          <label className="block text-xs font-medium text-slate-700 mb-1">
-            Hora Fin
-          </label>
-          <input
-            type="time"
-            value={selectedDates[0]?.endTime || "17:00"}
-            onChange={(e) => {
-              const newSelected = [...selectedDates];
-              newSelected[0].endTime = e.target.value;
-              setSelectedDates(newSelected);
-            }}
-            className="w-full p-2 border border-slate-300 rounded text-sm"
-          />
-        </div>
-      </div>
-
-      <div className="flex gap-2">
-        <button
-          className="btn btn-outline flex-1 text-sm"
-          onClick={() => {
-            setShowEditDateModal(null);
-            setSelectedDates([]);
-          }}
-        >
-          Cancelar
-        </button>
-        <button
-          className="btn btn-primary flex-1 text-sm"
-          onClick={handleEditDateOnly}
-          disabled={selectedDates.length === 0}
-        >
-          Guardar
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-// Componente personalizado para seleccionar fecha y hora
-const DateTimePicker = ({ label, value, onChange, isEndDate = false }) => {
-  // Generar opciones para días, meses, años, horas y minutos
-  const generateDays = () => {
-    const days = [];
-    for (let i = 1; i <= 31; i++) {
-      days.push(i.toString().padStart(2, '0'));
-    }
-    return days;
-  };
-
-  const generateMonths = () => {
-    return [
-      "Ene", "Feb", "Mar", "Abr", "May", "Jun",
-      "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"
-    ];
-  };
-
-  const generateYears = () => {
-    const currentYear = new Date().getFullYear();
-    const years = [];
-    for (let i = currentYear; i <= currentYear + 5; i++) {
-      years.push(i.toString());
-    }
-    return years;
-  };
-
-  const generateHours = () => {
-    const hours = [];
-    for (let i = 0; i < 24; i++) {
-      hours.push(i.toString().padStart(2, '0'));
-    }
-    return hours;
-  };
-
-  const generateMinutes = () => {
-    const minutes = [];
-    for (let i = 0; i < 60; i += 30) { // Solo 00 y 30 para simplificar
-      minutes.push(i.toString().padStart(2, '0'));
-    }
-    return minutes;
-  };
-
-  // Parsear el valor actual
-  let dateObj = new Date(value);
-  if (isNaN(dateObj.getTime())) {
-    dateObj = new Date();
-  }
-
-  const day = String(dateObj.getDate()).padStart(2, '0');
-  const monthIndex = dateObj.getMonth();
-  const year = dateObj.getFullYear();
-  const hour = String(dateObj.getHours()).padStart(2, '0');
-  const minute = String(dateObj.getMinutes()).padStart(2, '0');
-
-  // Manejar cambios
-  const handleDateChange = (newDay, newMonth, newYear) => {
-    const newDate = new Date(newYear, newMonth, newDay);
-    const newTime = new Date(value);
-    newTime.setFullYear(newYear);
-    newTime.setMonth(newMonth);
-    newTime.setDate(newDay);
-    onChange(newTime.toISOString());
-  };
-
-  const handleTimeChange = (newHour, newMinute) => {
-    const newTime = new Date(value);
-    newTime.setHours(parseInt(newHour));
-    newTime.setMinutes(parseInt(newMinute));
-    onChange(newTime.toISOString());
-  };
-
-  return (
-    <div className="mb-4">
-      <p className="text-sm font-medium text-slate-700 mb-1">
-        {label}
-      </p>
-      <div className="bg-white rounded-lg p-4 shadow">
-        {/* Selector de Fecha */}
-        <div className="flex gap-2 mb-3">
-          <div className="flex-1">
-            <Picker
-              selectedValue={day}
-              onValueChange={(itemValue) => handleDateChange(itemValue, monthIndex, year)}
-              style={{ height: 150 }}
-            >
-              {generateDays().map((d) => (
-                <Picker.Item key={d} label={d} value={d} />
-              ))}
-            </Picker>
-          </div>
-          <div className="flex-1">
-            <Picker
-              selectedValue={monthIndex}
-              onValueChange={(itemValue) => handleDateChange(day, itemValue, year)}
-              style={{ height: 150 }}
-            >
-              {generateMonths().map((m, idx) => (
-                <Picker.Item key={idx} label={m} value={idx} />
-              ))}
-            </Picker>
-          </div>
-          <div className="flex-1">
-            <Picker
-              selectedValue={year}
-              onValueChange={(itemValue) => handleDateChange(day, monthIndex, itemValue)}
-              style={{ height: 150 }}
-            >
-              {generateYears().map((y) => (
-                <Picker.Item key={y} label={y} value={y} />
-              ))}
-            </Picker>
-          </div>
-        </div>
-
-        {/* Selector de Hora */}
-        <div className="flex gap-2">
-          <div className="flex-1">
-            <Picker
-              selectedValue={hour}
-              onValueChange={(itemValue) => handleTimeChange(itemValue, minute)}
-              style={{ height: 150 }}
-            >
-              {generateHours().map((h) => (
-                <Picker.Item key={h} label={h} value={h} />
-              ))}
-            </Picker>
-          </div>
-          <div className="flex-1">
-            <Picker
-              selectedValue={minute}
-              onValueChange={(itemValue) => handleTimeChange(hour, itemValue)}
-              style={{ height: 150 }}
-            >
-              {generateMinutes().map((m) => (
-                <Picker.Item key={m} label={m} value={m} />
-              ))}
-            </Picker>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
 
   return (
     <div className="space-y-6">
-    {userRole === "admin" && renderAdminView()}
-    {userRole === "evaluator" && renderEvaluatorView()}
-    {userRole === "competitor" && renderCompetidorView()}
+      {userRole === "admin" && renderAdminView()}
+      {userRole === "evaluator" && renderEvaluatorView()}
+      {userRole === "competitor" && renderCompetidorView()}
 
       {showDescriptionModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -1206,166 +934,146 @@ const DateTimePicker = ({ label, value, onChange, isEndDate = false }) => {
           </div>
         </div>
       )}
-  {showAddActivity && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-    <div className="bg-white rounded-lg p-5 w-full max-w-sm">
-      <h2 className="text-xl font-bold mb-3">
-        {editingActivity ? "Editar Actividad" : "Nueva Actividad"}
-      </h2>
-      {error && (
-        <div className="bg-red-100 border border-red-300 text-red-800 p-3 rounded mb-4">
-          {typeof error === 'string' ? error : 'Ocurrió un error inesperado.'}
-        </div>
-      )}
-      <Dropdown
-            items={actividades || []}
-            defaultLabel="Selecciona una actividad"
-            selectedLabel={
-              actividad?.label ||
-              "Selecciona una actividad (seleccione una fase antes)"
-            }
-            icon={FaChevronDown}
-            menuClass="w-full"
-            buttonClass="px-3 py-2 w-full border border-slate-300 rounded mb-3 text-sm text-left flex justify-between items-center"
-            disabled={editingActivity || !fase}
-            onSelect={(item) => {
-              if (!editingActivity) {
-                setNewActivityName(item);
-                setActividad(item);
-              }
- }}
-          />
-          <Dropdown
-            items={fases || []}
-            defaultLabel="Selecciona una fase*"
-            icon={FaChevronDown}
-            selectedLabel={fase?.label || "Selecciona una fase*"}
-            menuClass="w-full"
-            buttonClass="px-3 py-2 w-full border border-slate-300 rounded mb-3 text-sm text-left flex justify-between items-center"
-            disabled={editingActivity}
-            onSelect={(item) => {
-              if (!editingActivity) {
-                setActividad(null);
-                setFase(item);
-                setNewActivityName(item);
-              }
-            }}
-          />
-           <textarea
-            placeholder="Descripción (opcional)"
-            value={newActivityDescription}
-            onChange={(e) => setNewActivityDescription(e.target.value)}
-            className="w-full p-2 border border-slate-300 rounded mb-3 text-sm h-16"
-          />
 
-          
-{/* ✅ NUEVOS CAMPOS: Desde y Hasta con inputs separados */}
-<div className="space-y-4 mb-4">
-  {/* Fecha y hora de inicio */}
-  <div>
-    <p className="text-sm font-medium text-slate-700 mb-1">
-      Elige una fecha y hora de inicio
-    </p>
-    <div className="flex gap-2 mb-2">
-      <div className="flex-1">
-        <label className="block text-xs font-medium text-slate-700 mb-1">Fecha</label>
-        <input
-          type="date"
-          value={selectedDates[0]?.date || ""}
-          onChange={(e) => {
-            const newSelected = [...selectedDates];
-            newSelected[0].date = e.target.value;
-            setSelectedDates(newSelected);
-          }}
-          className="w-full p-2 border border-slate-300 rounded text-sm"
-          required
-        />
-      </div>
-      <div className="flex-1">
-        <label className="block text-xs font-medium text-slate-700 mb-1">Hora</label>
-        <input
-          type="time"
-          value={selectedDates[0]?.startTime || "09:00"}
-          onChange={(e) => {
-            const newSelected = [...selectedDates];
-            newSelected[0].startTime = e.target.value;
-            setSelectedDates(newSelected);
-          }}
-          className="w-full p-2 border border-slate-300 rounded text-sm"
-          required
-        />
-      </div>
-    </div>
-  </div>
+      {showAddActivity && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg p-5 w-full max-w-sm">
+            <h2 className="text-xl font-bold mb-3">
+              {editingActivity ? "Editar Actividad" : "Nueva Actividad"}
+            </h2>
+            {error && (
+              <div className="bg-red-100 border border-red-300 text-red-800 p-3 rounded mb-4">
+                {error}
+              </div>
+            )}
 
-  {/* Fecha y hora de fin */}
-  <div>
-    <p className="text-sm font-medium text-slate-700 mb-1">
-      Elige una fecha y hora de fin
-    </p>
-    <div className="flex gap-2 mb-2">
-      <div className="flex-1">
-        <label className="block text-xs font-medium text-slate-700 mb-1">Fecha</label>
-        <input
-          type="date"
-          value={selectedDates[1]?.date || ""}
-          onChange={(e) => {
-            const newSelected = [...selectedDates];
-            if (newSelected.length < 2) {
-              newSelected.push({
-                date: e.target.value,
-                startTime: "09:00",
-                endTime: "17:00",
-              });
-            } else {
-              newSelected[1].date = e.target.value;
-            }
-            setSelectedDates(newSelected);
-          }}
-          className="w-full p-2 border border-slate-300 rounded text-sm"
-          required
-        />
-      </div>
-      <div className="flex-1">
-        <label className="block text-xs font-medium text-slate-700 mb-1">Hora</label>
-        <input
-          type="time"
-          value={selectedDates[1]?.startTime || "17:00"}
-          onChange={(e) => {
-            const newSelected = [...selectedDates];
-            if (newSelected.length < 2) {
-              newSelected.push({
-                date: "",
-                startTime: e.target.value,
-                endTime: e.target.value,
-              });
-            } else {
-              newSelected[1].startTime = e.target.value;
-            }
-            setSelectedDates(newSelected);
-          }}
-          className="w-full p-2 border border-slate-300 rounded text-sm"
-          required
-        />
-      </div>
-    </div>
-  </div>
-</div>
-          <div className="flex gap-2">
-            <button className="btn btn-outline flex-1 text-sm" onClick={resetForm}>
-              Cancelar
-            </button>
-            <button
-              className="btn btn-primary flex-1 text-sm"
-              onClick={editingActivity ? handleUpdateActivity : handleAddActivity}
-              disabled={!fase || selectedDates.length < 2}
-            >
-              {editingActivity ? "Actualizar" : "Guardar"}
-            </button>
+            {/*   <input
+              type="text"
+              placeholder="Nombre de la actividad"
+              value={newActivityName}
+              onChange={(e) => setNewActivityName(e.target.value)}
+              className="w-full p-2 border border-slate-300 rounded mb-3 text-sm"
+            /> */}
+            <Dropdown
+              items={actividades || []}
+              defaultLabel="Selecciona una actividad"
+              selectedLabel={
+                actividad && actividad
+                  ? actividad.label
+                  : "Selecciona una actividad (seleccione una fase antes)"
+              }
+              icon={FaChevronDown}
+              menuClass="w-full"
+              buttonClass="px-3 py-2 w-full border border-slate-300 rounded mb-3 text-sm text-left flex justify-between items-center"
+              disabled={editingActivity || !fase} // <--- Aquí
+              onSelect={(item) => {
+                if (!editingActivity) {
+                  setNewActivityName(item);
+                  setActividad(item);
+                }
+              }}
+            />
+
+            <Dropdown
+              items={fases || []}
+              defaultLabel="Selecciona una fase*"
+              icon={FaChevronDown}
+              selectedLabel={fase && fase ? fase.label : "Selecciona una fase*"}
+              menuClass="w-full"
+              buttonClass="px-3 py-2 w-full border border-slate-300 rounded mb-3 text-sm text-left flex justify-between items-center"
+              disabled={editingActivity} // <--- Aquí
+              onSelect={(item) => {
+                if (!editingActivity) {
+                  setActividad(null);
+                  setFase(item);
+                  setNewActivityName(item);
+                }
+              }}
+            />
+
+            <textarea
+              placeholder="Descripción (opcional)"
+              value={newActivityDescription}
+              onChange={(e) => setNewActivityDescription(e.target.value)}
+              className="w-full p-2 border border-slate-300 rounded mb-3 text-sm h-16"
+            />
+
+            <p className="text-xs text-slate-500 mb-2">
+              Fechas seleccionadas ({selectedDates.length}):
+            </p>
+            <div className="max-h-28 overflow-y-auto mb-3 space-y-2">
+              {selectedDates.length === 0 ? (
+                <p className="text-xs italic text-slate-400">
+                  Ninguna fecha seleccionada
+                </p>
+              ) : (
+                selectedDates.map((item, index) => {
+                  const dateObj = new Date(item.date + "T00:00:00");
+
+                  const formattedDate = dateObj.toLocaleDateString();
+
+                  const handleStartTimeChange = (e) => {
+                    const newSelected = [...selectedDates];
+                    newSelected[index].startTime = e.target.value;
+                    setSelectedDates(newSelected);
+                  };
+
+                  const handleEndTimeChange = (e) => {
+                    const newSelected = [...selectedDates];
+                    newSelected[index].endTime = e.target.value;
+                    setSelectedDates(newSelected);
+                  };
+
+                  return (
+                    <div
+                      key={item.date}
+                      className="flex items-center gap-2 p-1 bg-slate-100 rounded"
+                    >
+                      <span className="text-xs flex-1">{formattedDate}</span>
+                      <div className="flex gap-1">
+                        <input
+                          type="time"
+                          value={item.startTime}
+                          onChange={handleStartTimeChange}
+                          className="w-20 text-xs p-1 border border-slate-300 rounded"
+                        />
+                        <span className="text-xs">→</span>
+                        <input
+                          type="time"
+                          value={item.endTime}
+                          onChange={handleEndTimeChange}
+                          className="w-20 text-xs p-1 border border-slate-300 rounded"
+                        />
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                className="btn btn-outline flex-1 text-sm"
+                onClick={resetForm}
+              >
+                Cancelar
+              </button>
+              <button
+                className="btn btn-primary flex-1 text-sm"
+                onClick={
+                  editingActivity ? handleUpdateActivity : handleAddActivity
+                }
+                disabled={
+                  selectedDates.length === 0 || !newActivityName || !fase
+                }
+              >
+                {editingActivity ? "Actualizar" : "Guardar"}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-          )}
+      )}
+
       {/* Modal: Detalle de Evento */}
       {showEventDetail && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">

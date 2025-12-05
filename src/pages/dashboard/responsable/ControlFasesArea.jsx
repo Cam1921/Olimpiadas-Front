@@ -1,5 +1,6 @@
 // src/pages/dashboard/responsable/ControlFasesArea.jsx
 import EvaluacionesRepository from "@/infrastructure/http/Evaluacion/repository";
+import { personaRepo } from "@/infrastructure/http/persona/repositorio";
 import { Search } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
@@ -204,16 +205,20 @@ export default function ControlFasesArea({
         params,
         idAreaNivelFase
       );
+      console.log(res);
       const adaptedData = res.data.map((item) => ({
         id: item.id_evaluacion,
         nombre: item.nombre,
         ci: item.ci || item.documento_identidad || item?.competidor?.ci || "", // para búsqueda por CI
         nota: item.nota || "Sin nota",
+        area: item.area,
+        nivel: item.nivel,
         categoria: item.estado_clasificado || "Sin categoria",
         observacion: item.descripcion || "Sin observacion",
         estado: item.estado_confirmado,
         motivo: item.observacion,
       }));
+
       setRows(adaptedData);
       setMeta(res.meta);
       setPage(res.meta.current_page);
@@ -281,10 +286,21 @@ export default function ControlFasesArea({
       setMotivoErr(`Máximo ${MAX_MOTIVO_CHARS} caracteres.`);
       return;
     }
+    console.log(rowSel);
     await EvaluacionesRepository.updateEvaluacion(rowSel.id, {
       estado_confirmacion: "rechazado",
       observacion: motivo.trim(),
     });
+    const data = {
+      id_evaluacion: rowSel.id,
+      nombre_competidor: rowSel.nombre,
+      ci_competidor: rowSel.ci,
+      area: rowSel.area,
+      nivel: rowSel.nivel,
+      motivo: motivo.trim(),
+    };
+    const res = personaRepo.sendNotificaciones(data);
+    console.log(res);
     setRows((prev) =>
       prev.map((x) =>
         x.id === rowSel.id
@@ -394,9 +410,11 @@ export default function ControlFasesArea({
             <button
               type="button"
               onClick={otorgarAval}
-              disabled={avalGranted}
+              disabled={avalGranted || estadoFase !== "En_revicion"}
               className={`inline-flex items-center gap-2 h-9 px-4 rounded-lg text-white text-sm shadow-sm ${
-                avalGranted ? "opacity-60 cursor-not-allowed" : ""
+                avalGranted || estadoFase !== "En_revicion"
+                  ? "opacity-60 cursor-not-allowed"
+                  : ""
               }`}
               style={{ background: C.brand }}
               title="Otorgar aval de fase"
@@ -533,7 +551,15 @@ export default function ControlFasesArea({
                             type="button"
                             onClick={() => aprobar(r)}
                             className="inline-flex items-center gap-2 h-8 px-3 rounded-md text-white text-xs shadow-sm"
-                            style={{ background: C.brand }}
+                            style={{
+                              background: C.brand, // gris si está deshabilitado
+                              cursor:
+                                estadoFase !== "En_revicion"
+                                  ? "not-allowed"
+                                  : "pointer",
+                              opacity: estadoFase !== "En_revicion" ? 0.7 : 1,
+                            }}
+                            disabled={estadoFase !== "En_revicion"}
                           >
                             <HiCheck size={14} />
                             Aprobar
@@ -546,7 +572,12 @@ export default function ControlFasesArea({
                               background: "#FFFFFF",
                               color: "#6B7280",
                               border: `1px solid ${C.grayB}`,
+                              cursor:
+                                estadoFase !== "En_revicion"
+                                  ? "not-allowed"
+                                  : "pointer",
                             }}
+                            disabled={estadoFase !== "En_revicion"}
                           >
                             <HiXMark size={14} />
                             Rechazar

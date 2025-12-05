@@ -22,8 +22,7 @@ import EstablecerContraseñaPage from "@/pages/auth/EstablecerContraseñaPage";
 import EntornoFinal from "./components/EntornoFinal.jsx";
 import OfficialListPage from "./components/OfficialListPage";
 
-import ResultsPage from './pages/ResultsPage.jsx';
-
+import ResultsPage from "./pages/ResultsPage.jsx";
 
 // HU10 – Publicación
 import PublicacionPage from "./pages/dashboard/Publicacion";
@@ -32,8 +31,8 @@ import PublicacionPage from "./pages/dashboard/Publicacion";
 import ControlFasesArea from "./pages/dashboard/responsable/ControlFasesArea.jsx";
 import HomePlanillas from "./pages/dashboard/evaluador/pages/HomePlanillas";
 import HomePlanillasResponsable from "./pages/dashboard/responsable/HomePlanillasResponsable";
-import PaginaPrincipal from "./components/asignar-competidores/PaginaPrincipal";
-import PreviewDistribucion from "./components/asignar-competidores/PreviewDistribucion";
+/* import PaginaPrincipal from "./components/asignar-competidores/PaginaPrincipal"; */
+/* import PreviewDistribucion from "./components/asignar-competidores/PreviewDistribucion"; */
 
 // NUEVO: HU13 – Medallero / Parametrización (ruta /dashboard/medallero-premiacion)
 import ParametrizarMedallero from "./pages/dashboard/medallero/ParametrizarMedallero.jsx";
@@ -45,12 +44,14 @@ import SideMenu from "./components/SideMenu";
 
 //Nuevo: HU 22.2 - Panel de Fases Responsable
 import ResponsablePanelFases from "./pages/dashboard/responsable/ResponsablePanelFases";
+import PaginaPrincipal from "./pages/dashboard/asignar-competidores/PaginaPrincipal";
+import PreviewDistribucion from "./pages/dashboard/asignar-competidores/PreviewDistribucion";
 
 export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
- 
+
       <Route path="/results" element={<ResultsPage />} />
       {/* Ruta directa para probar Evaluador SIN login */}
       <Route path="/activar" element={<EstablecerContraseñaPage />} />
@@ -68,7 +69,7 @@ export default function App() {
         <Route path="panel-principal" element={<PanelPrincipal />} />
         <Route path="gestion-roles" element={<ResponsablesAcademicos />} />
         <Route path="asignacion-competidores" element={<PaginaPrincipal />} />
-        //asignacion-competidores
+
         <Route
           path="asignacion-competidores/preview"
           element={<PreviewDistribucion />}
@@ -133,7 +134,7 @@ export default function App() {
         <Route path="panel-evaluador" element={<EvaluadorPanelPrincipal />} />
 
         {/* Responsable Fases HU:22.2*/}
-       <Route path="control-fases" element={<ResponsablePanelFases />} />
+        <Route path="control-fases" element={<ResponsablePanelFases />} />
       </Route>
 
       {/* Rutas de prueba (accesibles sin login) */}

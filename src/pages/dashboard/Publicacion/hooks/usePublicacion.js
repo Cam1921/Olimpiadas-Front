@@ -40,8 +40,8 @@ export function usePublicacion({ fase, area, nivel, tipo, page = 1, perPage = 10
 
         const params = {
           estado_clasificado: tipo,
-          id_area: selectedArea?.id || null,
-          id_nivel: selectedNivel?.id || null,
+          area: selectedArea?.id || null,
+          nivel: selectedNivel?.id || null,
           per_page: perPage,
           page: page,
         };
@@ -53,7 +53,7 @@ export function usePublicacion({ fase, area, nivel, tipo, page = 1, perPage = 10
             nombre: item.nombre,
             area: item.area,
             nivel: item.nivel,
-            puntaje: item.nota,
+            puntaje: item.nota || null,
             estado: item.estado_clasificado,
           }));
           setData(adaptedData);

@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import api from "@/lib/api";
 import EvaluadorHome from "./EvaluadorHome";
 import { FileSpreadsheet } from "lucide-react";
+import { estadoService } from "@/services/estadoService";
 
 // Componente principal: Calificación de Competidores
 // Requiere TailwindCSS configurado en el proyecto
@@ -42,7 +43,16 @@ export default function HomePlanillas() {
 
   useEffect(() => {
     fetchNiveles();
+    fetchEstados();
   }, []);
+  async function fetchEstados() {
+    try {
+      const res = await estadoService.actualizarEstados();
+      console.log("Estados actualizados cargadas:", res);
+    } catch (err) {
+      console.error("Error al cargar áreas:", err);
+    }
+  }
 
   const filtered = useMemo(() => {
     if (!areas) return [];
@@ -50,7 +60,7 @@ export default function HomePlanillas() {
 
     if (filter === "clasificatoria")
       return areas.filter(
-        (a) => a.fase.toLowerCase() === "clasificación".toLowerCase()
+        (a) => a.fase.toLowerCase() === "clasificacion".toLowerCase()
       );
 
     if (filter === "final")

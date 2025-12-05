@@ -64,7 +64,7 @@ const EvaluacionesRepository = {
    */
   async filtrarEvaluaciones(params = {}) {
     try {
-      const response = await api.get("/evaluaciones/filtrar", { params });
+      const response = await api.get("/evaluaciones", { params });
       return response.data;
     } catch (error) {
       console.error("Error al filtrar evaluaciones:", error);

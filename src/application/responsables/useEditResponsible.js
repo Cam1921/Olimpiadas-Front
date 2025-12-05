@@ -2,11 +2,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { responsablesRepo } from "../../infrastructure/http/responsables/repository";
 import { cleanNameInput, cleanPhoneInput, cleanCIInput } from "../../utils/text";
-import { getAreasConNiveles } from "../../infrastructure/http/areas/areaRepostory";
+
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.com$/i;
 
-export function useEditResponsible(initial, open, takenAreas) {
+export function useEditResponsible(initial, open) {
     const [form, setForm] = useState({
     nombre: "",
     apellidos: "",
@@ -14,23 +14,12 @@ export function useEditResponsible(initial, open, takenAreas) {
     telefono: "",
     ci: "",
     area: "",
+    id_area: null
   });
   ; // 🔹 Para comparar cambios
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
-  const [areasConNiveles, setAreasConNiveles] = useState({});
 
-    useEffect(() => {
-      const fetchAreas = async () => {
-        try {
-          const data = await getAreasConNiveles(); // devuelve tu JSON
-          setAreasConNiveles(data);
-        } catch (err) {
-          console.error("Error al cargar áreas con niveles:", err);
-        }
-      };
-      fetchAreas();
-    }, []);
 useEffect(() => {
     console.log("⚡ open:", open, "initial:", initial);
   if (open && initial) {
@@ -41,7 +30,7 @@ useEffect(() => {
       telefono: (initial.telefono || "").replace(/\+591\s?/, ""),
       ci: initial.ci || "",
       area: initial.area || "",
-      nivel: initial.nivel || "",
+      id_area: initial.id_area || null
     });
     setErrors({});
   }
@@ -87,19 +76,7 @@ useEffect(() => {
     setErrors(prev => ({ ...prev, ...newErrors }));
   }, [form]);
 
-function obtenerIdArea(areas, nombreArea) {
-  const area = areas.find(
-    (a) => a.nombre.toLowerCase() === nombreArea.toLowerCase()
-  );
 
-  if (!area) {
-    return { error: `No se encontró el área "${nombreArea}".` };
-  }
-
-  return {
-    id_area:area.id
-  } // ✅ solo el id del área
-}
   const submit = async () => {
     setSubmitting(true);
 
@@ -137,7 +114,7 @@ function obtenerIdArea(areas, nombreArea) {
       setSubmitting(false);
       return { ok: false };
     }
-   const  asignaciones = obtenerIdArea(areasConNiveles, form.area);
+  
     try {
        const payload = {
         nombre: form.nombre,
@@ -145,7 +122,7 @@ function obtenerIdArea(areas, nombreArea) {
         email: form.correo,
         telefono: form.telefono.replace(/\D/g, ""),
         ci: form.ci.replace(/\D/g, ""),
-        asignaciones: [asignaciones],
+        id_area: form.id_area,
       };
       console.log(payload);
       console.log(initial.id);

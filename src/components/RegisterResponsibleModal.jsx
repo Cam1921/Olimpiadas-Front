@@ -5,7 +5,6 @@ import {
   ChevronDownIcon,
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
-import { getAreasConNiveles } from "../infrastructure/http/areas/areaRepostory";
 
 export default function RegisterResponsibleModal({
   open,
@@ -16,27 +15,21 @@ export default function RegisterResponsibleModal({
   submitting,
   onSubmit,
   takenAreas = [],
+  areas = [],
 }) {
   const [showAreas, setShowAreas] = useState(false);
-  const [areasConNiveles, setAreasConNiveles] = useState([]);
+  const [areasConNiveles, setAreasConNiveles] = useState(areas);
 
-  useEffect(() => {
-    const fetchAreas = async () => {
-      try {
-        const data = await getAreasConNiveles(); // devuelve tu JSON
-        setAreasConNiveles(data);
-      } catch (err) {
-        console.error("Error al cargar áreas con niveles:", err);
-      }
-    };
-
-    fetchAreas();
-  }, []);
   useEffect(() => {
     if (!open) setShowAreas(false);
   }, [open]);
 
   if (!open) return null;
+
+  const availableAreasList = areas.filter((a) => {
+    // Buscamos el área en takenAreas
+    return !takenAreas?.find((t) => t.id === a.id);
+  });
 
   const errClass = (field) =>
     errors[field]
@@ -205,7 +198,7 @@ export default function RegisterResponsibleModal({
             {showAreas && (
               <div className="absolute z-10 mt-1 w-full card p-0 overflow-hidden">
                 <ul className="max-h-56 overflow-auto">
-                  {areasConNiveles
+                  {/*  {areasConNiveles
                     .filter((a) => !takenAreas.includes(a.nombre))
                     .map((a) => (
                       <li key={a.id}>
@@ -221,7 +214,30 @@ export default function RegisterResponsibleModal({
                           {a.nombre}
                         </button>
                       </li>
-                    ))}
+                    ))} */}
+                  {availableAreasList.length > 0 ? (
+                    availableAreasList.map((a) => (
+                      <li key={a.id}>
+                        <button
+                          className="w-full text-left px-4 py-3 hover:bg-slate-50"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => {
+                            setField("id_area", a.id);
+                            setField("area", a.nombre);
+                            setShowAreas(false);
+                          }}
+                        >
+                          {a.nombre}
+                        </button>
+                      </li>
+                    ))
+                  ) : (
+                    <li>
+                      <p className="px-4 py-3 text-slate-400">
+                        Todas las áreas ya están completas.
+                      </p>
+                    </li>
+                  )}
                 </ul>
               </div>
             )}

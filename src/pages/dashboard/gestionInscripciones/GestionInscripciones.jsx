@@ -66,8 +66,8 @@ export default function InscripcionesManagement() {
   const IsActive = async () => {
     try {
       const actividad = await actividadService.verificarActividad(
-        "Inscripcion",
-        "Importacion de competidores"
+        "inscripcion",
+        "importacion"
       );
       console.log(actividad.activo);
       setIsActivo(actividad.activo);
