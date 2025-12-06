@@ -21,6 +21,7 @@ import NotificacionesPage from "@/pages/dashboard/notificaciones/NotificacionesP
 import EstablecerContraseñaPage from "@/pages/auth/EstablecerContraseñaPage";
 import EntornoFinal from "./components/EntornoFinal.jsx";
 import OfficialListPage from "./components/OfficialListPage";
+import TrazabilidadLogPage from "./pages/dashboard/logDeCambios/index.jsx";
 
 import ResultsPage from "./pages/ResultsPage.jsx";
 
@@ -76,6 +77,7 @@ export default function App() {
           <Route index element={<RoleIndexRedirect />} />
           {/* Admin */}
           <Route path="panel-principal" element={<PanelPrincipal />} />
+          <Route path="trazabilidad-log" element={<TrazabilidadLogPage />} />
           <Route path="gestion-roles" element={<ResponsablesAcademicos />} />
           <Route path="asignacion-competidores" element={<PaginaPrincipal />} />
 
