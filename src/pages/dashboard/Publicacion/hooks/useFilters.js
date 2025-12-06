@@ -1,12 +1,14 @@
 // src/pages/dashboard/publicacion/hooks/useFilters.js
 import { useMemo, useState, useEffect } from "react";
 import { getAreasConNiveles } from "@/infrastructure/http/areas/areaRepostory";
+import { faseService } from "@/services/faseService";
 
 export function useFilters() {
-  const [fase, setFase] = useState("clasificatoria"); // "clasificatoria" | "final"
+  const [fase, setFase] = useState([]); // "clasificatoria" | "final"
   const [area, setArea] = useState("Todas las áreas");
+  const [fases, setFases] = useState([]); 
   const [nivel, setNivel] = useState("Todos los niveles");
-  const [data, setData] = useState([]); // datos del backend
+  const [dataAreas, setData] = useState([]); // datos del backend
   const [loading, setLoading] = useState(true);
 
   // Fetch al backend
@@ -17,7 +19,7 @@ export function useFilters() {
         
         console.log(res);
         if(res){
-setData(res);       
+           setData(res);       
         }    else{
           console.log("no se obtubo datos de la base de datos");
         }
@@ -29,17 +31,29 @@ setData(res);
       }
     }
 
-    fetchAreas();
+     fetchAreas();
+     fetchFases()
   }, []);
+    async function fetchFases() {
+    try {
+      const res = await faseService.getAll();
+      const f = res.data
+      setFases(f || []);
+      setFase( f.find(e=>e.nombre=="clasificacion"))
+      console.log(res);
+    } catch (e) {
+      console.log(e);
+    }
+  }
 
   // Mapa área → niveles
   const LEVELS_BY_AREA = useMemo(() => {
     const map = {};
-    data.forEach((a) => {
+    dataAreas.forEach((a) => {
       map[a.nombre] = a.niveles.map((n) => n.nombre_nivel);
     });
     return map;
-  }, [data]);
+  }, [dataAreas]);
 
   // Niveles disponibles según área seleccionada
   const nivelesDisponibles = useMemo(() => {
@@ -58,8 +72,10 @@ setData(res);
   );
 
   return {
+    dataAreas,
     fase,
     setFase,
+    fases,
     area,
     setArea: handleSetArea,
     nivel,

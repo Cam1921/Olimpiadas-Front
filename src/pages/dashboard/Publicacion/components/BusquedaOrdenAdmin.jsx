@@ -1,4 +1,5 @@
 // src/pages/dashboard/publicacion/components/BusquedaOrdenAdmin.jsx
+import { useEffect } from "react";
 import { HiMagnifyingGlass, HiArrowsUpDown } from "react-icons/hi2";
 
 export default function BusquedaOrdenAdmin({
@@ -8,8 +9,8 @@ export default function BusquedaOrdenAdmin({
   onSortChange,
   disabled,
 }) {
-  const isNombre = (sort?.by || "nota") === "nombre";
-  const isNota = (sort?.by || "nota") === "nota";
+  const isNombre = (sort?.by || "puntaje_total") === "nombre";
+  const isNota = (sort?.by || "puntaje_total") === "nota";
 
   const dirSymbol = (by) =>
     sort?.by === by ? (sort.dir === "asc" ? "↑" : "↓") : "";
@@ -19,7 +20,7 @@ export default function BusquedaOrdenAdmin({
       onSortChange({ by, dir: sort.dir === "asc" ? "desc" : "asc" });
     } else {
       // predeterminado: nota ↓, nombre ↑
-      onSortChange({ by, dir: by === "nota" ? "desc" : "asc" });
+      onSortChange({ by, dir: by === "puntaje_total" ? "desc" : "asc" });
     }
   };
 
@@ -40,7 +41,6 @@ export default function BusquedaOrdenAdmin({
           placeholder="Buscar por nombre…"
           value={query}
           onChange={(e) => onQueryChange(e.target.value)}
-          disabled={disabled}
         />
       </div>
 
@@ -51,7 +51,9 @@ export default function BusquedaOrdenAdmin({
           disabled={disabled}
           onClick={() => toggleBy("nombre")}
           className={`${baseBtn} ${isNombre ? active : inactive}`}
-          title={`Ordenar por nombre ${dirSymbol("nombre") ? (sort.dir === "asc" ? "(A–Z)" : "(Z–A)") : ""}`}
+          title={`Ordenar por nombre ${
+            dirSymbol("nombre") ? (sort.dir === "asc" ? "(A–Z)" : "(Z–A)") : ""
+          }`}
         >
           <HiArrowsUpDown className="opacity-90" />
           <span>Nombre</span>
@@ -61,13 +63,19 @@ export default function BusquedaOrdenAdmin({
         <button
           type="button"
           disabled={disabled}
-          onClick={() => toggleBy("nota")}
+          onClick={() => toggleBy("puntaje_total")}
           className={`${baseBtn} ${isNota ? active : inactive}`}
-          title={`Ordenar por nota ${dirSymbol("nota") ? (sort.dir === "asc" ? "(asc)" : "(desc)") : ""}`}
+          title={`Ordenar por nota ${
+            dirSymbol("puntaje_total")
+              ? sort.dir === "asc"
+                ? "(asc)"
+                : "(desc)"
+              : ""
+          }`}
         >
           <HiArrowsUpDown className="opacity-90" />
           <span>Nota</span>
-          <span className="text-xs">{dirSymbol("nota")}</span>
+          <span className="text-xs">{dirSymbol("puntaje_total")}</span>
         </button>
       </div>
     </div>
