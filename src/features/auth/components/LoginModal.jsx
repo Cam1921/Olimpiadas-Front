@@ -160,11 +160,6 @@ export default function LoginModal({ open, onClose }) {
             {passInvalid && <p id="password-help" className="text-[var(--danger)] text-sm mt-1">{passwordError}</p>}
           </div>
 
-          {/* ¿Olvidaste tu contraseña? */}
-          <div className="text-center">
-            <a href="#" className="text-ink/60 hover:text-ink underline-offset-2">¿Olvidaste tu contraseña?</a>
-          </div>
-
           {/* Error de credenciales (permanece visible) */}
           {credError && <p className="text-[var(--danger)] text-sm">{credError}</p>}
 
