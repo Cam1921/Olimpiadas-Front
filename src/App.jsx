@@ -21,6 +21,7 @@ import NotificacionesPage from "@/pages/dashboard/notificaciones/NotificacionesP
 import EstablecerContraseñaPage from "@/pages/auth/EstablecerContraseñaPage";
 import EntornoFinal from "./components/EntornoFinal.jsx";
 import OfficialListPage from "./components/OfficialListPage";
+import TrazabilidadLogPage from "./pages/dashboard/logDeCambios/index.jsx";
 
 import ResultsPage from './pages/ResultsPage.jsx';
 
@@ -58,6 +59,8 @@ export default function App() {
         <Route index element={<RoleIndexRedirect />} />
         {/* Admin */}
         <Route path="panel-principal" element={<PanelPrincipal />} />
+        {/* Trazabilidad / Log de Cambios */}
+        <Route path="trazabilidad-log" element={<TrazabilidadLogPage />} />
         <Route path="gestion-roles" element={<ResponsablesAcademicos />} />
         <Route path="asignacion-competidores" element={<PaginaPrincipal />} />
         //asignacion-competidores
@@ -129,6 +132,9 @@ export default function App() {
       {/* Rutas de prueba (accesibles sin login) */}
       <Route path="/responsables-test" element={<ResponsablesAcademicos />} />
       <Route path="/evaluadores-test" element={<Evaluadores />} />
+
+      
+
 
       {/* 🔹 Rutas para Entorno Final y Lista Oficial (pruebas visuales) */}
       <Route path="/lista-oficial" element={<OfficialListPage />} />
