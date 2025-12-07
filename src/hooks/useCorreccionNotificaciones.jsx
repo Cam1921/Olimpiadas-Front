@@ -1,23 +1,20 @@
 // src/hooks/useCorreccionNotificaciones.js
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   getNotificacionesCorreccion,
   marcarNotificacionComoLeida,
 } from "@/services/notificacionesCorreccionApi";
+import EvaluadorHome from "@/pages/dashboard/evaluador/pages";
 
 // Contexto
 const CorreccionNotificacionesContext = createContext(null);
 
 export function CorreccionNotificacionesProvider({ children }) {
-  const [notificaciones, setNotificaciones] = useState([]);
+  const [notificaciones, setNotificaciones] = useState({});
   const [isOpen, setIsOpen] = useState(false); // controla el modal
   const [toastMessage, setToastMessage] = useState(null); // mensaje del toast
+  const [selectedNotificacion, setSelectedNotificacion] = useState(null);
   const navigate = useNavigate();
 
   // Cargar notificaciones al montar
@@ -28,13 +25,14 @@ export function CorreccionNotificacionesProvider({ children }) {
   const cargarNotificaciones = async () => {
     try {
       const data = await getNotificacionesCorreccion();
-      setNotificaciones(data || []);
+      console.log("·· notificaciones de corrección:", data);
+      setNotificaciones(data || {});
     } catch (error) {
       console.error("Error cargando notificaciones de corrección:", error);
     }
   };
-
-  const unreadCount = notificaciones.filter((n) => !n.leida).length;
+  console.log(notificaciones);
+  const unreadCount = notificaciones?.no_leidas?.length ?? 0;
 
   const openModal = () => setIsOpen(true);
   const closeModal = () => setIsOpen(false);
@@ -42,21 +40,25 @@ export function CorreccionNotificacionesProvider({ children }) {
   const handleClickNotificacion = async (notificacion) => {
     try {
       setToastMessage("Redirigiendo a la corrección de notas...");
-
-      // marcar como leída en backend
+      console.log("notificacion", notificacion);
+      const res = await marcarNotificacionComoLeida(notificacion.id);
+      console.log(res);
+      /*   // marcar como leída en backend
       await marcarNotificacionComoLeida(notificacion.id);
-
+    
       // actualizar en memoria
       setNotificaciones((prev) =>
-        prev.map((n) =>
-          n.id === notificacion.id ? { ...n, leida: true } : n
-        )
+        prev.map((n) => (n.id === notificacion.id ? { ...n, leida: true } : n))
       );
 
       // TODO: ajusta esta ruta a tu pantalla real de registro de notas
       navigate("/dashboard/registrar-notas", {
         state: { fromNotificationId: notificacion.id },
       });
+      
+ */
+      cargarNotificaciones();
+      setSelectedNotificacion(notificacion);
 
       setTimeout(() => setToastMessage(null), 2500);
     } catch (error) {
@@ -74,6 +76,8 @@ export function CorreccionNotificacionesProvider({ children }) {
     closeModal,
     handleClickNotificacion,
     toastMessage,
+    selectedNotificacion,
+    setSelectedNotificacion,
   };
 
   return (
@@ -92,6 +96,3 @@ export function useCorreccionNotificaciones() {
   }
   return ctx;
 }
-
-
-

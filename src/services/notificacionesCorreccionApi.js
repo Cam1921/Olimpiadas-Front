@@ -1,11 +1,15 @@
 // src/services/api/notificacionesCorreccionApi.js
 
+import { personaRepo } from "@/infrastructure/http/persona/repositorio";
+
 // Luego lo cambias por tu apiClient real:
 // import { apiClient } from "@/application/apiClient";
 
 export async function getNotificacionesCorreccion() {
-  // Datos de prueba
-  return [
+  const { data } = await personaRepo.getNotificaciones();   
+  console.log("correcion de notificaciones",data);
+  return data || {}; 
+ /*  return [
     {
       id: 1,
       responsableNombre: "María González",
@@ -29,15 +33,15 @@ export async function getNotificacionesCorreccion() {
       leida: false,
     },
   ];
-
+ */
   // Versión real:
   // const { data } = await apiClient.get("/evaluador/notificaciones-correccion");
   // return data;
 }
 
 export async function marcarNotificacionComoLeida(id) {
+  const { data } = await personaRepo.marcarLeidoNotificaciones(id);  
   console.log("Marcando notificación como leída:", id);
-
-  // Versión real:
-  // await apiClient.patch(`/evaluador/notificaciones-correccion/${id}/leer`);
+  return data || {};
+  
 }
