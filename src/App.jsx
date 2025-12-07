@@ -23,7 +23,7 @@ import EntornoFinal from "./components/EntornoFinal.jsx";
 import OfficialListPage from "./components/OfficialListPage";
 import TrazabilidadLogPage from "./pages/dashboard/logDeCambios/index.jsx";
 
-import ResultsPage from "./pages/ResultsPage.jsx";
+import ResultsPage from "./pages/dashboard/resultadosHome/ResultsPage.jsx";
 
 // HU10 – Publicación
 import PublicacionPage from "./pages/dashboard/Publicacion";

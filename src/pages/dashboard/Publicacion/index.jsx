@@ -14,6 +14,7 @@ import api from "@/lib/api";
 import BusquedaOrdenAdmin from "./components/BusquedaOrdenAdmin";
 import { faseService } from "@/services/faseService";
 import ResultsFinalTable from "./components/ResultsFinalTable";
+import ConfirmationModal from "@/components/ConfirmationModal";
 
 /* ===========================
    Utils de exportación (tu lógica)
@@ -147,6 +148,8 @@ export default function PublicacionPage() {
     generarListas,
     publicarResultados,
     limpiarToast,
+    openModalConfirm,
+    setOpenModalConfirm,
   } = usePublicacion({ fase, area, nivel, tipo, page, perPage, query, sort });
 
   // Para exportación (tu lógica)
@@ -212,7 +215,7 @@ export default function PublicacionPage() {
       <HeaderBar
         isGenerating={flowOpen}
         onGenerar={() => setFlowOpen(true)}
-        onPublicar={publicarResultados}
+        onPublicar={() => setOpenModalConfirm(true)}
       />
 
       {/* Tabs de fase (dejamos final deshabilitado como tenías) */}
@@ -252,7 +255,15 @@ export default function PublicacionPage() {
           onClose={limpiarToast}
         />
       )}
-
+      <ConfirmationModal
+        open={openModalConfirm}
+        onClose={() => setOpenModalConfirm(false)}
+        onConfirm={publicarResultados}
+        title="Publicar resultados"
+        message="Esta acción no se puede deshacer."
+        confirmText="Sí, continuar"
+        cancelText="Cancelar"
+      />
       {/* Modal "Generar listas" (tu flujo) */}
       <GenerateListsFlow
         open={flowOpen}

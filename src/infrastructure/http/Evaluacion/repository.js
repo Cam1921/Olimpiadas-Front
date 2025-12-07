@@ -81,7 +81,16 @@ const EvaluacionesRepository = {
       console.error("Error al filtrar evaluaciones:", error);
       throw error.response?.data || error;
     }
-  }
+  },  
+    async filtrarResultados(params = {}) {
+    try {
+      const response = await api.get("/resultados", { params });
+      return response.data;
+    } catch (error) {
+      console.error("Error al filtrar evaluaciones:", error);
+      throw error.response?.data || error;
+    }
+  },
 };
 
 export default EvaluacionesRepository;

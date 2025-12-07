@@ -14,7 +14,7 @@ import {
   HiChevronRight,
 } from "react-icons/hi2";
 import olimpiadas from "@/assets/olimpiadas.png";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const AREAS = [
   {
@@ -87,7 +87,7 @@ const NOVEDADES = [
 
 export default function Home() {
   const [open, setOpen] = useState(false);
-
+  const navigate = useNavigate();
   // ======== CARRUSEL SIMPLE: ventana de 3 áreas ========
   const [areaIndex, setAreaIndex] = useState(0); // índice del primer área visible
 
@@ -326,7 +326,12 @@ export default function Home() {
                 Consulta resultados por área, fase y clasificación. Accede a
                 toda la información de manera transparente y actualizada.
               </p>
-              <button className="mt-6 rounded-full bg-[#0284c7] px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-[#0284c7]/40 transition hover:-translate-y-0.5 hover:shadow-xl">
+              <button
+                onClick={() => {
+                  navigate("/results");
+                }}
+                className="mt-6 rounded-full bg-[#0284c7] px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-[#0284c7]/40 transition hover:-translate-y-0.5 hover:shadow-xl"
+              >
                 Consultar resultados
               </button>
             </div>
