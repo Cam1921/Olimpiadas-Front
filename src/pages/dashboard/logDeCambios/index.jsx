@@ -1,4 +1,3 @@
-// src/pages/dashboard/logDeCambios/index.jsx
 import React, { useState, forwardRef } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -110,11 +109,11 @@ const DateButton = forwardRef(({ value, onClick }, ref) => (
   <button
     ref={ref}
     onClick={onClick}
-    className="w-full flex items-center gap-2 justify-start px-3 py-2 border rounded bg-white text-sm"
+    className="w-full flex items-center gap-2 justify-start px-3 py-2 border rounded bg-white text-xs sm:text-sm"
     type="button"
   >
     <FiCalendar className="text-gray-600" />
-    <span className="text-sm text-gray-700">{value || "Seleccionar fecha"}</span>
+    <span className="text-xs sm:text-sm text-gray-700">{value || "Seleccionar fecha"}</span>
   </button>
 ));
 
@@ -145,7 +144,7 @@ export default function TrazabilidadLogPage() {
   const handleExport = (fmt) => {
     const filtered = applyFilters();
     console.info("Exportando", fmt, filtered);
-    // Placeholder: you will call backend /logs/export? or build CSV on client
+    // Placeholder: llamar a backend /logs/export?format=excel
   };
 
   const applyFilters = () => {
@@ -170,88 +169,111 @@ export default function TrazabilidadLogPage() {
   const totalEliminaciones = logs.filter(l => l.tipoAccion === "Eliminación").length;
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-4 md:space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-semibold">Trazabilidad y Log de Cambios</h2>
-        <p className="text-sm text-gray-500">Registro completo de modificaciones de notas con trazabilidad garantizada</p>
+        <h2 className="text-xl md:text-2xl font-semibold">Trazabilidad y Log de Cambios</h2>
+        <p className="text-xs md:text-sm text-gray-500">
+          Registro completo de modificaciones de notas con trazabilidad garantizada
+        </p>
       </div>
 
       {/* KPI cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-4 bg-white rounded shadow-sm border">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+        <div className="p-3 md:p-4 bg-white rounded shadow-sm border">
           <div className="flex justify-between items-center">
-            <div className="text-sm text-gray-500">Registros hoy</div>
-            <FiCalendar className="w-5 h-5 text-blue-500" />
+            <div className="text-xs md:text-sm text-gray-500">Registros hoy</div>
+            <FiCalendar className="w-4 h-4 md:w-5 md:h-5 text-blue-500" />
           </div>
-          <div className="mt-3 text-2xl font-bold text-primary">{registrosHoy}</div>
+          <div className="mt-2 md:mt-3 text-xl md:text-2xl font-bold text-primary">{registrosHoy}</div>
         </div>
 
-        <div className="p-4 bg-white rounded shadow-sm border">
+        <div className="p-3 md:p-4 bg-white rounded shadow-sm border">
           <div className="flex justify-between items-center">
-            <div className="text-sm text-gray-500">Inserciones</div>
-            <FiPlusCircle className="w-5 h-5 text-blue-500" />
+            <div className="text-xs md:text-sm text-gray-500">Inserciones</div>
+            <FiPlusCircle className="w-4 h-4 md:w-5 md:h-5 text-blue-500" />
           </div>
-          <div className="mt-3 flex items-center gap-2">
-            <div className="text-2xl font-bold text-blue-600">{totalInserciones}</div>
-            <span className="px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-800 border border-blue-200">insert</span>
-          </div>
-        </div>
-
-        <div className="p-4 bg-white rounded shadow-sm border">
-          <div className="flex justify-between items-center">
-            <div className="text-sm text-gray-500">Actualizaciones</div>
-            <FiRefreshCw className="w-5 h-5 text-green-500" />
-          </div>
-          <div className="mt-3 flex items-center gap-2">
-            <div className="text-2xl font-bold text-green-600">{totalActualizaciones}</div>
-            <span className="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-800 border border-green-200">update</span>
+          <div className="mt-2 md:mt-3 flex items-center gap-2">
+            <div className="text-xl md:text-2xl font-bold text-blue-600">{totalInserciones}</div>
+            <span className="px-2 py-0.5 text-[10px] md:text-xs rounded-full bg-blue-100 text-blue-800 border border-blue-200">
+              insert
+            </span>
           </div>
         </div>
 
-        <div className="p-4 bg-white rounded shadow-sm border">
+        <div className="p-3 md:p-4 bg-white rounded shadow-sm border">
           <div className="flex justify-between items-center">
-            <div className="text-sm text-gray-500">Eliminaciones</div>
-            <FiTrash2 className="w-5 h-5 text-red-500" />
+            <div className="text-xs md:text-sm text-gray-500">Actualizaciones</div>
+            <FiRefreshCw className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
           </div>
-          <div className="mt-3 flex items-center gap-2">
-            <div className="text-2xl font-bold text-red-600">{totalEliminaciones}</div>
-            <span className="px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-800 border border-red-200">delete</span>
+          <div className="mt-2 md:mt-3 flex items-center gap-2">
+            <div className="text-xl md:text-2xl font-bold text-green-600">{totalActualizaciones}</div>
+            <span className="px-2 py-0.5 text-[10px] md:text-xs rounded-full bg-green-100 text-green-800 border border-green-200">
+              update
+            </span>
+          </div>
+        </div>
+
+        <div className="p-3 md:p-4 bg-white rounded shadow-sm border">
+          <div className="flex justify-between items-center">
+            <div className="text-xs md:text-sm text-gray-500">Eliminaciones</div>
+            <FiTrash2 className="w-4 h-4 md:w-5 md:h-5 text-red-500" />
+          </div>
+          <div className="mt-2 md:mt-3 flex items-center gap-2">
+            <div className="text-xl md:text-2xl font-bold text-red-600">{totalEliminaciones}</div>
+            <span className="px-2 py-0.5 text-[10px] md:text-xs rounded-full bg-red-100 text-red-800 border border-red-200">
+              delete
+            </span>
           </div>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white p-4 rounded border">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
-          <select className="p-2 border rounded" value={filtroArea} onChange={e => { setFiltroArea(e.target.value); setFiltroNivel("Todos"); }}>
-            {/* label descriptiva en vez de "Todas" */}
+      <div className="bg-white p-3 md:p-4 rounded border">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-2 md:gap-3">
+          <select
+            className="p-2 border rounded text-xs md:text-sm"
+            value={filtroArea}
+            onChange={e => { setFiltroArea(e.target.value); setFiltroNivel("Todos"); }}
+          >
             <option value="Todas">Área</option>
             {areas.map(a => <option key={a} value={a}>{a}</option>)}
           </select>
 
-          <select className="p-2 border rounded" value={filtroNivel} onChange={e => setFiltroNivel(e.target.value)}>
-            {/* label descriptiva en vez de "Todos" */}
+          <select
+            className="p-2 border rounded text-xs md:text-sm"
+            value={filtroNivel}
+            onChange={e => setFiltroNivel(e.target.value)}
+          >
             <option value="Todos">Nivel</option>
             {nivelOptions.map(n => <option key={n} value={n}>{n}</option>)}
           </select>
 
-          <select className="p-2 border rounded" value={filtroFase} onChange={e => setFiltroFase(e.target.value)}>
-            {/* label descriptiva */}
+          <select
+            className="p-2 border rounded text-xs md:text-sm"
+            value={filtroFase}
+            onChange={e => setFiltroFase(e.target.value)}
+          >
             <option value="Todas">Fase</option>
             <option value="Clasificación">Clasificación</option>
             <option value="Final">Final</option>
           </select>
 
-          <select className="p-2 border rounded" value={filtroRol} onChange={e => setFiltroRol(e.target.value)}>
-            {/* label descriptiva */}
+          <select
+            className="p-2 border rounded text-xs md:text-sm"
+            value={filtroRol}
+            onChange={e => setFiltroRol(e.target.value)}
+          >
             <option value="Todos">Tipo de rol</option>
             <option value="Evaluador">Evaluador</option>
             <option value="Responsable">Responsable</option>
           </select>
 
-          <select className="p-2 border rounded" value={filtroTipo} onChange={e => setFiltroTipo(e.target.value)}>
-            {/* label descriptiva */}
+          <select
+            className="p-2 border rounded text-xs md:text-sm"
+            value={filtroTipo}
+            onChange={e => setFiltroTipo(e.target.value)}
+          >
             <option value="Todos">Tipo de cambio</option>
             <option value="Inserción">Inserción</option>
             <option value="Actualización">Actualización</option>
@@ -259,7 +281,6 @@ export default function TrazabilidadLogPage() {
           </select>
 
           <div>
-            {/* react-datepicker usando un CustomInput (DateButton) */}
             <DatePicker
               selected={selectedDate}
               onChange={(date) => setSelectedDate(date)}
@@ -272,22 +293,29 @@ export default function TrazabilidadLogPage() {
           </div>
         </div>
 
-        <div className="mt-3 flex gap-2">
-          <button onClick={handleLimpiar} className="px-3 py-1 border rounded text-sm flex items-center gap-2">
+        <div className="mt-3 flex flex-col sm:flex-row gap-2">
+          <button
+            onClick={handleLimpiar}
+            className="px-3 py-1 border rounded text-xs md:text-sm flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start"
+          >
             <FiRefreshCw /> Limpiar filtros
           </button>
 
-          <div className="ml-auto flex gap-2">
-            <button onClick={() => handleExport('excel')} className="px-3 py-1 bg-blue-600 text-white rounded text-sm flex items-center gap-2"><FiDownload /> Exportar Excel</button>
-            {/* CSV eliminado por petición */}
+          <div className="sm:ml-auto flex gap-2 w-full sm:w-auto justify-center sm:justify-end">
+            <button
+              onClick={() => handleExport('excel')}
+              className="px-3 py-1 bg-blue-600 text-white rounded text-xs md:text-sm flex items-center gap-2 w-full sm:w-auto justify-center"
+            >
+              <FiDownload /> Exportar Excel
+            </button>
           </div>
         </div>
       </div>
 
       {/* Table */}
-      <div className="bg-white p-4 rounded border overflow-x-auto">
-        <table className="min-w-full text-sm">
-          <thead className="text-left text-xs text-gray-600">
+      <div className="bg-white p-3 md:p-4 rounded border overflow-x-auto">
+        <table className="min-w-full text-xs md:text-sm">
+          <thead className="text-left text-[11px] md:text-xs text-gray-600">
             <tr>
               <th className="px-3 py-2">Fecha/Hora</th>
               <th className="px-3 py-2">Competidor</th>
@@ -305,31 +333,72 @@ export default function TrazabilidadLogPage() {
           </thead>
           <tbody>
             {filteredLogs.length === 0 ? (
-              <tr><td colSpan="12" className="py-8 text-center text-gray-500">No se encontraron registros</td></tr>
+              <tr>
+                <td colSpan="12" className="py-8 text-center text-gray-500 text-xs md:text-sm">
+                  No se encontraron registros
+                </td>
+              </tr>
             ) : filteredLogs.map(log => (
               <tr key={log.id} className="border-t">
                 <td className="px-3 py-2 align-top">
                   <div className="flex items-center gap-2">
-                    <FiClock className="text-gray-500" />
+                    <FiClock className="text-gray-500 min-w-[14px]" />
                     <div>
                       <div>{format(new Date(log.fecha + "T00:00:00"), "dd/MM/yyyy")}</div>
-                      <div className="text-xs text-gray-500">{log.hora}</div>
+                      <div className="text-[11px] md:text-xs text-gray-500">{log.hora}</div>
                     </div>
                   </div>
                 </td>
                 <td className="px-3 py-2">{log.competidor}</td>
-                <td className="px-3 py-2"><span className="px-2 py-0.5 bg-gray-100 rounded text-xs">{log.area}</span></td>
-                <td className="px-3 py-2"><span className="px-2 py-0.5 bg-gray-100 rounded text-xs">{log.nivel}</span></td>
-                <td className="px-3 py-2"><span className="px-2 py-0.5 border rounded text-xs">{log.fase}</span></td>
-                <td className="px-3 py-2">{log.notaAntes ? <code>{log.notaAntes}</code> : <span className="text-gray-400">—</span>}</td>
-                <td className="px-3 py-2">{log.notaDespues ? <code>{log.notaDespues}</code> : <span className="text-gray-400">—</span>}</td>
+                <td className="px-3 py-2">
+                  <span className="px-2 py-0.5 bg-gray-100 rounded text-[11px] md:text-xs">
+                    {log.area}
+                  </span>
+                </td>
+                <td className="px-3 py-2">
+                  <span className="px-2 py-0.5 bg-gray-100 rounded text-[11px] md:text-xs">
+                    {log.nivel}
+                  </span>
+                </td>
+                <td className="px-3 py-2">
+                  <span className="px-2 py-0.5 border rounded text-[11px] md:text-xs">
+                    {log.fase}
+                  </span>
+                </td>
+                <td className="px-3 py-2">
+                  {log.notaAntes ? (
+                    <code>{log.notaAntes}</code>
+                  ) : (
+                    <span className="text-gray-400">—</span>
+                  )}
+                </td>
+                <td className="px-3 py-2">
+                  {log.notaDespues ? (
+                    <code>{log.notaDespues}</code>
+                  ) : (
+                    <span className="text-gray-400">—</span>
+                  )}
+                </td>
                 <td className="px-3 py-2">{log.usuario}</td>
-                <td className="px-3 py-2"><span className="px-2 py-0.5 bg-gray-100 rounded text-xs">{log.rol}</span></td>
-                <td className="px-3 py-2"><span className={`px-2 py-0.5 border rounded text-xs ${tipoAccionClasses(log.tipoAccion)}`}>{log.tipoAccion}</span></td>
-                <td className="px-3 py-2 max-w-xs truncate" title={log.motivo}>{log.motivo}</td>
+                <td className="px-3 py-2">
+                  <span className="px-2 py-0.5 bg-gray-100 rounded text-[11px] md:text-xs">
+                    {log.rol}
+                  </span>
+                </td>
+                <td className="px-3 py-2">
+                  <span className={`px-2 py-0.5 border rounded text-[11px] md:text-xs ${tipoAccionClasses(log.tipoAccion)}`}>
+                    {log.tipoAccion}
+                  </span>
+                </td>
+                <td className="px-3 py-2 max-w-xs truncate" title={log.motivo}>
+                  {log.motivo}
+                </td>
                 <td className="px-3 py-2 text-center">
-                  <button onClick={() => handleVerDetalle(log)} className="p-1 rounded hover:bg-gray-100">
-                    <FiEye className="w-5 h-5 text-blue-600" />
+                  <button
+                    onClick={() => handleVerDetalle(log)}
+                    className="p-1 rounded hover:bg-gray-100 inline-flex items-center justify-center"
+                  >
+                    <FiEye className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
                   </button>
                 </td>
               </tr>
