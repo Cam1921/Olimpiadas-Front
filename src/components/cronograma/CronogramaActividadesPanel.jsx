@@ -14,7 +14,6 @@ import { faseService } from "@/services/faseService";
 import Dropdown from "../Dropdown";
 import { FaChevronDown } from "react-icons/fa";
 
-// ✅ Función robusta para manejar fechas sin errores de zona horaria
 const parseLocalDate = (dateInput) => {
   if (!dateInput) return null;
   if (dateInput instanceof Date && !isNaN(dateInput.getTime())) {
@@ -68,12 +67,15 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
   const [fase, setFase] = useState(null);
   const [actividades, setActividades] = useState([]);
   const [actividad, setActividad] = useState(null);
+  const [selectedDay, setSelectedDay] = useState(null);
 
   useEffect(() => {
     setCurrentMonth(new Date(selectedYear, selectedMonth, 1));
   }, [selectedYear, selectedMonth]);
 
+  // === FETCH FUNCTIONS ===
   const fetchActivities = async (faseid) => {
+    setActividades([]); // ✅ Limpia para evitar duplicados
     if (!faseid) return;
     try {
       setLoading(true);
@@ -118,26 +120,30 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
             while (current <= end) {
               const dateStr = getDateString(current);
               if (dateStr === getDateString(start)) {
-                dates.push({ date: dateStr, time: item.hora_inicio_ini });
+                dates.push({ date: dateStr, time: item.hora_inicio_ini || "09:00" });
               } else if (dateStr === getDateString(end)) {
-                dates.push({ date: dateStr, time: item.hora_inicio_fin });
+                dates.push({ date: dateStr, time: item.hora_inicio_fin || "17:00" });
               } else {
                 dates.push({ date: dateStr, time: "00:00" });
               }
               current.setDate(current.getDate() + 1);
             }
           } else if (item.fecha_inicio) {
-            dates.push({ date: item.fecha_inicio.split("T")[0], time: item.hora_inicio_ini });
+            dates.push({ date: item.fecha_inicio.split("T")[0], time: item.hora_inicio_ini || "09:00" });
           }
           return {
             id: item.id,
             name: item.nombre,
             description: item.descripcion,
-            fase: item.fase,
-            fase_id: item.fase_id,
+            fase: item.nombre,
+            fase_id: null,
             color: getRandomColor(),
             published: item.estado_publicado,
             dates,
+            fecha_inicio_original: item.fecha_inicio ? item.fecha_inicio.split("T")[0] : "",
+            fecha_fin_original: item.fecha_fin ? item.fecha_fin.split("T")[0] : "",
+            hora_inicio_ini_original: item.hora_inicio_ini || "09:00",
+            hora_inicio_fin_original: item.hora_inicio_fin || "17:00",
           };
         });
       setActivities(adaptedData);
@@ -164,26 +170,30 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
             while (current <= end) {
               const dateStr = getDateString(current);
               if (dateStr === getDateString(start)) {
-                dates.push({ date: dateStr, time: item.hora_inicio_ini });
+                dates.push({ date: dateStr, time: item.hora_inicio_ini || "09:00" });
               } else if (dateStr === getDateString(end)) {
-                dates.push({ date: dateStr, time: item.hora_inicio_fin });
+                dates.push({ date: dateStr, time: item.hora_inicio_fin || "17:00" });
               } else {
                 dates.push({ date: dateStr, time: "00:00" });
               }
               current.setDate(current.getDate() + 1);
             }
           } else if (item.fecha_inicio) {
-            dates.push({ date: item.fecha_inicio.split("T")[0], time: item.hora_inicio_ini });
+            dates.push({ date: item.fecha_inicio.split("T")[0], time: item.hora_inicio_ini || "09:00" });
           }
           return {
             id: item.id,
             name: item.nombre,
             description: item.descripcion,
-            fase: item.fase,
+            fase: item.fase?.nombre || "",
             fase_id: item.fase_id,
             color: getRandomColor(),
             published: item.estado_publicado,
             dates,
+            fecha_inicio_original: item.fecha_inicio ? item.fecha_inicio.split("T")[0] : "",
+            fecha_fin_original: item.fecha_fin ? item.fecha_fin.split("T")[0] : "",
+            hora_inicio_ini_original: item.hora_inicio_ini || "09:00",
+            hora_inicio_fin_original: item.hora_inicio_fin || "17:00",
           };
         });
       setActivities((prev) => [...prev, ...adaptedData]);
@@ -204,6 +214,7 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
     if (fase) fetchActivities(fase.value);
   }, [fase]);
 
+  // === UTILS ===
   const generateYears = () => {
     const currentYear = new Date().getFullYear();
     return Array.from({ length: 11 }, (_, i) => currentYear - 10 + i);
@@ -268,7 +279,22 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
     return colors[Math.floor(Math.random() * colors.length)];
   };
 
-  // ✅ Inicializar con dos fechas vacías, pero con un solo campo de tiempo
+  // === NAVIGATION FUNCTIONS (must be BEFORE renderAdminView) ===
+  const goToPreviousMonth = () => {
+    const newDate = new Date(currentMonth);
+    newDate.setMonth(newDate.getMonth() - 1);
+    setSelectedYear(newDate.getFullYear());
+    setSelectedMonth(newDate.getMonth());
+  };
+
+  const goToNextMonth = () => {
+    const newDate = new Date(currentMonth);
+    newDate.setMonth(newDate.getMonth() + 1);
+    setSelectedYear(newDate.getFullYear());
+    setSelectedMonth(newDate.getMonth());
+  };
+
+  // === HANDLERS ===
   const resetForm = () => {
     setFase(null);
     setActividad(null);
@@ -280,6 +306,20 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
     ]);
     setEditingActivity(null);
     setShowAddActivity(false);
+  };
+
+  const handleAddActivity = () => {
+    if (!selectedDay) {
+      alert("Por favor, seleccione un día en el calendario.");
+      return;
+    }
+    const dateStr = getDateString(selectedDay);
+    resetForm();
+    setSelectedDates([
+      { date: dateStr, time: "09:00" },
+      { date: dateStr, time: "17:00" }
+    ]);
+    setShowAddActivity(true);
   };
 
   const saveActivity = async (isEditing) => {
@@ -312,6 +352,7 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
       setSuccessMessage(`"${newActivityName?.label || newActivityName}" ${isEditing ? "ha sido actualizada" : "se ha programado"}.`);
       setShowSuccess(true);
       resetForm();
+      setSelectedDay(null);
     } catch (error) {
       setError(error.response?.data?.message || error.message || "Error desconocido");
     } finally {
@@ -320,7 +361,6 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
     }
   };
 
-  const handleAddActivity = () => saveActivity(false);
   const handleUpdateActivity = () => saveActivity(true);
 
   const confirmDeleteActivity = async (activity) => {
@@ -332,7 +372,7 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
         hora_inicio_ini: "",
         hora_inicio_fin: "",
       };
-      if (activity.fase) {
+      if (activity.fase && activity.fase_id) {
         await actividadService.update(activity.id, data);
       } else {
         await faseService.update(activity.id, data);
@@ -365,39 +405,32 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
     }
   };
 
-  const goToPreviousMonth = () => {
-    const newDate = new Date(currentMonth);
-    newDate.setMonth(newDate.getMonth() - 1);
-    setSelectedYear(newDate.getFullYear());
-    setSelectedMonth(newDate.getMonth());
-  };
-
-  const goToNextMonth = () => {
-    const newDate = new Date(currentMonth);
-    newDate.setMonth(newDate.getMonth() + 1);
-    setSelectedYear(newDate.getFullYear());
-    setSelectedMonth(newDate.getMonth());
-  };
-
   const openEventDetail = (activity, eventDate) => {
     setShowEventDetail({ activity, eventDate });
   };
 
   const editFromDetail = (activity) => {
     if (!activity?.id) return alert("Error: La actividad no tiene un ID válido.");
-    const fixTime = (time) => time?.slice(0, 5) ?? "00:00";
+
     handleEditActivity(activity);
     setEditingActivity(activity);
     setNewActivityName(activity.name);
     setNewActivityDescription(activity.description || "");
-    const dates = activity.dates.map((d) => ({
-      date: d.date,
-      time: fixTime(d.time),
-    }));
-    if (dates.length === 1) dates.push({ ...dates[0] });
+
+    const startDate = activity.fecha_inicio_original || "";
+    const endDate = activity.fecha_fin_original || "";
+    const startTime = activity.hora_inicio_ini_original || "09:00";
+    const endTime = activity.hora_inicio_fin_original || "17:00";
+
+    const dates = [
+      { date: startDate, time: startTime },
+      { date: endDate, time: endTime }
+    ];
+
     setSelectedDates(dates);
     setShowAddActivity(true);
     setShowEventDetail(null);
+    setSelectedDay(null);
   };
 
   const handleEditActivity = (activityData) => {
@@ -412,29 +445,28 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
     }
   };
 
+  // === VIEWS ===
   const renderAdminView = () => (
     <>
       <div className="flex justify-between items-start mb-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Cronograma de Actividades</h1>
-          <p className="text-sm text-slate-500 mt-1">Selecciona fechas y asígnalas a una actividad.</p>
+          <p className="text-sm text-slate-500 mt-1">
+            {selectedDay
+              ? `Día seleccionado: ${selectedDay.toLocaleDateString()}`
+              : "Seleccione un día en el calendario para programar una actividad."}
+          </p>
         </div>
         <div className="flex gap-3">
           <button
-            className="btn btn-outline flex items-center gap-2"
-            onClick={() => {
-              setEditingActivity(null);
-              setNewActivityName(null);
-              setNewActivityDescription("");
-              setShowAddActivity(true);
-            }}
+            className={`btn btn-outline flex items-center gap-2 ${!selectedDay ? "opacity-50 cursor-not-allowed" : ""}`}
+            onClick={handleAddActivity}
+            disabled={!selectedDay}
           >
             <PlusIcon className="w-4 h-4" /> Nueva Actividad
           </button>
           <button
-            className={`btn btn-primary flex items-center gap-2 ${
-              activities.length === 0 ? "opacity-50 cursor-not-allowed" : ""
-            }`}
+            className={`btn btn-primary flex items-center gap-2 ${activities.length === 0 ? "opacity-50 cursor-not-allowed" : ""}`}
             onClick={() => setShowConfirmPublish(true)}
             disabled={activities.length === 0}
           >
@@ -477,22 +509,24 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
           {days.map((date, idx) => {
             const isValidDate = date instanceof Date && !isNaN(date.getTime());
             const info = isValidDate ? getActivityInfo(date) : null;
+            const isSelected = selectedDay && getDateString(selectedDay) === getDateString(date);
             return (
               <div
                 key={idx}
-                className={`flex flex-col items-center justify-center text-xs rounded-md p-1 transition-colors ${
+                className={`flex flex-col items-center justify-center text-xs rounded-md p-1 transition-colors cursor-pointer ${
                   !isValidDate
                     ? ""
                     : !isFutureOrToday(date)
                     ? "text-slate-300 bg-slate-50 cursor-not-allowed"
+                    : isSelected
+                    ? "bg-blue-200 border border-blue-500"
                     : info
-                    ? "bg-white border border-slate-200 cursor-pointer"
-                    : "hover:bg-slate-100 cursor-pointer"
+                    ? "bg-white border border-slate-200 hover:bg-slate-100"
+                    : "hover:bg-slate-100"
                 } ${showAddActivity ? "pointer-events-none opacity-70" : ""}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (isValidDate && isFutureOrToday(date) && !showAddActivity && info) {
-                    openEventDetail(info[0].activity, date);
+                onClick={() => {
+                  if (isValidDate && isFutureOrToday(date)) {
+                    setSelectedDay(date);
                   }
                 }}
               >
@@ -546,7 +580,9 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
                 <div className="flex gap-2">
                   <button className="btn btn-sm btn-outline" onClick={() => editFromDetail(activity)}><PencilIcon className="w-4 h-4" /></button>
                   <button className="btn btn-sm btn-outline text-red-600" onClick={() => setShowConfirmDelete(activity)}><TrashIcon className="w-4 h-4" /></button>
-                  <span className={`px-2 py-1 text-xs rounded-full ${activity.published ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}>{activity.published}</span>
+                  <span className={`px-2 py-1 text-xs rounded-full ${activity.published ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}>
+                    {activity.published ? "Publicado" : "Borrador"}
+                  </span>
                 </div>
               </div>
             );
@@ -683,7 +719,6 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
               className="w-full p-2 border border-slate-300 rounded mb-3 text-sm h-16"
             />
             
-            {/* Fecha de inicio */}
             <div className="p-2 bg-blue-50 rounded mb-2">
               <div className="text-xs font-medium text-blue-800 mb-1">Fecha de inicio</div>
               <div className="flex items-center gap-2">
@@ -713,7 +748,6 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
               </div>
             </div>
 
-            {/* Fecha de fin */}
             <div className="p-2 bg-purple-50 rounded">
               <div className="text-xs font-medium text-purple-800 mb-1">Fecha de fin</div>
               <div className="flex items-center gap-2">
@@ -744,10 +778,10 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
             </div>
 
             <div className="flex gap-2 mt-4">
-              <button className="btn btn-outline flex-1 text-sm" onClick={resetForm}>Cancelar</button>
+              <button className="btn btn-outline flex-1 text-sm" onClick={() => { resetForm(); setSelectedDay(null); }}>Cancelar</button>
               <button
                 className="btn btn-primary flex-1 text-sm"
-                onClick={editingActivity ? handleUpdateActivity : handleAddActivity}
+                onClick={editingActivity ? handleUpdateActivity : () => saveActivity(false)}
                 disabled={!newActivityName || !fase}
               >
                 {editingActivity ? "Actualizar" : "Guardar"}
@@ -769,7 +803,14 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
             {showEventDetail.activity.description && <p className="text-sm text-slate-500 mb-4 italic">{showEventDetail.activity.description}</p>}
             <div className="flex gap-2">
               <button className="btn btn-outline flex-1 text-sm" onClick={() => setShowEventDetail(null)}>Cerrar</button>
-              {userRole === "admin" && <button className="btn btn-primary flex-1 text-sm" onClick={() => editFromDetail(showEventDetail.activity)}>Editar</button>}
+              {userRole === "admin" && (
+                <button 
+                  className="btn btn-primary flex-1 text-sm" 
+                  onClick={() => editFromDetail(showEventDetail.activity)}
+                >
+                  Editar
+                </button>
+              )}
             </div>
           </div>
         </div>
