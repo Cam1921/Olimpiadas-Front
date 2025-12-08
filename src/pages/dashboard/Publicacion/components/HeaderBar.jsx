@@ -1,7 +1,15 @@
 // src/pages/dashboard/publicacion/components/HeaderBar.jsx
-import { HiOutlineDocumentArrowUp, HiOutlineGlobeAmericas } from "react-icons/hi2";
+import {
+  HiOutlineDocumentArrowUp,
+  HiOutlineGlobeAmericas,
+} from "react-icons/hi2";
 
-export default function HeaderBar({ onGenerar, onPublicar, isGenerating = false }) {
+export default function HeaderBar({
+  onGenerar,
+  onPublicar,
+  isGenerating = false,
+  isActivo = false,
+}) {
   const base =
     "h-10 px-5 rounded-full inline-flex items-center gap-2 font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0284C7]/40 transition-colors";
 
@@ -16,6 +24,11 @@ export default function HeaderBar({ onGenerar, onPublicar, isGenerating = false 
   // Botón primario para 'Publicar Resultados' (se mantiene)
   const primary =
     "bg-[#0284C7] text-white hover:bg-[#027AB6] active:bg-[#026BA1] " +
+    "h-10 px-5 rounded-full inline-flex items-center gap-2 font-medium shadow-sm " +
+    "focus:outline-none focus:ring-2 focus:ring-[#0284C7]/40 transition-colors";
+
+  const disabled =
+    "bg-[#0284C7]  text-white cursor-not-allowed opacity-80 " +
     "h-10 px-5 rounded-full inline-flex items-center gap-2 font-medium shadow-sm " +
     "focus:outline-none focus:ring-2 focus:ring-[#0284C7]/40 transition-colors";
 
@@ -45,7 +58,8 @@ export default function HeaderBar({ onGenerar, onPublicar, isGenerating = false 
         <button
           type="button"
           onClick={() => onPublicar?.()}
-          className={primary}
+          className={isActivo ? primary : disabled}
+          disabled={!isActivo}
         >
           <HiOutlineGlobeAmericas size={18} />
           <span>Publicar Resultados</span>

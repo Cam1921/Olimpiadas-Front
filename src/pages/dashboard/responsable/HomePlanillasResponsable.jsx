@@ -93,7 +93,7 @@ export default function HomePlanillasResponsable() {
 
     if (filter === "clasificatoria")
       return areas.filter(
-        (a) => a.fase.toLowerCase() === "clasificación".toLowerCase()
+        (a) => a.fase.toLowerCase() === "clasificacion".toLowerCase()
       );
 
     if (filter === "final")

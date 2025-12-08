@@ -4,6 +4,7 @@ import EvaluacionesRepository from "@/infrastructure/http/Evaluacion/repository"
 import { getAreasConNiveles } from "@/infrastructure/http/areas/areaRepostory";
 import { IoGitMerge } from "react-icons/io5";
 import { faseService } from "@/services/faseService";
+import { actividadService } from "@/services/actividadService";
 
 export function usePublicacion({ fase, area, nivel, tipo, page = 1, perPage = 10 ,query, sort}) {
   // ---------------- ESTADOS ----------------
@@ -13,7 +14,29 @@ export function usePublicacion({ fase, area, nivel, tipo, page = 1, perPage = 10
   const [toast, setToast] = useState(null);
   const [totalPages, setTotalPages] = useState(1);
   const [openModalConfirm, setOpenModalConfirm] = useState(false);
-  
+  const [isClasificacionActiva, setIsClasificacionActiva] = useState(false);
+  const [isFinalActiva, setIsFinalActiva] = useState(false);
+   const verificarActividades = async () => {
+  try {
+    // Clasificación
+    const clasificacion = await actividadService.verificarActividad(
+      "clasificacion",
+      "publicacion"
+    );
+    console.log(clasificacion);
+    setIsClasificacionActiva(clasificacion.activo);
+
+    // Final
+    const final = await actividadService.verificarActividad(
+      "final",
+      "publicacion"
+    );
+    setIsFinalActiva(final.activo);
+
+  } catch (error) {
+    console.error("Error al verificar las actividades:", error);
+  }
+};
   // ---------------- TOAST ----------------
   const generarListas = () => setToast({ type: "success", message: "Listas generadas (mock)." });
 
@@ -31,7 +54,14 @@ export function usePublicacion({ fase, area, nivel, tipo, page = 1, perPage = 10
     } 
   };
 
-
+  async function fetchEstados() {
+    try {
+      const res = await estadoService.actualizarEstados();
+      console.log("Estados actualizados cargadas:", res);
+    } catch (err) {
+      console.error("Error al cargar áreas:", err);
+    }
+  }
   // ---------------- FETCH ÁREAS ----------------
   useEffect(() => {
     async function fetchAreas() {
@@ -42,7 +72,9 @@ export function usePublicacion({ fase, area, nivel, tipo, page = 1, perPage = 10
         console.error("Error al cargar áreas:", err);
       }
     }
+    fetchEstados();
     fetchAreas();
+    verificarActividades();
   }, []);
  
    async function fetchData() {
@@ -99,6 +131,8 @@ export function usePublicacion({ fase, area, nivel, tipo, page = 1, perPage = 10
     return () => clearTimeout(delay);
   }, [query]);
   return {
+    isClasificacionActiva,
+    isFinalActiva,
     data,
     loading,
     totalPages,

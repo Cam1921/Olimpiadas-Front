@@ -6,16 +6,10 @@ import App from "./App";
 import "./styles/globals.css";
 import "./index.css";
 
-// 🔔 importamos el provider de corrección de notificaciones
-import { CorreccionNotificacionesProvider } from "@/hooks/useCorreccionNotificaciones";
-
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
-      {/*  Aquí envolvemos toda la app con el provider */}
-      <CorreccionNotificacionesProvider>
-        <App />
-      </CorreccionNotificacionesProvider>
+      <App />
     </BrowserRouter>
   </React.StrictMode>
 );

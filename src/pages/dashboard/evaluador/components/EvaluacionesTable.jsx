@@ -99,11 +99,14 @@ export default function EvaluacionesTable({
     map[fila.id_evaluacion] = { ...map[fila.id_evaluacion], ...fila };
     saveLocal(map);
     const estado = estadoNivel === "En_revicion" ? "confirmado" : "pendiente";
+    const mot =
+      estadoNivel === "En_revicion" ? "Correcion nota" : "Registro nota";
     const payload = {
       nota: fila.nota,
       descripcion: fila.descripcion,
       conducta: fila.conducta,
       estado_confirmacion: estado,
+      observacion: mot,
     };
     console.log(payload);
     const res = await EvaluacionesRepository.updateEvaluacion(

@@ -141,6 +141,8 @@ export default function PublicacionPage() {
   const [query, setQuery] = useState(""); // buscar por NOMBRE (solo nombre)
   const [sort, setSort] = useState({ by: "puntaje_total", dir: "desc" }); // predeterminado: Nota ↓
   const {
+    isClasificacionActiva,
+    isFinalActiva,
     data, // ← filas que ya alimentan ResultsCard
     loading,
     totalPages,
@@ -174,7 +176,7 @@ export default function PublicacionPage() {
         sel?.nivel || "Todos"
       })`;
       console.log("fases", fases);
-      const faseSel = fases.find((a) => a.nombre === "clasificacion");
+      const faseSel = fases.find((a) => a.nombre === Nomfase);
       console.log("sel", sel, faseSel, sort);
       const params = {
         estado: res || null,
@@ -216,6 +218,7 @@ export default function PublicacionPage() {
         isGenerating={flowOpen}
         onGenerar={() => setFlowOpen(true)}
         onPublicar={() => setOpenModalConfirm(true)}
+        isActivo={isClasificacionActiva || isFinalActiva}
       />
 
       {/* Tabs de fase (dejamos final deshabilitado como tenías) */}

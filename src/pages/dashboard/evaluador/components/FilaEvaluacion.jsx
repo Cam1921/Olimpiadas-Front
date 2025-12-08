@@ -113,7 +113,7 @@ export default function FilaEvaluacion({
   const disabledAll =
     readOnly ||
     esClasificado ||
-    ["confirmado", "Concluido", "Pendiente", "publicado"].includes(
+    ["confirmado", "Concluido", "Pendiente", "Proceso", "publicado"].includes(
       estadoNivel
     ) ||
     !(

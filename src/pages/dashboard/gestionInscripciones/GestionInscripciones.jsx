@@ -244,191 +244,186 @@ export default function InscripcionesManagement() {
           Importa competidores desde CSV y genera listas por área y nivel.
         </p>
       </div>
-      {isActivo ? (
-        <div className="bg-white shadow rounded-xl p-6 space-y-6 border">
-          <h2 className=" font-medium">Importar competidores (CSV)</h2>
 
-          <div
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onClick={() => document.getElementById("csv-input").click()}
-            className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition 
+      <div className="bg-white shadow rounded-xl p-6 space-y-6 border">
+        <h2 className=" font-medium">Importar competidores (CSV)</h2>
+
+        <div
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onClick={() => document.getElementById("csv-input").click()}
+          className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition 
         ${
           isDragging
             ? "border-blue-400 bg-blue-100/40"
             : "border-gray-300 hover:border-blue-400"
         }`}
+        >
+          <input
+            id="csv-input"
+            type="file"
+            accept=".csv"
+            className="hidden"
+            onChange={handleFileSelect}
+          />
+          <ArrowUpTrayIcon className="h-12 w-12 text-gray-500 mx-auto mb-4" />
+          <p
+            className="text-lg font-semibold mb-4 truncate max-w-full text-center px-2"
+            title={file ? file.name : ""}
           >
-            <input
-              id="csv-input"
-              type="file"
-              accept=".csv"
-              className="hidden"
-              onChange={handleFileSelect}
-            />
-            <ArrowUpTrayIcon className="h-12 w-12 text-gray-500 mx-auto mb-4" />
-            <p
-              className="text-lg font-semibold mb-4 truncate max-w-full text-center px-2"
-              title={file ? file.name : ""}
-            >
-              {file
-                ? file.name
-                : "Suelta tu archivo CSV aquí o haz clic para seleccionar"}
-            </p>
-            <p className="text-sm text-gray-500 mb-3">
-              Campos requeridos: Nombre Completo, CI, Contacto tutor legal,
-              Unidad educativa, Departamento, Grado, Área(s), Nivel, Tutor
-              académico, Nombre del equipo (opcional).
-            </p>
-            <p className="text-sm text-gray-500">
-              Solo se admiten archivos con extensión .CSV
-            </p>
+            {file
+              ? file.name
+              : "Suelta tu archivo CSV aquí o haz clic para seleccionar"}
+          </p>
+          <p className="text-sm text-gray-500 mb-3">
+            Campos requeridos: Nombre Completo, CI, Contacto tutor legal, Unidad
+            educativa, Departamento, Grado, Área(s), Nivel, Tutor académico,
+            Nombre del equipo (opcional).
+          </p>
+          <p className="text-sm text-gray-500">
+            Solo se admiten archivos con extensión .CSV
+          </p>
+        </div>
+        {!isFormatValid && (
+          <div className="p-4 mb-4 border border-red-400 bg-red-50/40 rounded-xl flex items-center gap-3">
+            <ExclamationTriangleIcon className="h-6 w-6 text-red-600" />
+            <div>
+              <p className="font-semibold text-red-700">Formato inválido</p>
+              <p className="text-red-600 text-sm">
+                Solo se admiten archivos con extensión .csv.
+              </p>
+            </div>
           </div>
-          {!isFormatValid && (
-            <div className="p-4 mb-4 border border-red-400 bg-red-50/40 rounded-xl flex items-center gap-3">
-              <ExclamationTriangleIcon className="h-6 w-6 text-red-600" />
-              <div>
-                <p className="font-semibold text-red-700">Formato inválido</p>
-                <p className="text-red-600 text-sm">
-                  Solo se admiten archivos con extensión .csv.
-                </p>
-              </div>
+        )}
+        {importSuccess && (
+          <div className="p-4 mb-4 border border-green-400 bg-green-50/40 rounded-xl flex items-center gap-3">
+            <CheckCircleIcon className="h-6 w-6 text-green-600" />
+            <div>
+              <p className="font-semibold text-green-700">
+                ¡Importación exitosa!
+              </p>
+              <p className="text-green-600 text-sm">
+                Se importaron {confirmedData.length} competidores correctamente.
+              </p>
             </div>
-          )}
-          {importSuccess && (
-            <div className="p-4 mb-4 border border-green-400 bg-green-50/40 rounded-xl flex items-center gap-3">
-              <CheckCircleIcon className="h-6 w-6 text-green-600" />
-              <div>
-                <p className="font-semibold text-green-700">
-                  ¡Importación exitosa!
+          </div>
+        )}
+        {validationError && validationError.status === "error" && (
+          <div className="mt-4 bg-red-50/30 border border-red-300 rounded-xl p-4 w-full text-left">
+            <button
+              onClick={() => setValidationError(null)}
+              className="absolute top-2 right-2 text-red-600 hover:text-red-800 font-bold text-lg"
+              aria-label="Cerrar"
+            >
+              ×
+            </button>
+            <h4 className="text-red-700 font-semibold mb-2 flex items-center gap-2">
+              <span>
+                <FileWarning size={40} />
+              </span>{" "}
+              Error en el archivo
+            </h4>
+
+            <p className="text-red-600 mb-3">{validationError.message}</p>
+
+            {validationError.error_type === "requered headers missing" && (
+              <>
+                <p className="text-gray-700 font-medium">
+                  Encabezados detectados:
                 </p>
-                <p className="text-green-600 text-sm">
-                  Se importaron {confirmedData.length} competidores
-                  correctamente.
+                <ul className="list-disc list-inside text-gray-700 text-sm mb-2">
+                  {validationError.meta?.found_headers?.map((header, index) => (
+                    <li key={index}>{header}</li>
+                  ))}
+                </ul>
+                <p className="text-sm text-gray-600">
+                  Algunos encabezados requeridos no están presentes. Verifica
+                  que tu archivo incluya todos los campos necesarios:
+                  <br />
+                  <span className="font-semibold">
+                    Nombre Completo, CI, Contacto tutor legal, Unidad educativa,
+                    Departamento, Grado, Área(s), Nivel, Tutor académico, Nombre
+                    del equipo (opcional)
+                  </span>
                 </p>
-              </div>
-            </div>
-          )}
-          {validationError && validationError.status === "error" && (
-            <div className="mt-4 bg-red-50/30 border border-red-300 rounded-xl p-4 w-full text-left">
-              <button
-                onClick={() => setValidationError(null)}
-                className="absolute top-2 right-2 text-red-600 hover:text-red-800 font-bold text-lg"
-                aria-label="Cerrar"
-              >
-                ×
-              </button>
-              <h4 className="text-red-700 font-semibold mb-2 flex items-center gap-2">
-                <span>
-                  <FileWarning size={40} />
-                </span>{" "}
-                Error en el archivo
-              </h4>
-
-              <p className="text-red-600 mb-3">{validationError.message}</p>
-
-              {validationError.error_type === "requered headers missing" && (
-                <>
-                  <p className="text-gray-700 font-medium">
-                    Encabezados detectados:
-                  </p>
-                  <ul className="list-disc list-inside text-gray-700 text-sm mb-2">
-                    {validationError.meta?.found_headers?.map(
-                      (header, index) => (
-                        <li key={index}>{header}</li>
-                      )
-                    )}
-                  </ul>
-                  <p className="text-sm text-gray-600">
-                    Algunos encabezados requeridos no están presentes. Verifica
-                    que tu archivo incluya todos los campos necesarios:
-                    <br />
-                    <span className="font-semibold">
-                      Nombre Completo, CI, Contacto tutor legal, Unidad
-                      educativa, Departamento, Grado, Área(s), Nivel, Tutor
-                      académico, Nombre del equipo (opcional)
-                    </span>
-                  </p>
-                </>
-              )}
-
-              {validationError.message ===
-                "El archivo contiene encabezados no válidos o desconocidos" && (
-                <>
-                  <p className="text-gray-700 font-medium">
-                    Encabezados detectados:
-                  </p>
-                  <ul className="list-disc list-inside text-gray-700 text-sm mb-2">
-                    {validationError.meta?.found_headers?.map(
-                      (header, index) => (
-                        <li key={index}>{header}</li>
-                      )
-                    )}
-                  </ul>
-                  <p className="text-sm text-gray-600">
-                    <span></span> Tu archivo contiene encabezados desconocidos o
-                    mal escritos. Asegúrate de usar exactamente los siguientes
-                    nombres:
-                    <br />
-                    <span className="font-semibold">
-                      Nombre Completo, CI, Contacto tutor legal, Unidad
-                      educativa, Departamento, Grado, Área(s), Nivel, Tutor
-                      académico, Nombre del equipo (opcional)
-                    </span>
-                  </p>
-                </>
-              )}
-            </div>
-          )}
-          {isValidated &&
-            responseData?.status === "success" &&
-            responseData?.meta.invalid_rows === 0 && (
-              <div className="p-4 mb-4 border border-green-400 bg-green-50/40 rounded-xl flex justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <CheckCircleIcon className="h-6 w-6 text-green-600" />
-                  <div>
-                    <p className="font-semibold text-green-700">
-                      ¡Archivo validado con éxito!
-                    </p>
-                    <p className="text-green-600 text-sm">
-                      Se procesaron {responseData.meta.total_rows} filas y todas
-                      son correctas.
-                    </p>
-                  </div>
-                </div>
-
-                <button
-                  onClick={handleImportFile}
-                  disabled={isImporting || responseData.meta.valid_rows === 0}
-                  className="bg-[var(--primary)] hover:bg-[var(--primary)] text-white px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isImporting ? "Importando..." : "Importar inscritos"}
-                </button>
-              </div>
+              </>
             )}
 
-          {!validationError && file && !isValidated && (
-            <>
-              <div className="flex w-full  flex-row justify-between px-5  items-center gap-3">
-                <p>
-                  Coma <span>(,)</span>
+            {validationError.message ===
+              "El archivo contiene encabezados no válidos o desconocidos" && (
+              <>
+                <p className="text-gray-700 font-medium">
+                  Encabezados detectados:
                 </p>
-                <p>Tiene fila de encabezados</p>
-                <button
-                  onClick={handleValidateFile}
-                  disabled={isImporting || isValidating}
-                  className="bg-[var(--primary)] hover:bg-[var(--primary)] text-white px-4 py-2 rounded-lg"
-                >
-                  {isValidating ? "Validando..." : "Validar archivo"}
-                </button>
+                <ul className="list-disc list-inside text-gray-700 text-sm mb-2">
+                  {validationError.meta?.found_headers?.map((header, index) => (
+                    <li key={index}>{header}</li>
+                  ))}
+                </ul>
+                <p className="text-sm text-gray-600">
+                  <span></span> Tu archivo contiene encabezados desconocidos o
+                  mal escritos. Asegúrate de usar exactamente los siguientes
+                  nombres:
+                  <br />
+                  <span className="font-semibold">
+                    Nombre Completo, CI, Contacto tutor legal, Unidad educativa,
+                    Departamento, Grado, Área(s), Nivel, Tutor académico, Nombre
+                    del equipo (opcional)
+                  </span>
+                </p>
+              </>
+            )}
+          </div>
+        )}
+        {isValidated &&
+          responseData?.status === "success" &&
+          responseData?.meta.invalid_rows === 0 && (
+            <div className="p-4 mb-4 border border-green-400 bg-green-50/40 rounded-xl flex justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <CheckCircleIcon className="h-6 w-6 text-green-600" />
+                <div>
+                  <p className="font-semibold text-green-700">
+                    ¡Archivo validado con éxito!
+                  </p>
+                  <p className="text-green-600 text-sm">
+                    Se procesaron {responseData.meta.total_rows} filas y todas
+                    son correctas.
+                  </p>
+                </div>
               </div>
-            </>
+
+              <button
+                onClick={handleImportFile}
+                disabled={isImporting || responseData.meta.valid_rows === 0}
+                className="bg-[var(--primary)] hover:bg-[var(--primary)] text-white px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isImporting ? "Importando..." : "Importar inscritos"}
+              </button>
+            </div>
           )}
 
-          {isValidated && responseData?.status === "error" && (
-            <>
-              {/* <div className="flex w-full flex-row flex-start p-3 items-start gap-3 border rounded-lg bg-white">
+        {!validationError && file && !isValidated && (
+          <>
+            <div className="flex w-full  flex-row justify-between px-5  items-center gap-3">
+              <p>
+                Coma <span>(,)</span>
+              </p>
+              <p>Tiene fila de encabezados</p>
+              <button
+                onClick={handleValidateFile}
+                disabled={isImporting || isValidating}
+                className="bg-[var(--primary)] hover:bg-[var(--primary)] text-white px-4 py-2 rounded-lg"
+              >
+                {isValidating ? "Validando..." : "Validar archivo"}
+              </button>
+            </div>
+          </>
+        )}
+
+        {isValidated && responseData?.status === "error" && (
+          <>
+            {/* <div className="flex w-full flex-row flex-start p-3 items-start gap-3 border rounded-lg bg-white">
               <CheckCircleIcon className="h-4 w-4" />
               <div className="gap-2">
                 <p className="text-gray-500 text-sm flex items-center gap-1">
@@ -443,96 +438,95 @@ export default function InscripcionesManagement() {
                 </button>
               </div>
             </div> */}
-              <div
-                className={`p-4 border rounded-lg flex flex-row gap-4  ${"border-red-400 bg-white"}`}
-              >
-                <CheckCircleIcon className="h-4 w-4" />
-                <div className="flex flex-col gap-3">
-                  <p className="font-semibold">
-                    {responseData.message} No es posible importar los
-                    competidores{" "}
-                    <span>
-                      (Intente nuevamente con un archivo con los campos
-                      requeridos correctos)
-                    </span>
-                  </p>
-                  <p className="text-sm text-gray-700">
-                    <span className="px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-full">
-                      {responseData.meta.total_rows}
-                    </span>{" "}
-                    filas procesadas{" "}
-                    <span className="px-2 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded-full">
-                      {responseData.meta.valid_rows}
-                    </span>{" "}
-                    filas correctas{" "}
-                    <span className="px-2 py-1 text-xs font-medium text-red-700 bg-red-100 rounded-full">
-                      {responseData.meta.invalid_rows}
-                    </span>{" "}
-                    filas con errores.{" "}
-                  </p>
-
-                  <div
-                    onClick={handleDownloadErrors}
-                    className="flex items-center gap-2 text-sm cursor-pointer text-blue-600"
-                  >
-                    <span>
-                      {" "}
-                      <Download size={16} />
-                    </span>{" "}
-                    Descargar reporte de errores (.CSV)
-                  </div>
-                </div>
-              </div>
-              <div>
-                <div className="flex items-center justify-between">
-                  <h4 className="font-semibold mb-2">
-                    Resumen de Errores detectados
-                  </h4>
-                  <span className="px-2 py-1 text-xs font-medium text-red-700 bg-red-100 rounded-full">
-                    {responseData.meta.invalid_rows} errores
+            <div
+              className={`p-4 border rounded-lg flex flex-row gap-4  ${"border-red-400 bg-white"}`}
+            >
+              <CheckCircleIcon className="h-4 w-4" />
+              <div className="flex flex-col gap-3">
+                <p className="font-semibold">
+                  {responseData.message} No es posible importar los competidores{" "}
+                  <span>
+                    (Intente nuevamente con un archivo con los campos requeridos
+                    correctos)
                   </span>
-                </div>
+                </p>
+                <p className="text-sm text-gray-700">
+                  <span className="px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-full">
+                    {responseData.meta.total_rows}
+                  </span>{" "}
+                  filas procesadas{" "}
+                  <span className="px-2 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded-full">
+                    {responseData.meta.valid_rows}
+                  </span>{" "}
+                  filas correctas{" "}
+                  <span className="px-2 py-1 text-xs font-medium text-red-700 bg-red-100 rounded-full">
+                    {responseData.meta.invalid_rows}
+                  </span>{" "}
+                  filas con errores.{" "}
+                </p>
 
-                <div className="border-base-content/25 w-full rounded-lg border bg-white shadow-sm">
-                  <div className="overflow-x-auto">
-                    <table className="table w-full">
-                      <thead>
-                        <tr className="  h-10 ">
-                          <th className="text-start px-2 ">Fila</th>
-                          <th className="text-start px-2">Columna</th>
-                          <th className="text-start px-2">Motivo de error</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {responseData &&
-                          responseData.errors &&
-                          responseData.errors.slice(0, 10).map((err, i) => (
-                            <tr key={i} className="border-t h-10">
-                              <td className="text-start px-2 ">
-                                <span>#</span>
-                                {err.row}
-                              </td>
-                              <td className="text-start px-2">
-                                <span className="px-2 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded-full">
-                                  {err.field}
-                                </span>
-                              </td>
-                              <td className="text-start px-2 text-red-600">
-                                {" "}
-                                {err.error}
-                              </td>
-                            </tr>
-                          ))}
-                      </tbody>
-                    </table>
-                  </div>
+                <div
+                  onClick={handleDownloadErrors}
+                  className="flex items-center gap-2 text-sm cursor-pointer text-blue-600"
+                >
+                  <span>
+                    {" "}
+                    <Download size={16} />
+                  </span>{" "}
+                  Descargar reporte de errores (.CSV)
                 </div>
               </div>
-            </>
-          )}
-        </div>
-      ) : (
-        <div className="  flex items-center justify-center">
+            </div>
+            <div>
+              <div className="flex items-center justify-between">
+                <h4 className="font-semibold mb-2">
+                  Resumen de Errores detectados
+                </h4>
+                <span className="px-2 py-1 text-xs font-medium text-red-700 bg-red-100 rounded-full">
+                  {responseData.meta.invalid_rows} errores
+                </span>
+              </div>
+
+              <div className="border-base-content/25 w-full rounded-lg border bg-white shadow-sm">
+                <div className="overflow-x-auto">
+                  <table className="table w-full">
+                    <thead>
+                      <tr className="  h-10 ">
+                        <th className="text-start px-2 ">Fila</th>
+                        <th className="text-start px-2">Columna</th>
+                        <th className="text-start px-2">Motivo de error</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {responseData &&
+                        responseData.errors &&
+                        responseData.errors.slice(0, 10).map((err, i) => (
+                          <tr key={i} className="border-t h-10">
+                            <td className="text-start px-2 ">
+                              <span>#</span>
+                              {err.row}
+                            </td>
+                            <td className="text-start px-2">
+                              <span className="px-2 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded-full">
+                                {err.field}
+                              </span>
+                            </td>
+                            <td className="text-start px-2 text-red-600">
+                              {" "}
+                              {err.error}
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/*  <div className="  flex items-center justify-center">
           <div className="w-full max-w-lg bg-white border rounded-xl p-10 flex flex-col items-center text-center shadow-sm">
             <div className="bg-red-100 text-red-600 w-16 h-16 rounded-full flex items-center justify-center mb-4">
               <ExclamationTriangleIcon className="h-10 w-10" />
@@ -542,8 +536,7 @@ export default function InscripcionesManagement() {
               La importación de competidores no está activa en este momento.
             </p>
           </div>
-        </div>
-      )}
+        </div> */}
 
       <div className="bg-white shadow rounded-lg p-6 border space-y-4">
         <h2 className=" font-semibold text-gray-800">
