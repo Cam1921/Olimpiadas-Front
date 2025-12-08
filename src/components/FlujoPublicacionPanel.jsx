@@ -1,19 +1,8 @@
 // src/components/FlujoPublicacionPanel.jsx
 import { useState } from "react";
-import { PrinterIcon, ArrowUpTrayIcon } from "@heroicons/react/24/outline";
-import VistaPreviaCertificados from "./VistaPreviaCertificados";
-import ConfirmationModal from "./ConfirmationModal";
-import SuccessDialog from "./SuccessDialog";
 
 export default function FlujoPublicacionPanel({ areas = [] }) {
   const [vistaPrevia, setVistaPrevia] = useState(null);
-  const [showConfirmPublicar, setShowConfirmPublicar] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
-
-  // Filtrar áreas confirmadas
-  const areasConfirmadas = areas.filter((area) => area.estado === "Confirmado");
-  const hayAreasConfirmadas = areasConfirmadas.length > 0;
 
   const getColorChip = (estado) => {
     switch (estado) {
@@ -39,60 +28,16 @@ export default function FlujoPublicacionPanel({ areas = [] }) {
       : "bg-blue-500 text-white border-blue-600";
   };
 
-  const handlePublicar = () => {
-    setShowConfirmPublicar(true);
-  };
-
-  const confirmarPublicacion = () => {
-    setShowConfirmPublicar(false);
-    setSuccessMessage("Resultados publicados correctamente.");
-    setShowSuccess(true);
-  };
-
-  const handleImprimirGlobal = () => {
-    // Simulamos una "área" global para imprimir todos los certificados
-    const areaGlobal = {
-      id: "global",
-      nombre: "Todos los certificados",
-      estado: "Confirmado",
-    };
-    setVistaPrevia(areaGlobal);
-  };
-
   return (
     <div className="space-y-4">
-      {/* 👇 Título y subtítulo según tu mockup */}
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800 leading-tight">
-            Flujo y Publicación por Área
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Cambia el estado para habilitar impresión y publicación
-          </p>
-        </div>
-
-        {/* Botones globales en la esquina superior derecha */}
-        <div className="flex gap-3">
-          <button
-            className={`btn btn-outline flex items-center gap-2 ${
-              !hayAreasConfirmadas ? "opacity-50 cursor-not-allowed" : ""
-            }`}
-            onClick={handleImprimirGlobal}
-            disabled={!hayAreasConfirmadas}
-          >
-            <PrinterIcon className="w-4 h-4" /> Imprimir certificados
-          </button>
-          <button
-            className={`btn btn-primary flex items-center gap-2 ${
-              !hayAreasConfirmadas ? "opacity-50 cursor-not-allowed" : ""
-            }`}
-            onClick={handlePublicar}
-            disabled={!hayAreasConfirmadas}
-          >
-            <ArrowUpTrayIcon className="w-4 h-4" /> Publicar resultados
-          </button>
-        </div>
+      {/* 👇 Título y subtítulo */}
+      <div>
+        <h1 className="text-2xl font-bold text-slate-800 leading-tight">
+          Estado de Fases por Área
+        </h1>
+        <p className="text-sm text-slate-500 mt-1">
+          Cambia el estado para habilitar impresión y publicación
+        </p>
       </div>
 
       {/* Tarjetas por área */}
@@ -140,48 +85,11 @@ export default function FlujoPublicacionPanel({ areas = [] }) {
               </button>
             </div>
 
-            {/* Botón de imprimir por área (solo si está confirmado) */}
-            {area.estado === "Confirmado" && (
-              <button
-                className="mt-3 w-full btn btn-outline btn-sm"
-                onClick={() => setVistaPrevia(area)}
-              >
-                🖨️ Imprimir certificados
-              </button>
-            )}
           </div>
         ))}
       </div>
 
-      {/* Modal de vista previa */}
-      <VistaPreviaCertificados
-        open={!!vistaPrevia}
-        onClose={() => setVistaPrevia(null)}
-        areaNombre={vistaPrevia?.nombre || "Área"}
-        isGlobal={vistaPrevia?.id === "global"}
-        competidores={[]} // Puedes pasar competidores reales más adelante
-      />
-
-      {/* Modal de confirmación para publicar */}
-      <ConfirmationModal
-        open={showConfirmPublicar}
-        onClose={() => setShowConfirmPublicar(false)}
-        onConfirm={confirmarPublicacion}
-        title="Confirmar publicación"
-        message="¿Está seguro que desea publicar los resultados? Esta acción no se puede deshacer."
-        confirmText="Publicar"
-        cancelText="Cancelar"
-      />
-
-      {/* Modal de éxito */}
-      <SuccessDialog
-        open={showSuccess}
-        onClose={() => setShowSuccess(false)}
-        title="Operación Exitosa"
-        subtitle="Publicación completada"
-        message={successMessage}
-        confirmLabel="Aceptar"
-      />
+      
     </div>
   );
 }
