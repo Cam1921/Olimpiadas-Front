@@ -11,9 +11,10 @@ export default function HeaderBar({
   isActivo = false,
 }) {
   const base =
-    "h-10 px-5 rounded-full inline-flex items-center gap-2 font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0284C7]/40 transition-colors";
+    "h-10 px-5 rounded-full inline-flex items-center gap-2 text-sm font-medium shadow-sm " +
+    "focus:outline-none focus:ring-2 focus:ring-[#0284C7]/20 transition-colors";
 
-  // Botón outline (default) y botón relleno (cuando el modal está abierto)
+  // Estado de "Generar Listas": outline vs filled
   const outline =
     "bg-white text-[#0284C7] border-2 border-[#0284C7] hover:bg-[#E6F4FB]";
   const filled =
@@ -21,7 +22,7 @@ export default function HeaderBar({
 
   const generarClasses = `${base} ${isGenerating ? filled : outline}`;
 
-  // Botón primario para 'Publicar Resultados' (se mantiene)
+  // Botón primario para 'Publicar Resultados'
   const primary =
     "bg-[#0284C7] text-white hover:bg-[#027AB6] active:bg-[#026BA1] " +
     "h-10 px-5 rounded-full inline-flex items-center gap-2 font-medium shadow-sm " +
@@ -33,15 +34,19 @@ export default function HeaderBar({
     "focus:outline-none focus:ring-2 focus:ring-[#0284C7]/40 transition-colors";
 
   return (
-    <div className="flex items-start justify-between gap-4">
+    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+      {/* Títulos */}
       <div>
-        <h1 className="text-3xl font-semibold">Publicación de Resultados</h1>
+        <h1 className="text-2xl md:text-3xl font-semibold">
+          Publicación de Resultados
+        </h1>
         <p className="text-sm text-[#23263D]/60">
           Resultados de las Olimpiadas en Ciencia y Tecnología
         </p>
       </div>
 
-      <div className="flex gap-3">
+      {/* Botones de acciones */}
+      <div className="flex flex-wrap justify-end gap-3">
         {/* Generar Listas: outline -> filled cuando isGenerating=true */}
         <button
           type="button"
@@ -50,7 +55,6 @@ export default function HeaderBar({
           }}
           className={generarClasses}
         >
-          {/* El ícono hereda el color del texto (currentColor) */}
           <HiOutlineDocumentArrowUp size={18} />
           <span>Generar Listas</span>
         </button>
