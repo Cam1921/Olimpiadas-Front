@@ -279,7 +279,7 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
     return colors[Math.floor(Math.random() * colors.length)];
   };
 
-  // === NAVIGATION FUNCTIONS (must be BEFORE renderAdminView) ===
+  // === NAVIGATION FUNCTIONS ===
   const goToPreviousMonth = () => {
     const newDate = new Date(currentMonth);
     newDate.setMonth(newDate.getMonth() - 1);
@@ -691,7 +691,7 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
           <div className="bg-white rounded-lg p-5 w-full max-w-md">
             <h2 className="text-xl font-bold mb-3">{editingActivity ? "Editar Actividad" : "Nueva Actividad"}</h2>
             {error && <div className="bg-red-100 border border-red-300 text-red-800 p-3 rounded mb-4">{typeof error === "string" ? error : error.message || "Error desconocido"}</div>}
-            
+
             <Dropdown
               items={actividades || []}
               defaultLabel="Selecciona una actividad"
@@ -718,9 +718,10 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
               onChange={(e) => setNewActivityDescription(e.target.value)}
               className="w-full p-2 border border-slate-300 rounded mb-3 text-sm h-16"
             />
-            
+
+            {/* === Fecha y hora de inicio === */}
             <div className="p-2 bg-blue-50 rounded mb-2">
-              <div className="text-xs font-medium text-blue-800 mb-1">Fecha de inicio</div>
+              <div className="text-xs font-medium text-blue-800 mb-1">Fecha y hora de inicio</div>
               <div className="flex items-center gap-2">
                 <input
                   type="date"
@@ -734,22 +735,46 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
                   className="border border-slate-300 rounded px-2 py-1 text-sm"
                 />
                 <select
-                  value={selectedDates[0]?.time || "09:00"}
+                  value={selectedDates[0]?.time ? selectedDates[0].time.split(':')[0] : "09"}
                   onChange={(e) => {
                     const newDates = [...selectedDates];
                     if (newDates.length < 2) newDates.push({ ...newDates[0] });
-                    newDates[0].time = e.target.value;
+                    const currentMinutes = newDates[0].time?.split(':')[1] || "00";
+                    newDates[0].time = `${e.target.value}:${currentMinutes}`;
                     setSelectedDates(newDates);
                   }}
-                  className="border border-slate-300 rounded px-2 py-1 text-sm"
+                  className="border border-slate-300 rounded px-2 py-1 text-sm w-16"
                 >
-                  {Array.from({ length: 24 }, (_, i) => <option key={i} value={`${String(i).padStart(2, "0")}:00`}>{String(i).padStart(2, "0")}:00</option>)}
+                  {Array.from({ length: 24 }, (_, i) => (
+                    <option key={i} value={String(i).padStart(2, "0")}>
+                      {String(i).padStart(2, "0")}
+                    </option>
+                  ))}
+                </select>
+                <span>:</span>
+                <select
+                  value={selectedDates[0]?.time ? selectedDates[0].time.split(':')[1] : "00"}
+                  onChange={(e) => {
+                    const newDates = [...selectedDates];
+                    if (newDates.length < 2) newDates.push({ ...newDates[0] });
+                    const currentHour = newDates[0].time?.split(':')[0] || "09";
+                    newDates[0].time = `${currentHour}:${e.target.value}`;
+                    setSelectedDates(newDates);
+                  }}
+                  className="border border-slate-300 rounded px-2 py-1 text-sm w-16"
+                >
+                  {Array.from({ length: 60 }, (_, i) => (
+                    <option key={i} value={String(i).padStart(2, "0")}>
+                      {String(i).padStart(2, "0")}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
 
+            {/* === Fecha y hora de fin === */}
             <div className="p-2 bg-purple-50 rounded">
-              <div className="text-xs font-medium text-purple-800 mb-1">Fecha de fin</div>
+              <div className="text-xs font-medium text-purple-800 mb-1">Fecha y hora de fin</div>
               <div className="flex items-center gap-2">
                 <input
                   type="date"
@@ -763,16 +788,39 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
                   className="border border-slate-300 rounded px-2 py-1 text-sm"
                 />
                 <select
-                  value={selectedDates[1]?.time || "17:00"}
+                  value={selectedDates[1]?.time ? selectedDates[1].time.split(':')[0] : "17"}
                   onChange={(e) => {
                     const newDates = [...selectedDates];
                     if (newDates.length < 2) newDates.push({ ...newDates[0] });
-                    newDates[1].time = e.target.value;
+                    const currentMinutes = newDates[1].time?.split(':')[1] || "00";
+                    newDates[1].time = `${e.target.value}:${currentMinutes}`;
                     setSelectedDates(newDates);
                   }}
-                  className="border border-slate-300 rounded px-2 py-1 text-sm"
+                  className="border border-slate-300 rounded px-2 py-1 text-sm w-16"
                 >
-                  {Array.from({ length: 24 }, (_, i) => <option key={i} value={`${String(i).padStart(2, "0")}:00`}>{String(i).padStart(2, "0")}:00</option>)}
+                  {Array.from({ length: 24 }, (_, i) => (
+                    <option key={i} value={String(i).padStart(2, "0")}>
+                      {String(i).padStart(2, "0")}
+                    </option>
+                  ))}
+                </select>
+                <span>:</span>
+                <select
+                  value={selectedDates[1]?.time ? selectedDates[1].time.split(':')[1] : "00"}
+                  onChange={(e) => {
+                    const newDates = [...selectedDates];
+                    if (newDates.length < 2) newDates.push({ ...newDates[0] });
+                    const currentHour = newDates[1].time?.split(':')[0] || "17";
+                    newDates[1].time = `${currentHour}:${e.target.value}`;
+                    setSelectedDates(newDates);
+                  }}
+                  className="border border-slate-300 rounded px-2 py-1 text-sm w-16"
+                >
+                  {Array.from({ length: 60 }, (_, i) => (
+                    <option key={i} value={String(i).padStart(2, "0")}>
+                      {String(i).padStart(2, "0")}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
