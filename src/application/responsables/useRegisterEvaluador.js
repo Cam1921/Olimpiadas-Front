@@ -129,7 +129,7 @@ const submit = useCallback(async () => {
 
     // ✅ Axios lanza error si el status no es 2xx
     const data = response.data;
-    
+    console.log("Evaluador registrado:", data);
     return { ok: true, data };
 
   } catch (err) {

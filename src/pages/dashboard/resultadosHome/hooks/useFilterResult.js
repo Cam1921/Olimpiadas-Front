@@ -49,7 +49,7 @@ export function useFiltersResult() {
     if (!area || area === "Todas las áreas") return ["Todos los niveles"];
     return ["Todos los niveles", ...(LEVELS_BY_AREA[area] || [])];
   }, [area, LEVELS_BY_AREA]);
-const areasDisponibles = useMemo(
+  const areasDisponibles = useMemo(
     () => ["Todas las áreas", ...Object.keys(LEVELS_BY_AREA)],
     [LEVELS_BY_AREA]
   );

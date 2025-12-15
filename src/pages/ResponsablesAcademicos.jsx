@@ -142,7 +142,7 @@ export default function ResponsablesAcademicos() {
 
       <div className="mt-6 flex items-center justify-between">
         <div>
-          <h1 className="text-5xl font-semibold text-primary">
+          <h1 className="text-2xl md:text-3xl font-semibold">
             Registro de Responsables Académicos
           </h1>
           <p className="text-slate-500 mt-2">

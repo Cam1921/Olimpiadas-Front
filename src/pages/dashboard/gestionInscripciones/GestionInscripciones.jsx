@@ -1,4 +1,3 @@
-// src/pages/dashboard/gestionInscripciones/GestionInscripciones.jsx
 import React, { useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import {
@@ -7,22 +6,37 @@ import {
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { Download, FileWarning } from "lucide-react";
-import GestionInscripciones from "./ListaCompetidores";
-import { actividadService } from "@/services/actividadService";
 import api from "@/lib/api";
+import { useFilterCompetidores } from "./hooks/useFilterCompetidores";
+import ListaCompetidores from "./ListaCompetidores";
+import ModalAreasNiveles from "@/components/ModalAreasNiveles";
+import { Button } from "@/components/Button";
+import { IoWarningOutline } from "react-icons/io5";
+import { RiInformationLine } from "react-icons/ri";
 
 export default function InscripcionesManagement() {
   const [file, setFile] = useState(null);
   const [isValidated, setIsValidated] = useState(false);
   const [validationError, setValidationError] = useState(null);
-  const [confirmedData, setConfirmedData] = useState([]);
   const [isImporting, setIsImporting] = useState(false);
   const [isFormatValid, setIsformatValid] = useState(true);
   const [importSuccess, setImportSuccess] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [responseData, setResponseData] = useState(null);
   const [isValidating, setIsValidating] = useState(false);
-  const [isActivo, setIsActivo] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
+  const [showGuideAreasNiveles, setShowGuideAreasNiveles] = useState(false);
+  const {
+    actividad,
+    data,
+    importedData,
+    lastPage,
+    loading,
+    exportExcel,
+    setters,
+    filtros,
+    opciones,
+  } = useFilterCompetidores();
 
   const handleFileSelect = (e) => {
     const selected = e.target.files?.[0];
@@ -60,21 +74,10 @@ export default function InscripcionesManagement() {
 
   const resetValidation = () => {
     setIsValidated(false);
-    setConfirmedData([]);
+    setters.setImportedData([]);
     setResponseData(null);
   };
-  const IsActive = async () => {
-    try {
-      const actividad = await actividadService.verificarActividad(
-        "inscripcion",
-        "importacion"
-      );
-      console.log(actividad.activo);
-      setIsActivo(actividad.activo);
-    } catch (error) {
-      console.error("Error al verificar la actividad:", error);
-    }
-  };
+
   useEffect(() => {
     if (validationError) {
       const timer = setTimeout(() => {
@@ -105,9 +108,6 @@ export default function InscripcionesManagement() {
     }
   }, [importSuccess]);
 
-  useEffect(() => {
-    IsActive();
-  }, []);
   const handleValidateFile = async () => {
     if (!file) return;
     setIsValidating(true);
@@ -115,7 +115,10 @@ export default function InscripcionesManagement() {
       const formData = new FormData();
       formData.append("archivo", file);
 
-      const previewResponse = await api.post("importaciones/preview", formData);
+      const previewResponse = await api.post(
+        "/competidores/importaciones",
+        formData
+      );
       console.log(previewResponse);
       const previewResult = previewResponse.data;
       if (previewResult.status === "success") {
@@ -162,7 +165,7 @@ export default function InscripcionesManagement() {
     const importId = responseData.meta.import_id;
 
     try {
-      const response = await api.post("/importaciones/confirmar", {
+      const response = await api.post("/competidores/importaciones/confirmar", {
         import_id: importId,
       });
       const result = response.data;
@@ -170,21 +173,22 @@ export default function InscripcionesManagement() {
 
       if (result.status === "success") {
         toast.success("Competidores importados correctamente");
-        setConfirmedData(
+        setters.setImportedData(
           result.data.map((item, index) => ({
             id: index + 1,
-            nombre: item["nombres"] || "—",
+            nombres: item["nombres"] || "—",
             ci: item["ci"] || "—",
-            unidad_educativa: item["unidad educativa"] || "—",
+            unidad_educativa: item["unidad_educativa"] || "—",
             departamento: item["departamento"] || "—",
             grado: item["grado"] || "—",
             area: item["area"] || "—",
             nivel: item["nivel"] || "—",
-            contacto_tutor_legal: item["contacto tutor legal"] || "—",
-            contacto_tutor_academico: item["contacto tutor academico"] || "—",
-            nombre_equipo: item["nombre equipo"] || "—",
+            contacto_tutor_legal: item["contacto_tutor_legal"] || "—",
+            contacto_tutor_academico: item["contacto_tutor_academico"] || "",
+            nombre_equipo: item["nombre_equipo"] || "",
           }))
         );
+
         setImportSuccess(true);
         setIsValidated(false);
         setResponseData(null);
@@ -208,7 +212,7 @@ export default function InscripcionesManagement() {
     try {
       const importId = responseData.meta.import_id;
 
-      const response = await api.get("/importaciones/errores", {
+      const response = await api.get("/competidores/importaciones/errores", {
         params: { import_id: importId },
         headers: { Accept: "text/csv" },
         responseType: "blob",
@@ -237,28 +241,76 @@ export default function InscripcionesManagement() {
   return (
     <div className="p-3 lg:p-5 space-y-8 bg-gray-50 min-h-screen">
       <div>
-        <h2 className=" font-semibold text-gray-800">
-          Gestión de Inscripciones
-        </h2>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <h2 className=" text-2xl md:text-3xl font-semibold">
+            Gestión de Inscripciones
+          </h2>
+          {actividad?.data ? (
+            <div>
+              <div className="flex flex-col md:flex-row md:items-center mt-2 gap-2">
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium">Desde:</span>{" "}
+                  {new Date(
+                    actividad.data.fecha_inicio.split("T")[0] + "T00:00:00"
+                  ).toLocaleDateString("es-BO")}
+                  ({actividad.data.hora_inicio})
+                </p>
+                <span className="hidden md:block text-gray-500">|</span>
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium">Hasta:</span>{" "}
+                  {new Date(
+                    actividad.data.fecha_fin.split("T")[0] + "T00:00:00"
+                  ).toLocaleDateString("es-BO")}
+                  ({actividad.data.hora_fin})
+                </p>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-600">
+              {actividad?.message || "Cargando información de la actividad..."}
+            </p>
+          )}
+        </div>
+
         <p className="text-gray-600">
           Importa competidores desde CSV y genera listas por área y nivel.
         </p>
       </div>
 
       <div className="bg-white shadow rounded-xl p-6 space-y-6 border">
-        <h2 className=" font-medium">Importar competidores (CSV)</h2>
+        <h2 className=" text-xl md:text-xl font-semibold">
+          Importar competidores (CSV)
+        </h2>
+        <div className="flex justify-end mb-4 gap-3">
+          <Button
+            size="sm"
+            disabled={!actividad?.activo}
+            onClick={() => setShowGuide(true)}
+          >
+            <span>
+              <RiInformationLine className="h-5 w-5 text-white" />
+            </span>
+            Ver guía de campos
+          </Button>
+        </div>
 
         <div
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
-          onClick={() => document.getElementById("csv-input").click()}
-          className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition 
-        ${
-          isDragging
-            ? "border-blue-400 bg-blue-100/40"
-            : "border-gray-300 hover:border-blue-400"
-        }`}
+          onClick={
+            actividad?.activo
+              ? () => document.getElementById("csv-input").click()
+              : undefined
+          }
+          className={`border-2 border-dashed rounded-xl p-8 text-center transition
+    ${
+      !actividad?.activo
+        ? "cursor-not-allowed opacity-50 border-gray-400 "
+        : isDragging
+        ? "border-blue-400 bg-blue-100/40 cursor-pointer"
+        : "border-gray-300 hover:border-blue-400 cursor-pointer"
+    }`}
         >
           <input
             id="csv-input"
@@ -278,8 +330,8 @@ export default function InscripcionesManagement() {
           </p>
           <p className="text-sm text-gray-500 mb-3">
             Campos requeridos: Nombre Completo, CI, Contacto tutor legal, Unidad
-            educativa, Departamento, Grado, Área(s), Nivel, Tutor académico,
-            Nombre del equipo (opcional).
+            educativa, Departamento, Grado, Área(s), Nivel, Contacto tutor
+            académico, Nombre del equipo (opcional).
           </p>
           <p className="text-sm text-gray-500">
             Solo se admiten archivos con extensión .CSV
@@ -304,7 +356,7 @@ export default function InscripcionesManagement() {
                 ¡Importación exitosa!
               </p>
               <p className="text-green-600 text-sm">
-                Se importaron {confirmedData.length} competidores correctamente.
+                Se importaron {importedData.length} competidores correctamente.
               </p>
             </div>
           </div>
@@ -343,8 +395,8 @@ export default function InscripcionesManagement() {
                   <br />
                   <span className="font-semibold">
                     Nombre Completo, CI, Contacto tutor legal, Unidad educativa,
-                    Departamento, Grado, Área(s), Nivel, Tutor académico, Nombre
-                    del equipo (opcional)
+                    Departamento, Grado, Área(s), Nivel, Contacto tutor
+                    académico, Nombre del equipo (opcional)
                   </span>
                 </p>
               </>
@@ -368,8 +420,8 @@ export default function InscripcionesManagement() {
                   <br />
                   <span className="font-semibold">
                     Nombre Completo, CI, Contacto tutor legal, Unidad educativa,
-                    Departamento, Grado, Área(s), Nivel, Tutor académico, Nombre
-                    del equipo (opcional)
+                    Departamento, Grado, Área(s), Nivel,Contacto tutor
+                    académico, Nombre del equipo (opcional)
                   </span>
                 </p>
               </>
@@ -423,21 +475,6 @@ export default function InscripcionesManagement() {
 
         {isValidated && responseData?.status === "error" && (
           <>
-            {/* <div className="flex w-full flex-row flex-start p-3 items-start gap-3 border rounded-lg bg-white">
-              <CheckCircleIcon className="h-4 w-4" />
-              <div className="gap-2">
-                <p className="text-gray-500 text-sm flex items-center gap-1">
-                  Archivo validado correctamente.
-                </p>
-                <button
-                  onClick={handleImportFile}
-                  disabled={isImporting || responseData.meta.valid_rows === 0}
-                  className="bg-[var(--primary)] hover:bg-[var(--primary)] text-white px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isImporting ? "Importando..." : "Importar inscritos"}
-                </button>
-              </div>
-            </div> */}
             <div
               className={`p-4 border rounded-lg flex flex-row gap-4  ${"border-red-400 bg-white"}`}
             >
@@ -525,26 +562,201 @@ export default function InscripcionesManagement() {
           </>
         )}
       </div>
-
-      {/*  <div className="  flex items-center justify-center">
-          <div className="w-full max-w-lg bg-white border rounded-xl p-10 flex flex-col items-center text-center shadow-sm">
-            <div className="bg-red-100 text-red-600 w-16 h-16 rounded-full flex items-center justify-center mb-4">
-              <ExclamationTriangleIcon className="h-10 w-10" />
-            </div>
-
-            <p className="text-gray-600 max-w-md mb-6">
-              La importación de competidores no está activa en este momento.
-            </p>
-          </div>
-        </div> */}
-
       <div className="bg-white shadow rounded-lg p-6 border space-y-4">
-        <h2 className=" font-semibold text-gray-800">
-          Listas por Área y Nivel
+        <h2 className=" text-xl md:text-xl font-semibold">
+          Listas de competidores por área y nivel
         </h2>
 
-        <GestionInscripciones importedData={confirmedData} />
+        <ListaCompetidores
+          data={data || []}
+          loading={loading}
+          lastPage={lastPage}
+          setters={setters}
+          opciones={opciones}
+          filtros={filtros}
+          onExportExcel={exportExcel}
+        />
       </div>
+      {showGuide && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="relative w-full max-w-2xl h-[80vh] bg-white rounded-2xl shadow-2xl flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-800">
+                  Guía de campos CSV
+                </h2>
+                <p className="text-sm text-slate-500">
+                  Formato y reglas para la importación de datos
+                </p>
+              </div>
+
+              <button
+                onClick={() => setShowGuide(false)}
+                className="rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto px-6 py-4">
+              <div className="overflow-hidden rounded-xl border">
+                <table className="w-full text-sm text-left">
+                  <thead className="sticky top-0 bg-slate-100 text-slate-700">
+                    <tr>
+                      <th className="px-4 py-3 font-medium">Campo</th>
+                      <th className="px-4 py-3 font-medium">
+                        Formato / Reglas
+                      </th>
+                      <th className="px-4 py-3 font-medium">Ejemplo</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {[
+                      {
+                        campo: "Nombre completo",
+                        regla: "Campo obligatorio. No puede estar vacío.",
+                        ejemplo: "Juan Pérez López",
+                      },
+                      {
+                        campo: "CI",
+                        regla:
+                          "Campo obligatorio. Numérico entre 6 y 10 dígitos. No debe repetirse para la misma área y nivel.",
+                        ejemplo: "87654321",
+                      },
+                      {
+                        campo: "Contacto tutor legal",
+                        regla:
+                          "Campo obligatorio. Teléfono válido (6 a 14 dígitos).",
+                        ejemplo: "62345678",
+                      },
+                      {
+                        campo: "Contacto tutor académico",
+                        regla: "Opcional. Teléfono válido (6 a 14 dígitos).",
+                        ejemplo: "71234567",
+                      },
+                      {
+                        campo: "Unidad educativa",
+                        regla: "Campo obligatorio. Texto libre.",
+                        ejemplo: "Unidad Educativa San Martín",
+                      },
+                      {
+                        campo: "Departamento",
+                        regla:
+                          "Campo obligatorio. Debe coincidir con un departamento válido.",
+                        ejemplo: "La Paz",
+                      },
+                      {
+                        campo: "Grado",
+                        regla:
+                          "Campo obligatorio. Debe existir y corresponder al nivel seleccionado.",
+                        ejemplo: "1ro Secundaria",
+                      },
+                      {
+                        campo: "Área",
+                        regla:
+                          "Campo obligatorio. Debe existir y estar habilitada para la olimpiada.",
+                        ejemplo: "Matemáticas",
+                      },
+                      {
+                        campo: "Nivel",
+                        regla:
+                          "Campo obligatorio. Debe existir y tener relación válida con el área.",
+                        ejemplo: "Primer nivel",
+                      },
+                      {
+                        campo: "Nombre equipo",
+                        regla:
+                          "Opcional. Solo permitido si el área es Robótica.",
+                        ejemplo: "Los Jucumaris",
+                      },
+                    ].map((row) => (
+                      <tr
+                        key={row.campo}
+                        className="hover:bg-slate-50 transition"
+                      >
+                        <td className="px-4 py-3 font-medium text-slate-800 whitespace-nowrap">
+                          {row.campo}
+                        </td>
+                        <td className="px-4 py-3 text-slate-600">
+                          {row.regla}
+                        </td>
+                        <td className="px-4 py-3 text-slate-500 italic">
+                          {row.ejemplo}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                <div className="flex gap-3">
+                  <div className="text-amber-600 mt-0.5">
+                    {" "}
+                    <IoWarningOutline size={20} />
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-semibold text-amber-800">
+                      Importante antes de subir el CSV
+                    </h4>
+
+                    <ul className="mt-2 space-y-1 text-sm text-amber-700 list-disc list-inside">
+                      <li>
+                        El archivo debe estar en formato{" "}
+                        <span className="font-medium">CSV</span> y usar el
+                        separador correcto (
+                        <span className="font-medium">,</span> o{" "}
+                        <span className="font-medium">;</span>).
+                      </li>
+                      <li>
+                        Los campos deben respetar el{" "}
+                        <span className="font-medium">orden indicado</span> en
+                        la guía.
+                      </li>
+                      <li>
+                        Los campos <span className="font-medium">Área</span> y{" "}
+                        <span className="font-medium">Nivel</span> deben
+                        coincidir con valores válidos. Consulta la guía de áreas
+                        y niveles.
+                      </li>
+                      <li>
+                        Se permite registrar competidores a dos area y niveles
+                        diferentes .
+                      </li>
+                      <li>
+                        No se permite registrar dos competidores en la{" "}
+                        <span className="font-medium">misma área y nivel</span>.
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 flex justify-end">
+                <Button
+                  size="sm"
+                  onClick={() => setShowGuideAreasNiveles(true)}
+                >
+                  Ver guía de areas y niveles
+                </Button>
+              </div>
+            </div>
+            <ModalAreasNiveles
+              open={showGuideAreasNiveles}
+              onClose={() => setShowGuideAreasNiveles(false)}
+            />
+            {/* Footer */}
+            <div className="flex justify-end gap-2 border-t px-6 py-4">
+              <Button variant="outline" onClick={() => setShowGuide(false)}>
+                Cerrar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

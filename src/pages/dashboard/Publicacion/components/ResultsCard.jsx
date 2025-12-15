@@ -95,20 +95,7 @@ export default function ResultsCard({
                       <td className="px-3 py-2 text-right font-mono">
                         {row.puntaje}
                       </td>
-                      <td className="px-3 py-2 text-center">
-                        <span
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full ${
-                            row.estadoColor || "bg-gray-100 text-gray-700"
-                          }`}
-                        >
-                          {row.estadoIcon && (
-                            <span className="inline-block">
-                              {row.estadoIcon}
-                            </span>
-                          )}
-                          {row.estadoTexto}
-                        </span>
-                      </td>
+                      <td className="px-3 py-2 text-center">{row.estado}</td>
                     </tr>
                   ))
                 )}
@@ -136,9 +123,7 @@ export default function ResultsCard({
               </button>
               <button
                 type="button"
-                onClick={() =>
-                  setPage((p) => (p < totalPages ? p + 1 : p))
-                }
+                onClick={() => setPage((p) => (p < totalPages ? p + 1 : p))}
                 disabled={page >= totalPages}
                 className="px-3 py-1 rounded-full border text-xs disabled:opacity-40"
               >

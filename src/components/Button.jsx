@@ -12,7 +12,7 @@ const Button = React.forwardRef(
 
     // Variantes de estilo
     const variantClasses = {
-      default: "bg-blue-600 text-white hover:bg-blue-700",
+      default: "btn btn-cta  text-white ",
       destructive: "bg-red-600 text-white hover:bg-red-700",
       outline: "border border-gray-300 text-gray-700 hover:bg-gray-100",
       secondary: "bg-gray-200 text-gray-800 hover:bg-gray-300",

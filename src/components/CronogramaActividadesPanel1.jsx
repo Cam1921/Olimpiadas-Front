@@ -14,7 +14,7 @@ import { faseService } from "@/services/faseService";
 import Dropdown from "./Dropdown";
 import { FaChevronDown } from "react-icons/fa";
 
-export default function CronogramaActividadesPanel({ userRole = "admin" }) {
+export default function CronogramaActividadesPanel1({ userRole = "admin" }) {
   const [showDescriptionModal, setShowDescriptionModal] = useState(null);
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -542,7 +542,7 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
     <>
       <div className="flex justify-between items-start mb-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">
+          <h1 className="text-2xl md:text-3xl font-semibold">
             Cronograma de Actividades
           </h1>
           <p className="text-sm text-slate-500 mt-1">
