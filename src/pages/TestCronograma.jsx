@@ -1,4 +1,5 @@
-import CronogramaActividadesPanel from "@/components/cronograma/CronogramaActividadesPanel";
+// src/pages/TestCronograma.jsx
+import CronogramaActividadesPanel from "../components/cronograma/CronogramaActividadesPanel";
 
 export default function TestCronograma() {
   return (
