@@ -12,11 +12,11 @@
        { icon: "CalendarCheck", label: "Cronograma de Actividades", path: "gestion-cronograma" },
       { icon: "HiOutlineUserGroup", label: "Gestion de Roles", path: "gestion-roles" },
       { icon: "AiOutlineEdit", label: "Asignación de Competidores", path: "asignacion-competidores" },
-      { icon: "GoMail", label: "Notificaciones", path: "notificaciones" },
+      { icon: "GoMail", label: "Notificaciones de acceso", path: "notificaciones" },
       { icon: "BsSliders2", label: "Control de Fases", path: "control-fases" },
       { icon: "HiAcademicCap", label: "Entorno Final", path: "entorno-final" },
       { icon: "GrTrophy", label: "Medallero y Premiación", path: "medallero-premiacion" },
-      { icon: "FaRegFileAlt", label: "Resultados y Reportes", path: "resultados-reportes" },
+      
       { icon: "LuFileCheck", label: "Certificados", path: "certificados" },
       { icon: "ImSphere", label: "Publicación", path: "publicacion" },
       { icon: "IoTimeOutline", label: "Trazabilidad/Log", path: "trazabilidad-log" },

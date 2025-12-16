@@ -13,6 +13,9 @@ import { actividadService } from "@/services/actividadService";
 import { faseService } from "@/services/faseService";
 import Dropdown from "../Dropdown";
 import { FaChevronDown } from "react-icons/fa";
+import { Label } from "@headlessui/react";
+import { Button } from "../Button";
+import ButtonIo from "@/shared/ui/ButtonIo";
 
 const parseLocalDate = (dateInput) => {
   if (!dateInput) return null;
@@ -21,10 +24,10 @@ const parseLocalDate = (dateInput) => {
     d.setHours(12, 0, 0, 0);
     return d;
   }
-  if (typeof dateInput === 'string') {
+  if (typeof dateInput === "string") {
     const cleaned = dateInput.trim();
     if (!cleaned) return null;
-    const parts = cleaned.split('-');
+    const parts = cleaned.split("-");
     if (parts.length === 3) {
       const [year, month, day] = parts.map(Number);
       if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
@@ -81,7 +84,10 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
       setLoading(true);
       const res = await actividadService.porFase(faseid);
       const data = res.data;
-      const adaptedData = data.map((item) => ({ label: item.nombre, value: item.id }));
+      const adaptedData = data.map((item) => ({
+        label: item.nombre,
+        value: item.id,
+      }));
       setActividades(adaptedData);
       setLoading(false);
     } catch (error) {
@@ -95,7 +101,10 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
       setLoading(true);
       const res = await faseService.getDropdown();
       const data = res.data;
-      const adaptedData = data.map((item) => ({ label: item.nombre, value: item.id }));
+      const adaptedData = data.map((item) => ({
+        label: item.nombre,
+        value: item.id,
+      }));
       setFases(adaptedData);
       setLoading(false);
     } catch (error) {
@@ -120,17 +129,27 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
             while (current <= end) {
               const dateStr = getDateString(current);
               if (dateStr === getDateString(start)) {
-                dates.push({ date: dateStr, time: item.hora_inicio_ini || "09:00" });
+                dates.push({
+                  date: dateStr,
+                  time: item.hora_inicio_ini || "09:00",
+                });
               } else if (dateStr === getDateString(end)) {
-                dates.push({ date: dateStr, time: item.hora_inicio_fin || "17:00" });
+                dates.push({
+                  date: dateStr,
+                  time: item.hora_fin_fin || "17:00",
+                });
               } else {
                 dates.push({ date: dateStr, time: "00:00" });
               }
               current.setDate(current.getDate() + 1);
             }
           } else if (item.fecha_inicio) {
-            dates.push({ date: item.fecha_inicio.split("T")[0], time: item.hora_inicio_ini || "09:00" });
+            dates.push({
+              date: item.fecha_inicio.split("T")[0],
+              time: item.hora_inicio_ini || "09:00",
+            });
           }
+
           return {
             id: item.id,
             name: item.nombre,
@@ -140,12 +159,17 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
             color: getRandomColor(),
             published: item.estado_publicado,
             dates,
-            fecha_inicio_original: item.fecha_inicio ? item.fecha_inicio.split("T")[0] : "",
-            fecha_fin_original: item.fecha_fin ? item.fecha_fin.split("T")[0] : "",
-            hora_inicio_ini_original: item.hora_inicio_ini || "09:00",
-            hora_inicio_fin_original: item.hora_inicio_fin || "17:00",
+            fecha_inicio_original: item.fecha_inicio
+              ? item.fecha_inicio.split("T")[0]
+              : "",
+            fecha_fin_original: item.fecha_fin
+              ? item.fecha_fin.split("T")[0]
+              : "",
+            hora_ini_original: item.hora_inicio_ini || "09:00",
+            hora_fin_original: item.hora_fin_fin || "17:00",
           };
         });
+      console.log(adaptedData);
       setActivities(adaptedData);
       setLoading(false);
     } catch (error) {
@@ -170,30 +194,43 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
             while (current <= end) {
               const dateStr = getDateString(current);
               if (dateStr === getDateString(start)) {
-                dates.push({ date: dateStr, time: item.hora_inicio_ini || "09:00" });
+                dates.push({
+                  date: dateStr,
+                  time: item.hora_inicio_ini || "09:00",
+                });
               } else if (dateStr === getDateString(end)) {
-                dates.push({ date: dateStr, time: item.hora_inicio_fin || "17:00" });
+                dates.push({
+                  date: dateStr,
+                  time: item.hora_fin_fin || "17:00",
+                });
               } else {
                 dates.push({ date: dateStr, time: "00:00" });
               }
               current.setDate(current.getDate() + 1);
             }
           } else if (item.fecha_inicio) {
-            dates.push({ date: item.fecha_inicio.split("T")[0], time: item.hora_inicio_ini || "09:00" });
+            dates.push({
+              date: item.fecha_inicio.split("T")[0],
+              time: item.hora_inicio_ini || "09:00",
+            });
           }
           return {
             id: item.id,
             name: item.nombre,
             description: item.descripcion,
-            fase: item.fase?.nombre || "",
+            fase: item.fase || "",
             fase_id: item.fase_id,
             color: getRandomColor(),
             published: item.estado_publicado,
             dates,
-            fecha_inicio_original: item.fecha_inicio ? item.fecha_inicio.split("T")[0] : "",
-            fecha_fin_original: item.fecha_fin ? item.fecha_fin.split("T")[0] : "",
-            hora_inicio_ini_original: item.hora_inicio_ini || "09:00",
-            hora_inicio_fin_original: item.hora_inicio_fin || "17:00",
+            fecha_inicio_original: item.fecha_inicio
+              ? item.fecha_inicio.split("T")[0]
+              : "",
+            fecha_fin_original: item.fecha_fin
+              ? item.fecha_fin.split("T")[0]
+              : "",
+            hora_ini_original: item.hora_inicio_ini || "09:00",
+            hora_fin_original: item.hora_fin_fin || "17:00",
           };
         });
       setActivities((prev) => [...prev, ...adaptedData]);
@@ -220,7 +257,20 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
     return Array.from({ length: 11 }, (_, i) => currentYear - 10 + i);
   };
 
-  const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+  const monthNames = [
+    "Enero",
+    "Febrero",
+    "Marzo",
+    "Abril",
+    "Mayo",
+    "Junio",
+    "Julio",
+    "Agosto",
+    "Septiembre",
+    "Octubre",
+    "Noviembre",
+    "Diciembre",
+  ];
 
   const generateDays = () => {
     const year = currentMonth.getFullYear();
@@ -272,9 +322,14 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
 
   const getRandomColor = () => {
     const colors = [
-      "bg-blue-100 text-blue-800", "bg-purple-100 text-purple-800", "bg-green-100 text-green-800",
-      "bg-yellow-100 text-yellow-800", "bg-red-100 text-red-800", "bg-indigo-100 text-indigo-800",
-      "bg-pink-100 text-pink-800", "bg-teal-100 text-teal-800"
+      "bg-blue-100 text-blue-800",
+      "bg-purple-100 text-purple-800",
+      "bg-green-100 text-green-800",
+      "bg-yellow-100 text-yellow-800",
+      "bg-red-100 text-red-800",
+      "bg-indigo-100 text-indigo-800",
+      "bg-pink-100 text-pink-800",
+      "bg-teal-100 text-teal-800",
     ];
     return colors[Math.floor(Math.random() * colors.length)];
   };
@@ -302,7 +357,7 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
     setNewActivityDescription("");
     setSelectedDates([
       { date: "", time: "09:00" },
-      { date: "", time: "17:00" }
+      { date: "", time: "17:00" },
     ]);
     setEditingActivity(null);
     setShowAddActivity(false);
@@ -317,7 +372,7 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
     resetForm();
     setSelectedDates([
       { date: dateStr, time: "09:00" },
-      { date: dateStr, time: "17:00" }
+      { date: dateStr, time: "17:00" },
     ]);
     setShowAddActivity(true);
   };
@@ -326,6 +381,7 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
     try {
       setLoading(true);
       const data = {
+        mode: isEditing ? "edit" : "create",
         estado_publicado: "borrador",
         descripcion: newActivityDescription.trim() || "",
       };
@@ -336,7 +392,7 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
       }
       if (selectedDates[1]?.date) {
         data.fecha_fin = selectedDates[1].date;
-        data.hora_inicio_fin = selectedDates[1].time;
+        data.hora_fin_fin = selectedDates[1].time;
       }
 
       if (actividad && fase) {
@@ -347,14 +403,26 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
 
       await fetchAllfases();
       await fetchAllActividades();
-      setSuccessTitle(isEditing ? "Actividad Actualizada" : "Actividad Programada");
-      setSuccessSubtitle(isEditing ? "Los cambios han sido guardados" : "La actividad ha sido creada con éxito");
-      setSuccessMessage(`"${newActivityName?.label || newActivityName}" ${isEditing ? "ha sido actualizada" : "se ha programado"}.`);
+      setSuccessTitle(
+        isEditing ? "Actividad Actualizada" : "Actividad Programada"
+      );
+      setSuccessSubtitle(
+        isEditing
+          ? "Los cambios han sido guardados"
+          : "La actividad ha sido creada con éxito"
+      );
+      setSuccessMessage(
+        `"${newActivityName?.label || newActivityName}" ${
+          isEditing ? "ha sido actualizada" : "se ha programado"
+        }.`
+      );
       setShowSuccess(true);
       resetForm();
       setSelectedDay(null);
     } catch (error) {
-      setError(error.response?.data?.message || error.message || "Error desconocido");
+      setError(
+        error.response?.data?.message || error.message || "Error desconocido"
+      );
     } finally {
       setTimeout(() => setError(""), 5000);
       setLoading(false);
@@ -366,11 +434,12 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
   const confirmDeleteActivity = async (activity) => {
     try {
       const data = {
+        mode: "edit",
         estado_publicado: "sin_fechas",
         fecha_inicio: "",
         fecha_fin: "",
         hora_inicio_ini: "",
-        hora_inicio_fin: "",
+        hora_fin_fin: "",
       };
       if (activity.fase && activity.fase_id) {
         await actividadService.update(activity.id, data);
@@ -393,7 +462,6 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
       await faseService.publicarTodo();
       await fetchAllfases();
       await fetchAllActividades();
-      setActivities(activities.map((a) => ({ ...a, published: true })));
       setSuccessTitle("Cronograma Publicado");
       setSuccessSubtitle("Todos los participantes pueden ver las fechas");
       setSuccessMessage("El cronograma ha sido publicado exitosamente.");
@@ -410,29 +478,52 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
   };
 
   const editFromDetail = (activity) => {
-    if (!activity?.id) return alert("Error: La actividad no tiene un ID válido.");
+    if (!activity?.id)
+      return alert("Error: La actividad no tiene un ID válido.");
 
     handleEditActivity(activity);
     setEditingActivity(activity);
     setNewActivityName(activity.name);
     setNewActivityDescription(activity.description || "");
-
+    console.log("actificad a editar", activity);
     const startDate = activity.fecha_inicio_original || "";
     const endDate = activity.fecha_fin_original || "";
-    const startTime = activity.hora_inicio_ini_original || "09:00";
-    const endTime = activity.hora_inicio_fin_original || "17:00";
+    const startTime = (activity.hora_ini_original || "09:00:00").slice(0, 5); // "HH:MM"
+    const endTime = (activity.hora_fin_original || "17:00:00").slice(0, 5); // "HH:MM"
 
     const dates = [
       { date: startDate, time: startTime },
-      { date: endDate, time: endTime }
+      { date: endDate, time: endTime },
     ];
+    console.log(dates);
 
     setSelectedDates(dates);
     setShowAddActivity(true);
     setShowEventDetail(null);
     setSelectedDay(null);
   };
+  const isSelected = (date) => {
+    if (!date || !(date instanceof Date) || isNaN(date.getTime())) return false;
+    const dStr = getDateString(date);
+    return getDateString(selectedDay) === dStr;
+  };
 
+  const toggleDay = (date) => {
+    if (!date || !(date instanceof Date) || isNaN(date.getTime())) return;
+    if (!isFutureOrToday(date)) return;
+
+    const dStr = getDateString(date);
+
+    setSelectedDay((prev) => {
+      const exists = getDateString(prev) === dStr;
+      if (exists) {
+        return null;
+      }
+
+      // Reemplazar cualquier fecha existente con la nueva
+      return date;
+    });
+  };
   const handleEditActivity = (activityData) => {
     if (!activityData) return;
     if (activityData.fase && activityData.fase_id) {
@@ -445,28 +536,41 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
     }
   };
 
+  const estado_publicado = {
+    publicado: "Publicado",
+    borrador: "Borrador",
+  };
+
   // === VIEWS ===
   const renderAdminView = () => (
     <>
-      <div className="flex justify-between items-start mb-4">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Cronograma de Actividades</h1>
+          <h1 className="text-2xl md:text-3xl font-semibold">
+            Cronograma de Actividades
+          </h1>
           <p className="text-sm text-slate-500 mt-1">
             {selectedDay
               ? `Día seleccionado: ${selectedDay.toLocaleDateString()}`
               : "Seleccione un día en el calendario para programar una actividad."}
           </p>
         </div>
-        <div className="flex gap-3">
+
+        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
           <button
-            className={`btn btn-outline flex items-center gap-2 ${!selectedDay ? "opacity-50 cursor-not-allowed" : ""}`}
+            className={`btn btn-outline flex items-center justify-center gap-2 w-full sm:w-auto ${
+              !selectedDay ? "opacity-50 cursor-not-allowed" : ""
+            }`}
             onClick={handleAddActivity}
             disabled={!selectedDay}
           >
             <PlusIcon className="w-4 h-4" /> Nueva Actividad
           </button>
+
           <button
-            className={`btn btn-primary flex items-center gap-2 ${activities.length === 0 ? "opacity-50 cursor-not-allowed" : ""}`}
+            className={`btn btn-primary flex items-center justify-center gap-2 w-full sm:w-auto ${
+              activities.length === 0 ? "opacity-50 cursor-not-allowed" : ""
+            }`}
             onClick={() => setShowConfirmPublish(true)}
             disabled={activities.length === 0}
           >
@@ -482,7 +586,11 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
             onChange={(e) => setSelectedYear(Number(e.target.value))}
             className="border border-slate-300 rounded px-2 py-1 text-xs w-20"
           >
-            {generateYears().map((year) => <option key={year} value={year}>{year}</option>)}
+            {generateYears().map((year) => (
+              <option key={year} value={year}>
+                {year}
+              </option>
+            ))}
           </select>
         </div>
         <div className="flex items-center gap-2">
@@ -492,24 +600,40 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
             onChange={(e) => setSelectedMonth(Number(e.target.value))}
             className="border border-slate-300 rounded px-2 py-1 text-xs w-24"
           >
-            {monthNames.map((name, index) => <option key={index} value={index}>{name}</option>)}
+            {monthNames.map((name, index) => (
+              <option key={index} value={index}>
+                {name}
+              </option>
+            ))}
           </select>
         </div>
       </div>
       <div className="card p-4 mb-6">
         <div className="flex justify-between items-center mb-4">
-          <button onClick={goToPreviousMonth} className="btn btn-sm btn-outline">{"<"}</button>
-          <h3 className="text-lg font-medium">{monthNames[selectedMonth]} de {selectedYear}</h3>
-          <button onClick={goToNextMonth} className="btn btn-sm btn-outline">{">"}</button>
+          <button
+            onClick={goToPreviousMonth}
+            className="btn btn-sm btn-outline"
+          >
+            {"<"}
+          </button>
+          <h3 className="text-lg font-medium">
+            {monthNames[selectedMonth]} de {selectedYear}
+          </h3>
+          <button onClick={goToNextMonth} className="btn btn-sm btn-outline">
+            {">"}
+          </button>
         </div>
         <div className="grid grid-cols-7 gap-1 text-xs font-medium text-slate-500">
-          {["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"].map((day) => <div key={day} className="text-center py-2">{day}</div>)}
+          {["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"].map((day) => (
+            <div key={day} className="text-center py-2">
+              {day}
+            </div>
+          ))}
         </div>
         <div className="grid grid-cols-7 gap-1 mt-2">
           {days.map((date, idx) => {
             const isValidDate = date instanceof Date && !isNaN(date.getTime());
             const info = isValidDate ? getActivityInfo(date) : null;
-            const isSelected = selectedDay && getDateString(selectedDay) === getDateString(date);
             return (
               <div
                 key={idx}
@@ -518,7 +642,7 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
                     ? ""
                     : !isFutureOrToday(date)
                     ? "text-slate-300 bg-slate-50 cursor-not-allowed"
-                    : isSelected
+                    : isSelected(date)
                     ? "bg-blue-200 border border-blue-500"
                     : info
                     ? "bg-white border border-slate-200 hover:bg-slate-100"
@@ -526,7 +650,7 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
                 } ${showAddActivity ? "pointer-events-none opacity-70" : ""}`}
                 onClick={() => {
                   if (isValidDate && isFutureOrToday(date)) {
-                    setSelectedDay(date);
+                    toggleDay(date);
                   }
                 }}
               >
@@ -553,35 +677,98 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
         </div>
       </div>
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-slate-800">Actividades Programadas</h2>
+        <h2 className="text-xl font-semibold text-slate-800">
+          Actividades Programadas
+        </h2>
         {activities.length === 0 ? (
-          <div className="text-center py-8 text-slate-500">No hay actividades aún.</div>
+          <div className="text-center py-8 text-slate-500">
+            No hay actividades aún.
+          </div>
         ) : (
           activities.map((activity, index) => {
             const firstDate = activity.dates[0];
             const lastDate = activity.dates[activity.dates.length - 1];
+            console.log("actividad", activity);
             return (
-              <div key={index} className="card p-4 flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <span className={`inline-block px-3 py-1 text-xs rounded-full ${activity.color}`}>{activity.name}</span>
+              <div
+                key={index}
+                className="card p-4 flex flex-col md:flex-row justify-between md:items-center gap-4"
+              >
+                {/* IZQUIERDA */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1">
+                  <span
+                    className={`inline-block px-3 py-1 text-xs rounded-full ${activity.color}`}
+                  >
+                    {activity.fase_id
+                      ? activity.name + "-" + activity.fase
+                      : activity.name}
+                  </span>
+
                   <div className="text-sm text-slate-600">
-                    {firstDate && <>{new Date(firstDate.date).toLocaleDateString()} ({firstDate.time})</>}
-                    {lastDate && activity.dates.length > 1 && <>{" "}•{" "}{new Date(lastDate.date).toLocaleDateString()} ({lastDate.time})</>}
+                    {activity.fecha_inicio_original &&
+                      activity.hora_ini_original && (
+                        <>
+                          {new Date(
+                            activity.fecha_inicio_original + "T00:00:00"
+                          ).toLocaleDateString()}{" "}
+                          ({activity.hora_ini_original})
+                        </>
+                      )}
+
+                    {activity.fecha_fin_original &&
+                      activity.hora_fin_original && (
+                        <>
+                          {" • "}
+                          {new Date(
+                            activity.fecha_fin_original + "T00:00:00"
+                          ).toLocaleDateString()}{" "}
+                          ({activity.hora_fin_original})
+                        </>
+                      )}
                   </div>
+
                   {activity.description && (
                     <div className="flex items-center gap-1">
-                      <span className="text-xs text-slate-500 italic">Descripción:</span>
-                      <button onClick={() => setShowDescriptionModal(activity)} className="text-blue-600 hover:text-blue-800" title="Ver descripción completa">
+                      <span className="text-xs text-slate-500 italic">
+                        Descripción:
+                      </span>
+                      <button
+                        onClick={() => setShowDescriptionModal(activity)}
+                        className="text-blue-600 hover:text-blue-800"
+                        title="Ver descripción completa"
+                      >
                         <EyeIcon className="w-4 h-4" />
                       </button>
                     </div>
                   )}
                 </div>
-                <div className="flex gap-2">
-                  <button className="btn btn-sm btn-outline" onClick={() => editFromDetail(activity)}><PencilIcon className="w-4 h-4" /></button>
-                  <button className="btn btn-sm btn-outline text-red-600" onClick={() => setShowConfirmDelete(activity)}><TrashIcon className="w-4 h-4" /></button>
-                  <span className={`px-2 py-1 text-xs rounded-full ${activity.published ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}>
-                    {activity.published ? "Publicado" : "Borrador"}
+
+                {/* DERECHA */}
+                <div className="flex gap-2 justify-end">
+                  <button
+                    className="btn btn-sm btn-outline"
+                    onClick={() => editFromDetail(activity)}
+                  >
+                    <PencilIcon className="w-4 h-4" />
+                  </button>
+
+                  <button
+                    className="btn btn-sm btn-outline text-red-600"
+                    onClick={() => setShowConfirmDelete(activity)}
+                  >
+                    <TrashIcon className="w-4 h-4" />
+                  </button>
+
+                  <span
+                    className={`px-2 py-1 text-xs rounded-full ${
+                      activity.published
+                        ? "bg-green-100 text-green-800"
+                        : "bg-gray-100 text-gray-800"
+                    }`}
+                  >
+                    {activity.published
+                      ? estado_publicado[activity.published]
+                      : "Borrador"}
                   </span>
                 </div>
               </div>
@@ -594,25 +781,47 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
 
   const renderEvaluatorView = () => (
     <div>
-      <h1 className="text-2xl font-bold text-slate-800 mb-4">Cronograma de Actividades</h1>
-      <p className="text-sm text-slate-500 mb-6">Fechas clave para evaluadores.</p>
+      <h1 className="text-2xl font-bold text-slate-800 mb-4">
+        Cronograma de Actividades
+      </h1>
+      <p className="text-sm text-slate-500 mb-6">
+        Fechas clave para evaluadores.
+      </p>
       <div className="card p-4">
         <div className="grid grid-cols-7 gap-1 text-xs font-medium text-slate-500 mb-2">
-          {["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"].map((day) => <div key={day} className="text-center py-2">{day}</div>)}
+          {["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"].map((day) => (
+            <div key={day} className="text-center py-2">
+              {day}
+            </div>
+          ))}
         </div>
         <div className="grid grid-cols-7 gap-1">
           {days.map((date, idx) => {
             const info = getActivityInfo(date);
             return (
-              <div key={idx} className={`h-16 flex flex-col items-center justify-center text-xs rounded-md p-1 ${info ? "bg-white border border-slate-200" : "bg-white"}`}>
+              <div
+                key={idx}
+                className={`h-16 flex flex-col items-center justify-center text-xs rounded-md p-1 ${
+                  info ? "bg-white border border-slate-200" : "bg-white"
+                }`}
+              >
                 {date ? date.getDate() : ""}
                 {info && (
                   <div className="mt-1 space-y-1 w-full">
-                    {info.filter((e) => e.published).map((event, i) => (
-                      <div key={i} className={`px-1 py-0.5 text-[10px] rounded truncate ${event.color} text-xs cursor-pointer`} onClick={(e) => { e.stopPropagation(); openEventDetail(event.activity, date); }}>
-                        {event.name}
-                      </div>
-                    ))}
+                    {info
+                      .filter((e) => e.published)
+                      .map((event, i) => (
+                        <div
+                          key={i}
+                          className={`px-1 py-0.5 text-[10px] rounded truncate ${event.color} text-xs cursor-pointer`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openEventDetail(event.activity, date);
+                          }}
+                        >
+                          {event.name}
+                        </div>
+                      ))}
                   </div>
                 )}
               </div>
@@ -621,42 +830,82 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
         </div>
       </div>
       <div className="mt-6 space-y-3">
-        <h2 className="text-lg font-semibold text-slate-800">Eventos Confirmados</h2>
-        {activities.filter((a) => a.published).map((activity) => (
-          <div key={activity.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-md">
-            <span className={`inline-block px-3 py-1 text-xs rounded-full ${activity.color}`}>{activity.name}</span>
-            <div className="text-sm text-slate-600">
-              {activity.dates.map((d) => {
-                const dt = parseLocalDate(d.date);
-                return `${dt.toLocaleDateString()} (${d.time})`;
-              }).join(", ")}
+        <h2 className="text-lg font-semibold text-slate-800">
+          Eventos Confirmados
+        </h2>
+        {activities
+          .filter((a) => a.published)
+          .map((activity) => (
+            <div
+              key={activity.id}
+              className="flex items-center gap-3 p-3 bg-slate-50 rounded-md"
+            >
+              <span
+                className={`inline-block px-3 py-1 text-xs rounded-full ${activity.color}`}
+              >
+                {activity.name}
+              </span>
+              <div className="text-sm text-slate-600">
+                {activity.dates
+                  .map((d) => {
+                    const dt = parseLocalDate(d.date);
+                    return `${dt.toLocaleDateString()} (${d.time})`;
+                  })
+                  .join(", ")}
+              </div>
+              {activity.description && (
+                <div className="text-xs text-slate-500 italic ml-2">
+                  {activity.description}
+                </div>
+              )}
             </div>
-            {activity.description && <div className="text-xs text-slate-500 italic ml-2">{activity.description}</div>}
-          </div>
-        ))}
+          ))}
       </div>
     </div>
   );
 
   const renderCompetidorView = () => (
     <div className="bg-white rounded-lg shadow p-6">
-      <h1 className="text-2xl font-bold text-slate-800 mb-2">📅 Fechas Importantes</h1>
-      <p className="text-sm text-slate-500 mb-6">¡No te pierdas ninguna fecha!</p>
+      <h1 className="text-2xl font-bold text-slate-800 mb-2">
+        📅 Fechas Importantes
+      </h1>
+      <p className="text-sm text-slate-500 mb-6">
+        ¡No te pierdas ninguna fecha!
+      </p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        {activities.filter((a) => a.published).map((activity) => (
-          <div key={activity.id} className="p-4 border rounded-lg">
-            <div className={`inline-block px-3 py-1 text-xs rounded-full ${activity.color} mb-2`}>{activity.name}</div>
-            <div className="text-sm text-slate-600">
-              {activity.dates.map((d) => {
-                const dt = parseLocalDate(d.date);
-                return `${dt.toLocaleDateString("es-ES", { day: "2-digit", month: "short" })} • ${d.time}`;
-              }).join(", ")}
+        {activities
+          .filter((a) => a.published)
+          .map((activity) => (
+            <div key={activity.id} className="p-4 border rounded-lg">
+              <div
+                className={`inline-block px-3 py-1 text-xs rounded-full ${activity.color} mb-2`}
+              >
+                {activity.name}
+              </div>
+              <div className="text-sm text-slate-600">
+                {activity.dates
+                  .map((d) => {
+                    const dt = parseLocalDate(d.date);
+                    return `${dt.toLocaleDateString("es-ES", {
+                      day: "2-digit",
+                      month: "short",
+                    })} • ${d.time}`;
+                  })
+                  .join(", ")}
+              </div>
+              {activity.description && (
+                <div className="text-xs text-slate-500 mt-2 italic">
+                  {activity.description}
+                </div>
+              )}
             </div>
-            {activity.description && <div className="text-xs text-slate-500 mt-2 italic">{activity.description}</div>}
-          </div>
-        ))}
+          ))}
       </div>
-      {activities.filter((a) => a.published).length === 0 && <div className="text-center py-8 text-slate-500">Próximamente se publicarán las fechas.</div>}
+      {activities.filter((a) => a.published).length === 0 && (
+        <div className="text-center py-8 text-slate-500">
+          Próximamente se publicarán las fechas.
+        </div>
+      )}
     </div>
   );
 
@@ -670,16 +919,42 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
       {showDescriptionModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg p-5 w-full max-w-sm">
-            <h3 className="text-lg font-semibold mb-2">{showDescriptionModal.name}</h3>
+            <h3 className="text-lg font-semibold mb-2">
+              {showDescriptionModal.name}
+            </h3>
             <div className="text-sm text-slate-600 mb-4">
-              {showDescriptionModal.dates.map((d) => {
-                const dt = parseLocalDate(d.date);
-                return `${dt.toLocaleDateString()} (${d.time})`;
-              }).join(", ")}
+              {showDescriptionModal.fecha_inicio_original &&
+                showDescriptionModal.hora_ini_original && (
+                  <>
+                    {new Date(
+                      showDescriptionModal.fecha_inicio_original + "T00:00:00"
+                    ).toLocaleDateString()}{" "}
+                    ({showDescriptionModal.hora_ini_original})
+                  </>
+                )}
+
+              {showDescriptionModal.fecha_fin_original &&
+                showDescriptionModal.hora_fin_original && (
+                  <>
+                    {" • "}
+                    {new Date(
+                      showDescriptionModal.fecha_fin_original + "T00:00:00"
+                    ).toLocaleDateString()}{" "}
+                    ({showDescriptionModal.hora_fin_original})
+                  </>
+                )}
             </div>
-            <div className="text-sm text-slate-500 italic mb-4">{showDescriptionModal.description || "Sin descripción"}</div>
+            <div className="text-sm text-slate-500 italic mb-4">
+              {showDescriptionModal.description || "Sin descripción"}
+            </div>
             <div className="flex justify-end">
-              <button className="btn btn-outline text-sm" onClick={() => setShowDescriptionModal(null)}>Cerrar</button>
+              <Button
+                variant="outline"
+                className="btn btn-outline text-sm"
+                onClick={() => setShowDescriptionModal(null)}
+              >
+                Cerrar
+              </Button>
             </div>
           </div>
         </div>
@@ -689,18 +964,35 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
       {showAddActivity && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg p-5 w-full max-w-md">
-            <h2 className="text-xl font-bold mb-3">{editingActivity ? "Editar Actividad" : "Nueva Actividad"}</h2>
-            {error && <div className="bg-red-100 border border-red-300 text-red-800 p-3 rounded mb-4">{typeof error === "string" ? error : error.message || "Error desconocido"}</div>}
+            <h2 className="text-xl font-bold mb-3">
+              {editingActivity ? "Editar Actividad" : "Nueva Actividad"}
+            </h2>
+            {error && (
+              <div className="bg-red-100 border border-red-300 text-red-800 p-3 rounded mb-4">
+                {typeof error === "string"
+                  ? error
+                  : error.message || "Error desconocido"}
+              </div>
+            )}
 
             <Dropdown
               items={actividades || []}
               defaultLabel="Selecciona una actividad"
-              selectedLabel={actividad ? actividad.label : "Selecciona una actividad (seleccione una fase antes)"}
+              selectedLabel={
+                actividad
+                  ? actividad.label
+                  : "Selecciona una actividad (seleccione una fase antes)"
+              }
               icon={FaChevronDown}
               menuClass="w-full"
+              dropdowClass="w-full"
               buttonClass="px-3 py-2 w-full border border-slate-300 rounded mb-3 text-sm text-left flex justify-between items-center"
               disabled={editingActivity || !fase}
-              onSelect={(item) => !editingActivity && setNewActivityName(item) && setActividad(item)}
+              onSelect={(item) => {
+                setActividad(item);
+                setNewActivityName(item);
+                setActividad(item);
+              }}
             />
             <Dropdown
               items={fases || []}
@@ -710,7 +1002,12 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
               menuClass="w-full"
               buttonClass="px-3 py-2 w-full border border-slate-300 rounded mb-3 text-sm text-left flex justify-between items-center"
               disabled={editingActivity}
-              onSelect={(item) => !editingActivity && (setActividad(null), setFase(item), setNewActivityName(item))}
+              dropdowClass="w-full"
+              onSelect={(item) => {
+                setActividad(null);
+                setFase(item);
+                setNewActivityName(item);
+              }}
             />
             <textarea
               placeholder="Descripción (opcional)"
@@ -721,7 +1018,9 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
 
             {/* === Fecha y hora de inicio === */}
             <div className="p-2 bg-blue-50 rounded mb-2">
-              <div className="text-xs font-medium text-blue-800 mb-1">Fecha y hora de inicio</div>
+              <div className="text-xs font-medium text-blue-800 mb-1">
+                Fecha y hora de inicio
+              </div>
               <div className="flex items-center gap-2">
                 <input
                   type="date"
@@ -735,11 +1034,16 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
                   className="border border-slate-300 rounded px-2 py-1 text-sm"
                 />
                 <select
-                  value={selectedDates[0]?.time ? selectedDates[0].time.split(':')[0] : "09"}
+                  value={
+                    selectedDates[0]?.time
+                      ? selectedDates[0].time.split(":")[0]
+                      : "09"
+                  }
                   onChange={(e) => {
                     const newDates = [...selectedDates];
                     if (newDates.length < 2) newDates.push({ ...newDates[0] });
-                    const currentMinutes = newDates[0].time?.split(':')[1] || "00";
+                    const currentMinutes =
+                      newDates[0].time?.split(":")[1] || "00";
                     newDates[0].time = `${e.target.value}:${currentMinutes}`;
                     setSelectedDates(newDates);
                   }}
@@ -753,11 +1057,15 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
                 </select>
                 <span>:</span>
                 <select
-                  value={selectedDates[0]?.time ? selectedDates[0].time.split(':')[1] : "00"}
+                  value={
+                    selectedDates[0]?.time
+                      ? selectedDates[0].time.split(":")[1]
+                      : "00"
+                  }
                   onChange={(e) => {
                     const newDates = [...selectedDates];
                     if (newDates.length < 2) newDates.push({ ...newDates[0] });
-                    const currentHour = newDates[0].time?.split(':')[0] || "09";
+                    const currentHour = newDates[0].time?.split(":")[0] || "09";
                     newDates[0].time = `${currentHour}:${e.target.value}`;
                     setSelectedDates(newDates);
                   }}
@@ -774,7 +1082,9 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
 
             {/* === Fecha y hora de fin === */}
             <div className="p-2 bg-purple-50 rounded">
-              <div className="text-xs font-medium text-purple-800 mb-1">Fecha y hora de fin</div>
+              <div className="text-xs font-medium text-purple-800 mb-1">
+                Fecha y hora de fin
+              </div>
               <div className="flex items-center gap-2">
                 <input
                   type="date"
@@ -788,11 +1098,16 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
                   className="border border-slate-300 rounded px-2 py-1 text-sm"
                 />
                 <select
-                  value={selectedDates[1]?.time ? selectedDates[1].time.split(':')[0] : "17"}
+                  value={
+                    selectedDates[1]?.time
+                      ? selectedDates[1].time.split(":")[0]
+                      : "17"
+                  }
                   onChange={(e) => {
                     const newDates = [...selectedDates];
                     if (newDates.length < 2) newDates.push({ ...newDates[0] });
-                    const currentMinutes = newDates[1].time?.split(':')[1] || "00";
+                    const currentMinutes =
+                      newDates[1].time?.split(":")[1] || "00";
                     newDates[1].time = `${e.target.value}:${currentMinutes}`;
                     setSelectedDates(newDates);
                   }}
@@ -806,11 +1121,15 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
                 </select>
                 <span>:</span>
                 <select
-                  value={selectedDates[1]?.time ? selectedDates[1].time.split(':')[1] : "00"}
+                  value={
+                    selectedDates[1]?.time
+                      ? selectedDates[1].time.split(":")[1]
+                      : "00"
+                  }
                   onChange={(e) => {
                     const newDates = [...selectedDates];
                     if (newDates.length < 2) newDates.push({ ...newDates[0] });
-                    const currentHour = newDates[1].time?.split(':')[0] || "17";
+                    const currentHour = newDates[1].time?.split(":")[0] || "17";
                     newDates[1].time = `${currentHour}:${e.target.value}`;
                     setSelectedDates(newDates);
                   }}
@@ -826,14 +1145,27 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
             </div>
 
             <div className="flex gap-2 mt-4">
-              <button className="btn btn-outline flex-1 text-sm" onClick={() => { resetForm(); setSelectedDay(null); }}>Cancelar</button>
-              <button
-                className="btn btn-primary flex-1 text-sm"
-                onClick={editingActivity ? handleUpdateActivity : () => saveActivity(false)}
+              <Button
+                variant="outline"
+                className=" flex-1 rounded-xl  text-sm"
+                onClick={() => {
+                  resetForm();
+                  setSelectedDay(null);
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button
+                className="flex-1 rounded-xl text-sm"
+                onClick={
+                  editingActivity
+                    ? handleUpdateActivity
+                    : () => saveActivity(false)
+                }
                 disabled={!newActivityName || !fase}
               >
                 {editingActivity ? "Actualizar" : "Guardar"}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -843,21 +1175,57 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
       {showEventDetail && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg p-5 w-full max-w-sm">
-            <div className={`inline-block px-3 py-1 text-xs rounded-full ${showEventDetail.activity.color} mb-3`}>{showEventDetail.activity.name}</div>
-            <h3 className="text-lg font-semibold mb-2">{showEventDetail.activity.name}</h3>
+            <div
+              className={`inline-block px-3 py-1 text-xs rounded-full ${showEventDetail.activity.color} mb-3`}
+            >
+              {showEventDetail.activity.name}
+            </div>
+            <h3 className="text-lg font-semibold mb-2">
+              {showEventDetail.activity.name}
+            </h3>
             <p className="text-sm text-slate-600 mb-2">
-              {parseLocalDate(showEventDetail.eventDate).toLocaleDateString()} • {showEventDetail.activity.time}
+              {showEventDetail.activity.fecha_inicio_original &&
+                showEventDetail.activity.hora_ini_original && (
+                  <>
+                    {new Date(
+                      showEventDetail.activity.fecha_inicio_original +
+                        "T00:00:00"
+                    ).toLocaleDateString()}{" "}
+                    ({showEventDetail.activity.hora_ini_original})
+                  </>
+                )}
+              {showEventDetail.activity.fecha_fin_original &&
+                showEventDetail.activity.hora_fin_original && (
+                  <>
+                    {" "}
+                    •{" "}
+                    {new Date(
+                      showEventDetail.activity.fecha_fin_original + "T00:00:00"
+                    ).toLocaleDateString()}{" "}
+                    ({showEventDetail.activity.hora_fin_original})
+                  </>
+                )}
             </p>
-            {showEventDetail.activity.description && <p className="text-sm text-slate-500 mb-4 italic">{showEventDetail.activity.description}</p>}
+            {showEventDetail.activity.description && (
+              <p className="text-sm text-slate-500 mb-4 italic">
+                {showEventDetail.activity.description}
+              </p>
+            )}
             <div className="flex gap-2">
-              <button className="btn btn-outline flex-1 text-sm" onClick={() => setShowEventDetail(null)}>Cerrar</button>
+              <Button
+                variant="outline"
+                className="btn btn-outline flex-1 text-sm"
+                onClick={() => setShowEventDetail(null)}
+              >
+                Cerrar
+              </Button>
               {userRole === "admin" && (
-                <button 
-                  className="btn btn-primary flex-1 text-sm" 
+                <Button
+                  className="btn btn-primary flex-1 text-sm"
                   onClick={() => editFromDetail(showEventDetail.activity)}
                 >
                   Editar
-                </button>
+                </Button>
               )}
             </div>
           </div>

@@ -55,6 +55,7 @@ import CertificadosPage from "./pages/dashboard/certificados/certificados.jsx";
 // 🔔 Corrección de Notas – Modal y Toast
 import CorreccionNotificationsModal from "./components/correccion-notificaciones/CorreccionNotificationsModal.jsx";
 import CorreccionNotificationToast from "./components/correccion-notificaciones/CorreccionNotificationToast.jsx";
+import { CorreccionNotificacionesProvider } from "./hooks/useCorreccionNotificaciones";
 
 export default function App() {
   return (
@@ -70,7 +71,11 @@ export default function App() {
           path="/dashboard"
           element={
             <ProtectedRoute>
-              <Dashboard />
+              <CorreccionNotificacionesProvider>
+                <Dashboard />
+                <CorreccionNotificationsModal />
+                <CorreccionNotificationToast />
+              </CorreccionNotificacionesProvider>
             </ProtectedRoute>
           }
         >
@@ -179,8 +184,6 @@ export default function App() {
       </Routes>
 
       {/* 🔔 Modal y Toast globales para Notificación de Corrección de Notas */}
-      <CorreccionNotificationsModal />
-      <CorreccionNotificationToast />
     </>
   );
 }

@@ -5,9 +5,7 @@ import {
   ChevronDownIcon,
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
-import { AREAS } from "../services/areas";
 import { useEditResponsible } from "../application/responsables/useEditResponsible";
-import { getAreasConNiveles } from "../infrastructure/http/areas/areaRepostory";
 
 export default function EditResponsibleModal({
   open,

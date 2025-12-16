@@ -4,63 +4,108 @@ import Footer from "@/components/Footer";
 import { FiDownload, FiSearch, FiUser, FiEye, FiX } from "react-icons/fi";
 import { MdCheckCircle, MdCancel, MdWarning } from "react-icons/md";
 import { TbMedal, TbAward } from "react-icons/tb";
-import { useFilters } from "./hooks/useFilterResult";
-import { useResult } from "./hooks/useResults";
+import { useFiltersResult } from "./hooks/useFilterResult";
+import api from "@/lib/api";
+import { useNavigate } from "react-router-dom";
+import LoginModal from "@/features/auth/components/LoginModal";
 
 export default function ResultsPage() {
   const [activeTab, setActiveTab] = useState("clasificatoria");
-  const [areaFilter, setAreaFilter] = useState("all");
-  const [nivelFilter, setNivelFilter] = useState("all");
+  const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
   const [downloadFormat, setDownloadFormat] = useState("pdf");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewType, setPreviewType] = useState("pdf"); // 'pdf' o 'excel'
-
+  const Navigate = useNavigate();
   // ... (tus mock data y funciones de filtrado aquí, sin cambios)
 
-  const {
-    dataAreas,
-    fase,
-    setFase,
-    fases,
-    area,
-    setArea,
-    nivel,
-    setNivel,
-    nivelesDisponibles,
-    areasDisponibles,
-  } = useFilters();
+  const { dataAreas, data, lastPage, loading, filtros, setters, opciones } =
+    useFiltersResult();
   // Datos simulados (igual que antes)
+  const handleDownloadExcel = async () => {
+    try {
+      const selectedArea = dataAreas.find((a) => a.nombre === filtros.area);
+      const selectedNivel = selectedArea?.niveles.find(
+        (n) => n.nombre_nivel === filtros.nivel
+      );
+      const orden = filtros.fase.nombre == "final" ? "puntaje_total" : "nombre";
+      const direccion = filtros.fase.nombre == "final" ? "desc" : "asc";
+      const params = {
+        esPublicado: true,
+        ordenar_por: orden,
+        direccion: direccion,
+        busqueda: filtros.query,
+        id_fase: filtros.fase.id,
+        id_area: selectedArea?.id || null,
+        id_nivel: selectedNivel?.id || null,
+      };
+      console.log("payload", params);
+      console.log(params);
+      const response = await api.get("evaluaciones/exportar", {
+        params,
+        responseType: "blob",
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `resultados_${new Date()
+          .toISOString()
+          .slice(0, 19)
+          .replace("T", "_")}.xlsx`
+      );
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error("Error al descargar el Excel:", error);
+      alert("Hubo un problema al exportar las evaluaciones.");
+    }
+  };
 
-  const {
-    data,
-    loading,
-    totalPages,
-    toast,
-    generarListas,
-    publicarResultados,
-    limpiarToast,
-    openModalConfirm,
-    setOpenModalConfirm,
-  } = useResult({
-    dataAreas,
-    fase,
-    area,
-    nivel,
-    page,
-    query,
-  });
+  const handleExportarPDF = async () => {
+    try {
+      const selectedArea = dataAreas.find((a) => a.nombre === filtros.area);
+      const selectedNivel = selectedArea?.niveles.find(
+        (n) => n.nombre_nivel === filtros.nivel
+      );
+      const orden = filtros.fase.nombre == "final" ? "puntaje_total" : "nombre";
+      const direccion = filtros.fase.nombre == "final" ? "desc" : "asc";
+      const params = {
+        esPublicado: true,
+        ordenar_por: orden,
+        direccion: direccion,
+        busqueda: filtros.query,
+        id_fase: filtros.fase.id,
+        id_area: selectedArea?.id || null,
+        id_nivel: selectedNivel?.id || null,
+      };
+      const response = await api.get("/exportar-evaluaciones-pdf", {
+        params,
+        responseType: "blob",
+      });
 
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "evaluaciones_filtradas.pdf");
+      document.body.appendChild(link);
+      link.click();
+    } catch (error) {
+      console.error("Error generando PDF:", error);
+    }
+  };
   // Funciones de iconos y colores (igual que antes)
   const getStatusIcon = (status) => {
     switch (status) {
-      case "clasificado":
+      case "Clasificado":
         return <MdCheckCircle className="text-green-500" />;
-      case "no_clasificado":
+      case "No clasificado":
         return <MdCancel className="text-red-500" />;
-      case "descalificado":
+      case "Descalificado":
         return <MdWarning className="text-yellow-500" />;
       default:
         return null;
@@ -69,11 +114,11 @@ export default function ResultsPage() {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case "clasificado":
+      case "Clasificado":
         return "bg-green-100 text-green-800";
-      case "no_clasificado":
+      case "No clasificado":
         return "bg-red-100 text-red-800";
-      case "descalificado":
+      case "Descalificado":
         return "bg-yellow-100 text-yellow-800";
       default:
         return "bg-gray-100 text-gray-800";
@@ -82,14 +127,14 @@ export default function ResultsPage() {
 
   const getAwardIcon = (award) => {
     switch (award) {
-      case "oro":
-        return <TbMedal className="text-yellow-500" />;
-      case "plata":
-        return <TbMedal className="text-gray-500" />;
-      case "bronce":
-        return <TbMedal className="text-orange-500" />;
-      case "mencion":
-        return <TbAward className="text-blue-500" />;
+      case "Oro":
+        return <TbMedal size={20} className="text-yellow-500" />;
+      case "Plata":
+        return <TbMedal size={20} className="text-gray-500" />;
+      case "Bronce":
+        return <TbMedal size={20} className="text-orange-500" />;
+      case "Mención Honorífica":
+        return <TbAward size={20} className="text-blue-500" />;
       default:
         return null;
     }
@@ -97,13 +142,13 @@ export default function ResultsPage() {
 
   const getAwardLabel = (award) => {
     switch (award) {
-      case "oro":
+      case "Oro":
         return "Oro";
-      case "plata":
+      case "Plata":
         return "Plata";
-      case "bronce":
+      case "Bronce":
         return "Bronce";
-      case "mencion":
+      case "Mención Honorífica":
         return "Mención Honorífica";
       default:
         return "";
@@ -112,13 +157,13 @@ export default function ResultsPage() {
 
   const getAwardColor = (award) => {
     switch (award) {
-      case "oro":
+      case "Oro":
         return "bg-yellow-100 text-yellow-800";
-      case "plata":
+      case "Plata":
         return "bg-gray-100 text-gray-800";
-      case "bronce":
+      case "Bronce":
         return "bg-orange-100 text-orange-800";
-      case "mencion":
+      case "Mención Honorífica":
         return "bg-blue-100 text-blue-800";
       default:
         return "bg-gray-100 text-gray-800";
@@ -332,10 +377,7 @@ export default function ResultsPage() {
                             item.status
                           )}`}
                         >
-                          {getStatusIcon(item.status)}
-                          {item.status === "clasificado" && "Clasificado"}
-                          {item.status === "no_clasificado" && "No Clasificado"}
-                          {item.status === "descalificado" && "Descalificado"}
+                          {item.status}
                         </span>
                       </td>
                     </>
@@ -418,8 +460,9 @@ export default function ResultsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f9fbfb] font-comfortaa">
-      <Navbar onLoginClick={() => setIsAuthenticated(true)} />
+    <div className="h-screen bg-[#f9fbfb] font-comfortaa">
+      <Navbar onLoginClick={() => setOpen(true)} />
+      <LoginModal open={open} onClose={() => setOpen(false)} />
       <main className="mx-auto max-w-6xl px-4 py-12">
         {/* Encabezado */}
         <div className="flex justify-between items-center mb-6">
@@ -433,7 +476,12 @@ export default function ResultsPage() {
                 <FiUser size={16} /> Ver mi resultado
               </button>
             )}
-            <button className="px-3 py-1.5 border border-slate-300 rounded-md hover:bg-slate-100">
+            <button
+              onClick={() => {
+                Navigate("/");
+              }}
+              className="px-3 py-1.5 border border-slate-300 rounded-md hover:bg-slate-100"
+            >
               Volver al inicio
             </button>
           </div>
@@ -456,17 +504,15 @@ export default function ResultsPage() {
                 Área
               </label>
               <select
-                value={areaFilter}
-                onChange={(e) => setAreaFilter(e.target.value)}
+                value={filtros.area}
+                onChange={(e) => setters.setArea(e.target.value)}
                 className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500"
               >
-                <option value="all">Todas las áreas</option>
-                <option value="Matemáticas">Matemáticas</option>
-                <option value="Física">Física</option>
-                <option value="Química">Química</option>
-                <option value="Biología">Biología</option>
-                <option value="Informática">Informática</option>
-                <option value="Astronomía">Astronomía</option>
+                {opciones.areasDisponibles.map((a) => (
+                  <option key={a} value={a}>
+                    {a}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -476,14 +522,15 @@ export default function ResultsPage() {
                 Nivel
               </label>
               <select
-                value={nivelFilter}
-                onChange={(e) => setNivelFilter(e.target.value)}
+                value={filtros.nivel}
+                onChange={(e) => setters.setNivel(e.target.value)}
                 className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500"
               >
-                <option value="all">Todos los niveles</option>
-                <option value="Primaria">Primaria</option>
-                <option value="Secundaria">Secundaria</option>
-                <option value="Universitario">Universitario</option>
+                {opciones.nivelesDisponibles.map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -495,8 +542,8 @@ export default function ResultsPage() {
               <input
                 type="text"
                 placeholder="Nombre del competidor..."
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                value={filtros.query}
+                onChange={(e) => setters.setQuery(e.target.value)}
                 className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -523,7 +570,7 @@ export default function ResultsPage() {
                     setPreviewType(downloadFormat);
                     setPreviewOpen(true);
                   }}
-                  className="p-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+                  className="p-2 bg-[#0284C7] text-white hover:bg-[#027AB6] active:bg-[#026BA1] rounded-md  transition"
                   title={`Vista previa en ${downloadFormat.toUpperCase()}`}
                 >
                   <FiEye size={18} />
@@ -531,7 +578,10 @@ export default function ResultsPage() {
 
                 {/* Botón de Descargar */}
                 <button
-                  onClick={handleDownload}
+                  onClick={() => {
+                    if (downloadFormat === "pdf") handleExportarPDF();
+                    if (downloadFormat === "excel") handleDownloadExcel();
+                  }}
                   className="p-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition"
                   title={`Descargar en ${downloadFormat.toUpperCase()}`}
                 >
@@ -546,7 +596,13 @@ export default function ResultsPage() {
         <div className="border-b border-slate-200 mb-6">
           <div className="flex space-x-8">
             <button
-              onClick={() => setActiveTab("clasificatoria")}
+              onClick={() => {
+                setActiveTab("clasificatoria");
+                const fs = opciones.fases.find(
+                  (f) => f.nombre === "clasificacion"
+                );
+                setters.setFase(fs);
+              }}
               className={`pb-3 font-medium text-lg ${
                 activeTab === "clasificatoria"
                   ? "border-b-2 border-blue-600 text-blue-600"
@@ -556,7 +612,11 @@ export default function ResultsPage() {
               Fase Clasificatoria
             </button>
             <button
-              onClick={() => setActiveTab("final")}
+              onClick={() => {
+                setActiveTab("final");
+                const fs = opciones.fases.find((f) => f.nombre === "final");
+                setters.setFase(fs);
+              }}
               className={`pb-3 font-medium text-lg ${
                 activeTab === "final"
                   ? "border-b-2 border-blue-600 text-blue-600"
@@ -615,10 +675,10 @@ export default function ResultsPage() {
                             )}`}
                           >
                             {getStatusIcon(item.status)}
-                            {item.status === "clasificado" && "Clasificado"}
-                            {item.status === "no_clasificado" &&
-                              "No Clasificado"}
-                            {item.status === "descalificado" && "Descalificado"}
+                            {item.status === "Clasificado" && "Clasificado"}
+                            {item.status === "No clasificado" &&
+                              "No clasificado"}
+                            {item.status === "Descalificado" && "Descalificado"}
                           </span>
                         </td>
                       </tr>
@@ -627,29 +687,6 @@ export default function ResultsPage() {
                 </tbody>
               </table>
             </div>
-            {data?.length > 0 && (
-              <div className="mt-4 flex justify-center gap-2">
-                <button
-                  className="px-4 py-2 border rounded"
-                  disabled={page === 1}
-                  onClick={() => setPage(page - 1)}
-                >
-                  Anterior
-                </button>
-
-                <span className="px-4 py-2 ">
-                  Página {page} de {totalPages}
-                </span>
-
-                <button
-                  className="px-4 py-2 border rounded"
-                  disabled={page === totalPages}
-                  onClick={() => setPage(page + 1)}
-                >
-                  Siguiente
-                </button>
-              </div>
-            )}
           </div>
         )}
 
@@ -668,7 +705,6 @@ export default function ResultsPage() {
                     <th className="px-4 py-3 text-left">Área/Nivel</th>
                     <th className="px-4 py-3 text-left">Puntaje</th>
                     <th className="px-4 py-3 text-left">Premio</th>
-                    <th className="px-4 py-3 text-left">Certificado</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
@@ -707,18 +743,33 @@ export default function ResultsPage() {
                             {getAwardLabel(item.award)}
                           </span>
                         </td>
-                        <td className="px-4 py-3">
-                          {getCertificateButton(
-                            item.certificateStatus,
-                            item.id
-                          )}
-                        </td>
                       </tr>
                     ))
                   )}
                 </tbody>
               </table>
             </div>
+          </div>
+        )}
+        {data?.length > 0 && (
+          <div className="flex justify-center items-center gap-2 mt-4">
+            <button
+              onClick={() => setters.setPage(filtros.page - 1)}
+              disabled={filtros.page === 1}
+              className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+            >
+              Anterior
+            </button>
+            <span className="text-sm">
+              Página {filtros.page} de {lastPage}
+            </span>
+            <button
+              onClick={() => setters.setPage(filtros.page + 1)}
+              disabled={filtros.page === lastPage}
+              className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+            >
+              Siguiente
+            </button>
           </div>
         )}
       </main>
@@ -740,7 +791,7 @@ export default function ResultsPage() {
             <div className="p-4 border-t bg-gray-50 text-center">
               <button
                 onClick={() => setPreviewOpen(false)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                className="px-4 py-2 bg-[#0284C7] text-white hover:bg-[#027AB6] active:bg-[#026BA1] rounded-md "
               >
                 Cerrar
               </button>

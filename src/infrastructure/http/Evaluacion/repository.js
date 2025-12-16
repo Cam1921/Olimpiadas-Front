@@ -91,6 +91,34 @@ const EvaluacionesRepository = {
       throw error.response?.data || error;
     }
   },
+  async filtrosLogs(params = {}) {
+    try {
+      const response = await api.get("logs/evaluaciones", { params });
+      return response.data;
+    } catch (error) {
+      console.error("Error al filtrar evaluaciones:", error);
+      throw error.response?.data || error;
+    }
+  },
+
+  async getLogsCertificados(params = {}) {
+    try {
+      const response = await api.get("logs/certificados", { params });
+      return response.data;
+    } catch (error) {
+      console.error("Error al filtrar evaluaciones:", error);
+      throw error.response?.data || error;
+    }
+  },
+  async generarCertificados(data) {
+    try {
+      const response = await api.post("logs/certificados", data);
+      return response.data;
+    } catch (error) {
+      console.error("Error al filtrar evaluaciones:", error);
+      throw error.response?.data || error;
+    }
+  },
 };
 
 export default EvaluacionesRepository;

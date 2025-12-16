@@ -2,6 +2,7 @@
 import { Fragment } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
+import { Button } from "./Button";
 
 export default function ConfirmationModal({
   open,
@@ -12,10 +13,6 @@ export default function ConfirmationModal({
   confirmText = "Confirmar",
   cancelText = "Cancelar",
 }) {
-  const primary =
-    "bg-[#0284C7] text-white hover:bg-[#027AB6] active:bg-[#026BA1] " +
-    "h-10 px-5 rounded-lg inline-flex items-center gap-2 font-medium shadow-sm " +
-    "focus:outline-none focus:ring-2 focus:ring-[#0284C7]/40 transition-colors";
   return (
     <Transition.Root show={open} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={onClose}>
@@ -58,16 +55,14 @@ export default function ConfirmationModal({
               </div>
 
               <div className="mt-6 flex justify-end gap-3">
-                <button
-                  type="button"
-                  className="btn btn-ghost"
+                <Button
+                  variant="outline"
+                  className="rounded-xl"
                   onClick={onClose}
                 >
                   {cancelText}
-                </button>
-                <button type="button" className={primary} onClick={onConfirm}>
-                  {confirmText}
-                </button>
+                </Button>
+                <Button onClick={onConfirm}>{confirmText}</Button>
               </div>
             </Dialog.Panel>
           </Transition.Child>

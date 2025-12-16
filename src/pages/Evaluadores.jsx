@@ -251,7 +251,7 @@ export default function Evaluadores({ onBackToResponsables, areas = [] }) {
       <div className="mt-6 grid gap-4 md:grid-cols-[1fr_auto] md:items-center">
         {/* Título y descripción */}
         <div className="min-w-0">
-          <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold text-primary leading-tight">
+          <h1 className="text-2xl md:text-3xl font-semibold">
             Registro de Evaluadores
           </h1>
 

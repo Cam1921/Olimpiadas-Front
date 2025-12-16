@@ -13,6 +13,9 @@ import {
 import api from "@/lib/api";
 import { toast } from "sonner";
 import { Progress } from "./Progres";
+import ModalAreasNiveles from "./ModalAreasNiveles";
+import { IoWarningOutline } from "react-icons/io5";
+import { RiInformationLine } from "react-icons/ri";
 
 export default function ImportarEvaluadoresModal({ open, onClose, onImport }) {
   const [file, setFile] = useState(null);
@@ -23,6 +26,8 @@ export default function ImportarEvaluadoresModal({ open, onClose, onImport }) {
   const [importId, setImportId] = useState(null);
   const [importResult, setImportResult] = useState(null);
   const fileInputRef = useRef(null);
+  const [showGuide, setShowGuide] = useState(false);
+  const [showGuideAreasNiveles, setShowGuideAreasNiveles] = useState(false);
 
   if (!open) return null;
 
@@ -73,7 +78,7 @@ export default function ImportarEvaluadoresModal({ open, onClose, onImport }) {
       try {
         setStatusMsg("Validando archivo...");
 
-        const res = await api.post("/evaluador/import/preview", formData, {
+        const res = await api.post("/evaluadores/import/preview", formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
 
@@ -123,7 +128,7 @@ export default function ImportarEvaluadoresModal({ open, onClose, onImport }) {
     simulateProgress(async () => {
       try {
         const importID = importResult?.meta?.import_id;
-        const res = await api.post(`/evaluador/import/confirmar`, {
+        const res = await api.post(`/evaluadores/import/confirmar`, {
           import_id: importID,
         });
         const { data } = res;
@@ -149,7 +154,7 @@ export default function ImportarEvaluadoresModal({ open, onClose, onImport }) {
     try {
       const importId = importResult.meta.import_id;
 
-      const response = await api.get("/evaluador/import/errores", {
+      const response = await api.get("/evaluadores/import/errores", {
         params: { import_id: importId },
         headers: { Accept: "text/csv" },
         responseType: "blob",
@@ -189,9 +194,17 @@ export default function ImportarEvaluadoresModal({ open, onClose, onImport }) {
           Importar Evaluadores por CSV
         </h2>
         <p className="text-sm text-slate-500 mb-4">
-          Sube un archivo CSV con las columnas requeridas: nombre, apellidos,
-          correo, teléfono, CI, área y nivel.
+          Sube un archivo CSV con las columnas requeridas: Nombre, Apellidos,
+          Correo, Teléfono, CI, Área y Nivel (opcional).
         </p>
+        <div className="flex justify-end mb-4 gap-3">
+          <Button size="sm" onClick={() => setShowGuide(true)}>
+            <span>
+              <RiInformationLine className="h-5 w-5 text-white" />
+            </span>
+            Ver guía de campos
+          </Button>
+        </div>
 
         {/* === Paso 1: Seleccionar archivo === */}
         {importStep === "select" && (
@@ -479,6 +492,160 @@ export default function ImportarEvaluadoresModal({ open, onClose, onImport }) {
             <p className="text-base text-muted-foreground text-center">
               {processingProgress}% completado
             </p>
+          </div>
+        )}
+        {showGuide && (
+          <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+            <div className="relative w-full max-w-2xl h-[80vh] bg-white rounded-2xl shadow-2xl flex flex-col">
+              {/* Header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b">
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-800">
+                    Guía de campos CSV
+                  </h2>
+                  <p className="text-sm text-slate-500">
+                    Formato y reglas para la importación de datos
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setShowGuide(false)}
+                  className="rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto px-6 py-4">
+                <div className="overflow-hidden rounded-xl border">
+                  <table className="w-full text-sm text-left">
+                    <thead className="sticky top-0 bg-slate-100 text-slate-700">
+                      <tr>
+                        <th className="px-4 py-3 font-medium">Campo</th>
+                        <th className="px-4 py-3 font-medium">
+                          Formato / Reglas
+                        </th>
+                        <th className="px-4 py-3 font-medium">Ejemplo</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {[
+                        {
+                          campo: "Nombre",
+                          regla: "Solo letras y espacios. Mínimo 3 caracteres.",
+                          ejemplo: "Juan Pedro",
+                        },
+                        {
+                          campo: "Apellidos",
+                          regla: "Solo letras y espacios. Mínimo 3 caracteres.",
+                          ejemplo: "Gómez López",
+                        },
+                        {
+                          campo: "Correo",
+                          regla: "Email válido y menor a 50 caracteres.",
+                          ejemplo: "ejemplo@mail.com",
+                        },
+                        {
+                          campo: "Teléfono",
+                          regla: "Solo números, 8 dígitos, inicia con 6 o 7.",
+                          ejemplo: "62345678",
+                        },
+                        {
+                          campo: "CI",
+                          regla: "Numérico entre 6 y 10 dígitos.",
+                          ejemplo: "87654321",
+                        },
+                      ].map((row) => (
+                        <tr
+                          key={row.campo}
+                          className="hover:bg-slate-50 transition"
+                        >
+                          <td className="px-4 py-3 font-medium text-slate-800">
+                            {row.campo}
+                          </td>
+                          <td className="px-4 py-3 text-slate-600">
+                            {row.regla}
+                          </td>
+                          <td className="px-4 py-3 text-slate-500 italic">
+                            {row.ejemplo}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="mt-0.5 text-amber-600">
+                      {" "}
+                      <IoWarningOutline size={20} />
+                    </div>
+
+                    <div>
+                      <h4 className="text-sm font-semibold text-amber-800">
+                        Importante antes de subir el CSV
+                      </h4>
+
+                      <ul className="mt-2 space-y-1 text-sm text-amber-700 list-disc list-inside">
+                        <li>
+                          El archivo debe estar en formato{" "}
+                          <span className="font-medium">CSV</span> y usar el
+                          separador correcto.
+                        </li>
+                        <li>
+                          Los campos deben respetar el{" "}
+                          <span className="font-medium">orden indicado</span> en
+                          la guía.
+                        </li>
+                        <li>
+                          Los campos <span className="font-medium">Área</span> y{" "}
+                          <span className="font-medium">Nivel</span> deben
+                          coincidir con los valores permitidos. Consulta la guía
+                          de áreas y niveles.
+                        </li>
+                        <li>
+                          No se puede registrar más de un evaluador con el mismo{" "}
+                          <span className="font-medium">
+                            correo, CI o teléfono
+                          </span>
+                          .
+                        </li>
+                        <li>
+                          No se puede registrar dos evaluadores en la{" "}
+                          <span className="font-medium">
+                            misma área y nivel
+                          </span>
+                          .
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-6 flex justify-end">
+                  <Button
+                    size="sm"
+                    onClick={() => setShowGuideAreasNiveles(true)}
+                  >
+                    <span>
+                      <RiInformationLine className="h-5 w-5 text-white" />
+                    </span>
+                    Ver guía de areas y niveles
+                  </Button>
+                </div>
+              </div>
+              <ModalAreasNiveles
+                open={showGuideAreasNiveles}
+                onClose={() => setShowGuideAreasNiveles(false)}
+              />
+              {/* Footer */}
+              <div className="flex justify-end gap-2 border-t px-6 py-4">
+                <Button variant="outline" onClick={() => setShowGuide(false)}>
+                  Cerrar
+                </Button>
+              </div>
+            </div>
           </div>
         )}
       </div>
