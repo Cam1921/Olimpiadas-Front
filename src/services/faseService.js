@@ -22,4 +22,8 @@ import api from "@/lib/api";
       const res = await api.get(`/fases/dropdown`);
       return res.data;
    },
+   async publicarResultados(id){
+       const res = await api.put(`/fases/${id}/publicacion`)
+       return res.data;
+   }
  }

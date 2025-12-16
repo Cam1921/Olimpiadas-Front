@@ -10,6 +10,7 @@ export default function Dropdown({
   buttonClass = "",
   menuClass = "",
   disabled = false,
+  dropdowClass = "",
 }) {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState(selectedLabel || defaultLabel);
@@ -41,7 +42,7 @@ export default function Dropdown({
   return (
     <div
       ref={dropdownRef}
-      className="relative inline-flex flex-col items-center w-full"
+      className={`relative inline-flex flex-col items-center  ${dropdowClass}`}
     >
       {/* Botón principal */}
       <button
@@ -59,7 +60,7 @@ export default function Dropdown({
       {/* Menú desplegable */}
       {open && !disabled && (
         <div
-          className={`absolute top-11 left-0 z-20 bg-white border border-gray-200 rounded-xl shadow-lg p-1 ${menuClass}`}
+          className={`absolute top-11  z-20 bg-white border border-gray-200 rounded-xl shadow-lg p-1 ${menuClass}`}
           role="menu"
         >
           <div className="max-h-60 overflow-y-auto rounded-xl scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">

@@ -1,12 +1,12 @@
 // src/application/responsables/useRegisterResponsable.js
 import { useState, useCallback, useEffect } from 'react';
-import { getAreasConNiveles } from "../../infrastructure/http/areas/areaRepostory";
+
 import api from "../../lib/api";
 
 import { cleanNameInput, cleanPhoneInput, cleanCIInput } from '../../utils/text';
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.com$/i;
 
-export function useRegisterResponsable(takenAreas = []) {
+export function useRegisterResponsable() {
   const [form, setForm] = useState({
     nombre: '',
     apellidos: '',
@@ -14,10 +14,11 @@ export function useRegisterResponsable(takenAreas = []) {
     telefono: '',
     ci: '',
     area: '',
+    id_area: null
   });
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
-  const [allAreas, setAllAreas] = useState([]);
+
 
   const setField = useCallback((name, value) => {
     let cleaned = value;
@@ -34,17 +35,8 @@ export function useRegisterResponsable(takenAreas = []) {
       return rest;
     });
   }, []);
-
-   useEffect(() => {   
-      async function fetchAreas() {
-        const areas = await getAreasConNiveles();
-        setAllAreas(areas);
-        console.log(areas);
-      }
-      fetchAreas();
-    }, []);
   const resetForm = useCallback(() => {
-    setForm({ nombre: '', apellidos: '', correo: '', telefono: '', ci: '', area: '' });
+    setForm({ nombre: '', apellidos: '', correo: '', telefono: '', ci: '', area: '' , id_area: null});
     setErrors({});
   }, []);
 
@@ -89,34 +81,19 @@ export function useRegisterResponsable(takenAreas = []) {
     if (!data.ci) newErrors.ci = 'El CI es obligatorio.';
     else if (!/^\d{6,10}$/.test(data.ci)) newErrors.ci = 'El CI debe tener entre 6 y 10 dígitos.';
     if (!data.area) newErrors.area = 'Selecciona un área.';
-    else if (takenAreas.includes(data.area)) newErrors.area = 'Esta área ya tiene un responsable asignado.';
     return newErrors;
-  }, [takenAreas]);
+  }, []);
 
 
-
-  function obtenerIdArea(areas, nombreArea) {
-  const area = areas.find(
-    (a) => a.nombre.toLowerCase() === nombreArea.toLowerCase()
-  );
-
-  if (!area) {
-    return { error: `No se encontró el área "${nombreArea}".` };
-  }
-
-  return { id_area: area.id };
-}
 const submit = useCallback(async () => {
   // 🧩 1. Validar el formulario localmente
-  const newErrors = validate(form, takenAreas);
+  const newErrors = validate(form);
   setErrors(newErrors);
-
   if (Object.keys(newErrors).length > 0) {
     return { ok: false, error: "Corrige los errores" };
   }
-
   setSubmitting(true);
-  const asignacion = obtenerIdArea(allAreas, form.area);
+  
 
   try {
     // 📨 2. Enviar los datos al backend
@@ -126,13 +103,9 @@ const submit = useCallback(async () => {
       email: form.correo,
       telefono: form.telefono,
       ci: form.ci,
-      asignaciones: [asignacion],
-    });
-
-    // ✅ Axios no necesita response.ok — si no es 2xx, lanza error automáticamente
-    const data = response.data;
-
- 
+      id_area: form.id_area,
+    });    
+    const data = response.data; 
     return { ok: true, data };
 
   } catch (err) {
@@ -156,7 +129,7 @@ const submit = useCallback(async () => {
     // 🔁 5. Restablecer estado de envío
     setSubmitting(false);
   }
-}, [form, takenAreas, validate, allAreas]);
+}, [form, validate]);
 
   return { form, setField, errors, submitting, submit, resetForm };
 }

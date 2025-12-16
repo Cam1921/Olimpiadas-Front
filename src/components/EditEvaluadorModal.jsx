@@ -6,9 +6,6 @@ import {
   ExclamationTriangleIcon,
   LockClosedIcon,
 } from "@heroicons/react/24/outline";
-import { AREAS } from "../services/areas";
-import { getNivelesByArea, isAreaCompleta } from "../utils/areaUtils";
-import { getAreasConNiveles } from "../infrastructure/http/areas/areaRepostory";
 import { evaluadoresRepo } from "../infrastructure/http/evaluadores/repository";
 
 export default function EditEvaluadorModal({
@@ -17,6 +14,7 @@ export default function EditEvaluadorModal({
   onUpdate,
   initial = null,
   takenAreas = [],
+  areas = [],
 }) {
   const [form, setForm] = useState({
     nombre: "",
@@ -25,14 +23,11 @@ export default function EditEvaluadorModal({
     telefono: "",
     ci: "",
     area: "",
-    nivel: "",
+    id_area: "",
   });
   const [showAreas, setShowAreas] = useState(false);
-  const [showNiveles, setShowNiveles] = useState(false);
-  const [availableNiveles, setAvailableNiveles] = useState([]);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
-  const [areasConNiveles, setAreasConNiveles] = useState({});
 
   useEffect(() => {
     if (open && initial) {
@@ -44,43 +39,12 @@ export default function EditEvaluadorModal({
         telefono: (initial.telefono || "").replace(/\+591\s?/, ""),
         ci: initial.ci || "",
         area: initial.area || "",
-        nivel: initial.nivel || "",
+        id_area: initial.id_area || "",
       });
       setErrors({});
       setShowAreas(false);
-      setShowNiveles(false);
     }
   }, [open, initial]);
-
-  useEffect(() => {
-    const fetchAreas = async () => {
-      try {
-        const data = await getAreasConNiveles(); // devuelve tu JSON
-        setAreasConNiveles(data);
-      } catch (err) {
-        console.error("Error al cargar áreas con niveles:", err);
-      }
-    };
-    fetchAreas();
-  }, []);
-
-  // ✅ Actualiza los niveles disponibles cuando cambia el área
-  useEffect(() => {
-    if (form.area) {
-      const selectedArea = areasConNiveles.find((a) => a.nombre === form.area);
-      if (selectedArea) {
-        const takenForArea = takenAreas.filter((a) => a.area === form.area);
-        const available = selectedArea.niveles.filter(
-          (n) => !takenForArea.some((t) => t.nivel === n.nombre_nivel)
-        );
-        setAvailableNiveles(available);
-      } else {
-        setAvailableNiveles([]);
-      }
-    } else {
-      setAvailableNiveles([]);
-    }
-  }, [form.area, takenAreas, areasConNiveles]);
 
   const validateField = (name, value) => {
     switch (name) {
@@ -119,6 +83,16 @@ export default function EditEvaluadorModal({
         return null;
     }
   };
+  const availableAreasList = areas.filter((a) => {
+    // Buscamos el área en takenAreas
+    const areaTaken = takenAreas?.find((t) => t.id === a.id);
+
+    // Ocupados: si no existe en takenAreas, es 0
+    const ocupados = areaTaken?.ocupados || 0;
+
+    // Solo mostramos el área si aún hay cupo
+    return ocupados < a.cantidad_evaluadores;
+  });
 
   const handleFieldChange = (name, rawValue) => {
     let value = rawValue;
@@ -148,28 +122,6 @@ export default function EditEvaluadorModal({
     });
   };
 
-  function obtenerIds(areas, nombreArea, nombreNivel) {
-    const area = areas.find(
-      (a) => a.nombre.toLowerCase() === nombreArea.toLowerCase()
-    );
-
-    if (!area) {
-      return { error: `No se encontró el área "${nombreArea}".` };
-    }
-
-    const nivel = area.niveles.find(
-      (n) => n.nombre_nivel.toLowerCase() === nombreNivel.toLowerCase()
-    );
-
-    if (!nivel) {
-      return {
-        error: `No se encontró el nivel "${nombreNivel}" en el área "${nombreArea}".`,
-      };
-    }
-
-    return { id_area: area.id, id_nivel: nivel.id };
-  }
-
   const errClass = (field) =>
     errors[field]
       ? "border-2 border-red-500 focus:border-red-500 focus:ring-red-300"
@@ -184,8 +136,8 @@ export default function EditEvaluadorModal({
       if (err) localErrors[key] = err;
     }
 
-    if (!form.area) localErrors.area = "Selecciona un área.";
-    if (!form.nivel) localErrors.nivel = "Selecciona un nivel.";
+    if (!form.id_area) localErrors.area = "Selecciona un área.";
+
     // Validación de combinación área+nivel
     /*  const combinationExists = takenAreas.some(
       (a) =>
@@ -204,6 +156,16 @@ export default function EditEvaluadorModal({
     if (combinationExists) {
       localErrors.area = 'Ya existe un evaluador para esta combinación de área y nivel.';
     } */
+    const availableAreasList = areas.filter((a) => {
+      // Buscamos el área en takenAreas
+      const areaTaken = takenAreas.find((t) => t.id === a.id);
+
+      // Ocupados: si no existe en takenAreas, es 0
+      const ocupados = areaTaken?.ocupados || 0;
+
+      // Solo mostramos el área si aún hay cupo
+      return ocupados < a.cantidad_evaluadores;
+    });
 
     if (Object.keys(localErrors).length > 0) {
       setErrors(localErrors);
@@ -212,14 +174,13 @@ export default function EditEvaluadorModal({
     }
 
     try {
-      const asignaciones = obtenerIds(areasConNiveles, form.area, form.nivel);
       const payload = {
         nombre: form.nombre,
         apellidos: form.apellidos,
         email: form.correo,
         telefono: form.telefono.replace(/\D/g, ""),
         ci: form.ci.replace(/\D/g, ""),
-        asignaciones: [asignaciones],
+        id_area: form.id_area,
       };
       console.log(payload);
       console.log(initial.id);
@@ -228,13 +189,15 @@ export default function EditEvaluadorModal({
 
       const response = await evaluadoresRepo.update(initial.id, payload);
 
-      console.log(
+      /* console.log(
         "Respuesta del servidor:",
         response.status,
         response.statusText
-      );
+      ); */
 
-      const data = response.data;
+      console.log(response);
+
+      const data = response;
       console.log("Datos recibidos:", data);
       if (onUpdate) onUpdate(data);
       onClose();
@@ -427,47 +390,39 @@ export default function EditEvaluadorModal({
               </span>
               <ChevronDownIcon className="w-4 h-4 text-slate-400" />
             </button>
-            {/* {showAreas && (
-              <div className="absolute z-10 mt-1 w-full max-h-48 overflow-auto card p-0 shadow-lg">
-                <ul className="max-h-56 overflow-auto">
-                  {AREAS.filter((area) => {
-                    if (initial?.area === area) return true;
-                    return !isAreaCompleta(area, takenAreas);
-                  }).map((a) => (
-                    <li key={a}>
-                      <button
-                        className="w-full text-left px-4 py-3 hover:bg-slate-50"
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={() => {
-                          handleFieldChange("area", a);
-                          setShowAreas(false);
-                        }}
-                      >
-                        {a}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )} */}
             {showAreas && (
-              <div className="absolute z-10 mt-1 w-full max-h-48 overflow-auto card p-0 shadow-lg">
+              <div
+                className="absolute z-50 mt-1 w-full max-h-48 overflow-auto bg-white border border-slate-200 rounded shadow-lg"
+                style={{ position: "absolute", top: "100%", left: 0 }}
+              >
                 <ul className="max-h-56 overflow-auto">
-                  {areasConNiveles.map((a) => (
-                    <li key={a.id}>
-                      <button
-                        className="w-full text-left px-4 py-3 hover:bg-slate-50"
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={() => {
-                          handleFieldChange("area", a.nombre);
-                          handleFieldChange("nivel", "");
-                          setShowAreas(false);
-                        }}
-                      >
-                        {a.nombre}
-                      </button>
+                  {availableAreasList.length > 0 ? (
+                    availableAreasList.map((a) => (
+                      <li key={a.id}>
+                        <button
+                          className="w-full text-left px-4 py-3 hover:bg-slate-50"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => {
+                            handleFieldChange("id_area", a.id);
+                            handleFieldChange("area", a.nombre);
+                            setShowAreas(false);
+                          }}
+                        >
+                          {a.nombre} (
+                          {a.cantidad_evaluadores -
+                            (takenAreas.find((t) => t.id === a.id)?.ocupados ||
+                              0)}{" "}
+                          disponibles)
+                        </button>
+                      </li>
+                    ))
+                  ) : (
+                    <li>
+                      <p className="px-4 py-3 text-slate-400">
+                        Todas las áreas ya están completas.
+                      </p>
                     </li>
-                  ))}
+                  )}
                 </ul>
               </div>
             )}
@@ -480,7 +435,7 @@ export default function EditEvaluadorModal({
           </div>
 
           {/* Nivel */}
-          <div className="relative md:col-span-2">
+          {/* <div className="relative md:col-span-2">
             <label className="label text-sm">Nivel *</label>
             <button
               type="button"
@@ -499,8 +454,8 @@ export default function EditEvaluadorModal({
                     : "Primero selecciona un área")}
               </span>
               <ChevronDownIcon className="w-4 h-4 text-slate-400" />
-            </button>
-            {/*  {showNiveles && (
+            </button> */}
+          {/*  {showNiveles && (
               <div className="absolute z-10 mt-1 w-full card p-0 overflow-hidden">
                 <ul className="max-h-56 overflow-auto">
                   {availableNiveles.map((n) => (
@@ -520,8 +475,11 @@ export default function EditEvaluadorModal({
                 </ul>
               </div>
             )} */}
-            {showNiveles && (
-              <div className="absolute z-10 mt-1 w-full max-h-48 overflow-auto card p-0 shadow-lg">
+          {/*   {showNiveles && (
+              <div
+                className="absolute z-50 mt-1 w-full max-h-48 overflow-auto bg-white border border-slate-200 rounded shadow-lg"
+                style={{ top: "100%", left: 0, right: 0 }}
+              >
                 <ul className="max-h-56 overflow-auto">
                   {availableNiveles.length > 0 ? (
                     availableNiveles.map((n) => (
@@ -554,7 +512,7 @@ export default function EditEvaluadorModal({
                 {errors.nivel}
               </p>
             )}
-          </div>
+          </div> */}
         </div>
 
         <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 mt-6">

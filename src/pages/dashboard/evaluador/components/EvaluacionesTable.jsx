@@ -98,11 +98,19 @@ export default function EvaluacionesTable({
     const map = loadLocal();
     map[fila.id_evaluacion] = { ...map[fila.id_evaluacion], ...fila };
     saveLocal(map);
-    await EvaluacionesRepository.updateEvaluacion(fila.id_evaluacion, {
+    const estado = estadoNivel === "En_revicion" ? "confirmado" : "pendiente";
+    const payload = {
       nota: fila.nota,
       descripcion: fila.descripcion,
       conducta: fila.conducta,
-    });
+      estado_confirmacion: estado,
+    };
+    console.log(payload);
+    const res = await EvaluacionesRepository.updateEvaluacion(
+      fila.id_evaluacion,
+      payload
+    );
+    console.log(res);
   };
 
   // ========= DATOS VISIBLES (ya vienen filtrados y ordenados desde backend) =========

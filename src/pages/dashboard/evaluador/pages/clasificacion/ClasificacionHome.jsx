@@ -43,7 +43,8 @@ export default function ClasificacionHome() {
       setCtxLoading(true);
       setCtxError("");
       try {
-        const res = await api.get("/evaluador/niveles");
+        const res = await api.get("evaluaciones/mis-niveles");
+        console.log("no esta entrando", res);
         const list = Array.isArray(res?.data?.data) ? res.data.data : [];
         if (!list.length) {
           setCtxError("No tienes niveles asignados.");
@@ -54,6 +55,7 @@ export default function ClasificacionHome() {
         const id = first.id_area_nivel_fase;
         const title = `${first.area} • ${first.nivel} • ${first.fase}`;
         const est = (first.estado ?? "en_evaluacion").toLowerCase();
+        console.log({ id, title, est });
 
         setIdAreaNivelFase(id);
         setEstadoNivel(est);
@@ -103,10 +105,13 @@ export default function ClasificacionHome() {
       if (sort.dir) params.direccion = sort.dir;
       if (query) params.busqueda = query;
       console.log(params);
-      const response = await api.get("/evaluador/evaluaciones/exportar", {
-        params,
-        responseType: "blob", // clave para descarga Excel
-      });
+      const response = await api.get(
+        "/evaluaciones/mis-evaluaciones/exportar",
+        {
+          params,
+          responseType: "blob", // clave para descarga Excel
+        }
+      );
 
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
@@ -178,7 +183,7 @@ export default function ClasificacionHome() {
               <span>⬇</span> {exporting ? "Exportando…" : "Exportar listas"}
             </button>
 
-            <button
+            {/* <button
               onClick={handleConcluir}
               disabled={
                 !idAreaNivelFase || !puedeConcluir || concluding || ctxLoading
@@ -187,7 +192,7 @@ export default function ClasificacionHome() {
               title="Marcar calificación como Concluida"
             >
               {concluding ? "Concluyendo…" : "Concluir calificación"}
-            </button>
+            </button> */}
           </div>
         </div>
       </header>

@@ -14,6 +14,7 @@ export default function ResultsCard({
   page,
   totalPages,
   loading,
+  esfinal = false,
 }) {
   const noData = rows.length === 0;
 
@@ -59,21 +60,36 @@ export default function ResultsCard({
               <table className="min-w-full text-sm table-fixed">
                 <thead className="bg-surface text-ink/70">
                   <tr>
-                    <th className="p-3 text-left w-4/12">Nombre</th>
+                    {esfinal && (
+                      <th className="p-3 text-center w-1/12">Puesto</th>
+                    )}
+                    <th className="p-3 text-left w-3/12">Nombre</th>
                     <th className="p-3 text-left w-2/12">Área</th>
-                    <th className="p-3 text-left w-3/12">Nivel</th>
-                    <th className="p-3 text-left w-1/12">Puntaje</th>
-                    <th className="p-3 text-left w-2/12">Estado</th>
+                    <th className="p-3 text-left w-2/12">Nivel</th>
+                    <th className="p-3 text-left w-2/12">Puntaje</th>
+                    {!esfinal && (
+                      <th className="p-3 text-left w-3/12">Estado</th>
+                    )}
+                    {esfinal && (
+                      <th className="p-3 text-left w-3/12">Premio</th>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
                   {rows.map((r) => (
                     <tr key={r.id} className="border-t">
+                      {esfinal && (
+                        <td className="p-3 text-center">{r.puesto}</td>
+                      )}
                       <td className="p-3 truncate">{r.nombre}</td>
                       <td className="p-3 truncate">{r.area}</td>
                       <td className="p-3 truncate">{r.nivel}</td>
-                      <td className="p-3">{r.puntaje} pts</td>
-                      <td className="p-3">{r.estado}</td>
+                      <td className="p-3">
+                        {" "}
+                        {r.puntaje ? r.puntaje + " pts" : ""}
+                      </td>
+                      {!esfinal && <td className="p-3">{r.estado}</td>}
+                      {esfinal && <td className="p-3">{r.premio}</td>}
                     </tr>
                   ))}
                   {noData && (

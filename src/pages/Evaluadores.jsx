@@ -16,7 +16,7 @@ import { getAreasConNiveles } from "../infrastructure/http/areas/areaRepostory";
 import { evaluadoresRepo } from "../infrastructure/http/evaluadores/repository";
 import api from "@/lib/api";
 
-export default function Evaluadores({ onBackToResponsables }) {
+export default function Evaluadores({ onBackToResponsables, areas = [] }) {
   const [rows, setRows] = useState([]);
 
   // modal registrar evaluador
@@ -29,56 +29,44 @@ export default function Evaluadores({ onBackToResponsables }) {
   // modal eliminar
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deletingRow, setDeletingRow] = useState(null);
-
+  const [meta, setMeta] = useState(null);
   // modal importar CSV
   const [importOpen, setImportOpen] = useState(false);
-
+  const [takenAreas, setTakenAreas] = useState(null);
   // diálogo éxito
   const [successOpen, setSuccessOpen] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
 
   // áreas disponibles para asignar
-  const [allAreas, setAllAreas] = useState([]);
-
-  const takenAreas = useMemo(
-    () => rows.map((r) => ({ area: r.area, nivel: r.nivel })),
-    [rows]
-  );
-
-  // cuántas áreas ya tienen evaluador asignado
-  const areasCubiertas = useMemo(
-    () => new Set(rows.map((r) => r.area)).size,
-    [rows]
-  );
-
-  // cuántas áreas quedan libres para asignar un evaluador nuevo
-  const areasDisponibles = useMemo(() => {
-    if (!allAreas) return 0;
-    return allAreas.length - areasCubiertas;
-  }, [allAreas, areasCubiertas]);
-
+  const [allAreas, setAllAreas] = useState(areas);
   // hook para manejar el formulario de registro
+
   const { form, setField, errors, submitting, submit, resetForm, setErrors } =
-    useRegisterEvaluador(takenAreas);
+    useRegisterEvaluador();
 
   const fetchEvaluadores = async () => {
     try {
-      const response = await api.get("/evaluador"); // baseURL ya está en api
+      const params = {
+        include: "areas",
+      };
+      const response = await api.get("/evaluadores", { params }); // baseURL ya está en api
       const data = response.data;
-
+      console.log("esto es la respuesta", data);
       // adaptamos el backend a lo que la tabla necesita
-      const adaptedData = data.map((item) => ({
+      const adaptedData = data.data.map((item) => ({
         id: item.id,
         nombre: item.nombre,
         apellidos: item.apellidos,
         ci: item.ci,
         correo: item.correo,
         telefono: item.telefono,
-        area: item.asignaciones?.[0]?.area || "No asignado",
-        nivel: item.asignaciones?.[0]?.nivel || "No asignado",
+        area: item.area || "No asignado",
+        id_area: item.id_area,
         fecha: item.fecha_registro,
       }));
-
+      setMeta(data.meta);
+      setTakenAreas(data.meta.areas);
+      console.log("meta", data.meta);
       setRows(adaptedData);
     } catch (err) {
       console.error("❌ Error al cargar evaluadores:", err);
@@ -141,6 +129,7 @@ export default function Evaluadores({ onBackToResponsables }) {
   // abrir modal edición
   const handleOpenEdit = (row /*, idx */) => {
     setEditingRow(row);
+    console.log(row);
     setEditOpen(true);
   };
 
@@ -274,13 +263,14 @@ export default function Evaluadores({ onBackToResponsables }) {
 
         {/* Acciones */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 justify-start md:justify-end">
-          {/* Botón CSV */}
           <button
             className={`w-full sm:w-auto inline-flex items-center gap-2 border border-blue-600 text-blue-600 hover:bg-blue-50 bg-white font-medium rounded-lg px-4 py-2 text-sm shadow-sm transition-all duration-150 ease-in-out ${
-              areasDisponibles <= 0 ? "opacity-50 cursor-not-allowed" : ""
+              (meta?.areas_disponibles || 0) <= 0
+                ? "opacity-50 cursor-not-allowed"
+                : ""
             }`}
             onClick={() => setImportOpen(true)}
-            disabled={areasDisponibles <= 0}
+            disabled={(meta?.areas_disponibles || 0) <= 0}
           >
             <ArrowUpTrayIcon className="w-4 h-4" />
             <span>Registrar evaluadores por CSV</span>
@@ -289,11 +279,13 @@ export default function Evaluadores({ onBackToResponsables }) {
           {/* Botón Registrar Evaluador py-3 border-b-2 border-cta text-cta font-semibold*/}
           <button
             className={`w-full sm:w-auto btn btn-cta e  text-white flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all duration-150 ease-in-out ${
-              areasDisponibles <= 0 ? "opacity-50 cursor-not-allowed" : ""
+              (meta?.areas_disponibles || 0) <= 0
+                ? "opacity-50 cursor-not-allowed"
+                : ""
             }`}
             onClick={() => setOpen(true)}
-            disabled={areasDisponibles <= 0}
-            aria-disabled={areasDisponibles <= 0}
+            disabled={(meta?.areas_disponibles || 0) <= 0}
+            aria-disabled={(meta?.areas_disponibles || 0) <= 0}
           >
             <UserPlusIcon className="w-5 h-5" />
             Registrar Evaluador
@@ -301,23 +293,33 @@ export default function Evaluadores({ onBackToResponsables }) {
         </div>
       </div>
 
-      {/* Tarjetas de estado responsivas */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-6">
         <StatsCard
           title="Total Evaluadores"
-          value={rows.length}
+          value={meta?.total_evaluadores || 0}
           variant="cta"
           icon="userplus"
         />
         <StatsCard
           title="Áreas Cubiertas"
-          value={areasCubiertas}
+          value={meta?.areas_cubiertas || 0}
           variant="accent"
           icon="check"
         />
         <StatsCard
           title="Áreas Disponibles"
-          value={areasDisponibles}
+          value={
+            <ul className="text-sm">
+              {meta?.areas
+                ?.filter((a) => a.faltantes > 0)
+                .map((a) => (
+                  <li key={a.id}>
+                    {a.nombre}: {a.faltantes}{" "}
+                    {a.faltantes === 1 ? "faltante" : "faltantes"}
+                  </li>
+                ))}
+            </ul>
+          }
           variant="cta"
           icon="check"
         />
@@ -346,6 +348,7 @@ export default function Evaluadores({ onBackToResponsables }) {
         submitting={submitting}
         onSubmit={handleCreate}
         takenAreas={takenAreas}
+        areas={allAreas}
       />
 
       {/* MODAL: Editar evaluador existente */}
@@ -353,7 +356,8 @@ export default function Evaluadores({ onBackToResponsables }) {
         open={editOpen}
         onClose={() => setEditOpen(false)}
         initial={editingRow}
-        takenAreas={rows.map((r) => ({ area: r.area, nivel: r.nivel }))}
+        takenAreas={takenAreas}
+        areas={allAreas}
         onUpdate={async () => {
           await fetchEvaluadores();
           setEditOpen(false);

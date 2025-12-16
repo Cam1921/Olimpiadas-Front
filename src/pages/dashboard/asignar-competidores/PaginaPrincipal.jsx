@@ -4,13 +4,22 @@ import { useNavigate } from "react-router-dom";
 import { getAreasConNiveles } from "@/infrastructure/http/areas/areaRepostory";
 import { asignacionService } from "@/services/asignacionService";
 import AsignarEvaluadores from "./AsignarEvaluadores";
+import { estadoService } from "@/services/estadoService";
 
 export default function PaginaPrincipal() {
   const navigate = useNavigate();
   const [allAreas, setAllAreas] = useState([]);
   const [nivel, setNivel] = useState([]);
-  const [showAreas, setShowAreas] = useState(false);
-  const [showNiveles, setShowNiveles] = useState(false);
+
+  const [evaluadores, setEvaludores] = useState([]);
+  const [areaId, setAreaId] = useState("");
+  const [nivelId, setNivelId] = useState("");
+  const [limiteEvaluadoresActivos, setLimiteEvaluadoresActivos] = useState(3); // A: controla cuántos evaluadores quedan activos
+  const [limitePorEvaluador, setLimitePorEvaluador] = useState(10); // B: máximo de competidores por evaluador
+  const [cantidadEvaluadores, setCantidadEvaluadores] = useState(1);
+  const [configLimite, setConfigLimite] = useState(0);
+  const [totalEvaluadores, setTotalEvaluadores] = useState(0);
+  const [showConfig, setShowConfig] = useState(false);
 
   async function fetchAreas() {
     try {
@@ -22,8 +31,17 @@ export default function PaginaPrincipal() {
     }
   }
 
+  async function fetchEstados() {
+    try {
+      const res = await estadoService.actualizarEstados();
+      console.log("Estados actualizados cargadas:", res);
+    } catch (err) {
+      console.error("Error al cargar áreas:", err);
+    }
+  }
   useEffect(() => {
     fetchAreas();
+    fetchEstados();
   }, []);
 
   const handleAreaChange = (id) => {
@@ -58,56 +76,6 @@ export default function PaginaPrincipal() {
     ],
     []
   );
-
-  // Mock data
-  const [evaluadores, setEvaludores] = useState([]);
-  /*  const [evaluadores] = useState([
-    {
-      id: 1,
-      nombre: "Carmen Vargas",
-      area: "Matemática",
-      nivel: "Primaria",
-      cargaActual: 2,
-    },
-    {
-      id: 2,
-      nombre: "Roberto Silva",
-      area: "Matemática",
-      nivel: "Primaria",
-      cargaActual: 3,
-    },
-    {
-      id: 3,
-      nombre: "Patricia Méndez",
-      area: "Matemática",
-      nivel: "Primaria",
-      cargaActual: 5,
-    },
-    {
-      id: 4,
-      nombre: "Luis Morales",
-      area: "Matemática",
-      nivel: "Primaria",
-      cargaActual: 6,
-    },
-    {
-      id: 5,
-      nombre: "Jorge Castro",
-      area: "Matemática",
-      nivel: "Primaria",
-      cargaActual: 8,
-    },
-  ]); */
-
-  // Estado UI
-  const [areaId, setAreaId] = useState("");
-  const [nivelId, setNivelId] = useState("");
-  const [limiteEvaluadoresActivos, setLimiteEvaluadoresActivos] = useState(3); // A: controla cuántos evaluadores quedan activos
-  const [limitePorEvaluador, setLimitePorEvaluador] = useState(10); // B: máximo de competidores por evaluador
-  const [cantidadEvaluadores, setCantidadEvaluadores] = useState(1);
-  const [configLimite, setConfigLimite] = useState(0);
-  const [totalEvaluadores, setTotalEvaluadores] = useState(0);
-  const [showConfig, setShowConfig] = useState(false);
 
   async function fetchEvaluadores() {
     try {
@@ -378,7 +346,7 @@ export default function PaginaPrincipal() {
         </div>
       )}
 
-      {/*    <AsignarEvaluadores /> */}
+      <AsignarEvaluadores areas={allAreas} />
 
       {/* Modal: B – Límite por evaluador */}
       {showConfig && (

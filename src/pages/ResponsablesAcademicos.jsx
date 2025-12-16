@@ -10,7 +10,6 @@ import ConfirmDeleteModal from "../components/ConfirmDeleteModal";
 import { useRegisterResponsable } from "../application/responsables/useRegisterResponsible"; // 👈 Corregido nombre (a)
 import { getAreasConNiveles } from "../infrastructure/http/areas/areaRepostory";
 import { responsablesRepo } from "../infrastructure/http/responsables/repository";
-import api from "@/lib/api";
 import Evaluadores from "./Evaluadores";
 
 export default function ResponsablesAcademicos() {
@@ -26,24 +25,16 @@ export default function ResponsablesAcademicos() {
   const [successMsg, setSuccessMsg] = useState("");
   const [allAreas, setAllAreas] = useState([]);
   const [activeTab, setActiveTab] = useState("responsables");
-  const takenAreas = useMemo(() => rows.map((r) => r.area), [rows]);
-  const areasCubiertas = useMemo(
-    () => new Set(rows.map((r) => r.area)).size,
-    [rows]
-  );
-  const areasDisponibles = useMemo(() => {
-    if (!allAreas) return 0;
-    console.log(takenAreas);
-    return allAreas.length - areasCubiertas;
-  }, [allAreas, areasCubiertas]);
-
+  const [meta, setMeta] = useState({});
+  const [takenAreas, setTakenAreas] = useState([]);
   const { form, setField, errors, submitting, submit, resetForm, setErrors } =
-    useRegisterResponsable(takenAreas);
+    useRegisterResponsable();
 
   const fetchResponsables = async () => {
     try {
-      const response = await api.get("/responsable-academico");
+      const response = await responsablesRepo.list();
       const data = response.data;
+      console.log("esto es la respuest resa", response);
 
       const adaptedData = data.map((item) => ({
         id: item.id,
@@ -52,25 +43,29 @@ export default function ResponsablesAcademicos() {
         ci: item.ci,
         correo: item.correo,
         telefono: item.telefono,
-        area: item.asignaciones?.[0] || "—",
-        nivel: "—",
+        area: item.area || "—",
+        id_area: item.id_area,
         fecha: item.fecha_registro,
       }));
-
       setRows(adaptedData);
+      setMeta(response.meta);
+      setTakenAreas(response.meta.areas);
     } catch (err) {
       console.error("Error al cargar responsables:", err);
     }
   };
-
+  console.log("takenAreas", takenAreas);
+  async function fetchAreas() {
+    try {
+      const areas = await getAreasConNiveles();
+      setAllAreas(areas);
+    } catch (err) {
+      console.error("Error al cargar areas:", err);
+    }
+  }
   useEffect(() => {
     fetchAreas();
     fetchResponsables();
-    async function fetchAreas() {
-      const areas = await getAreasConNiveles();
-      setAllAreas(areas);
-      console.log(areas);
-    }
   }, []);
 
   const handleDelete = async (id) => {
@@ -83,12 +78,10 @@ export default function ResponsablesAcademicos() {
     } finally {
     }
   };
-  // 👇 Función para cerrar el modal Y limpiar el formulario
   const handleCloseModal = () => {
     setOpen(false);
     resetForm();
   };
-
   const handleCreate = async () => {
     const result = await submit();
     if (result.ok) {
@@ -98,7 +91,6 @@ export default function ResponsablesAcademicos() {
       handleCloseModal();
     }
   };
-
   const handleOpenEdit = (row, idx) => {
     setEditingRow(row);
     setEditingIndex(idx);
@@ -161,13 +153,15 @@ export default function ResponsablesAcademicos() {
         {/* ✅ Botón actualizado: deshabilitado si no hay áreas disponibles */}
         <button
           className={`btn btn-cta text-white ${
-            areasDisponibles <= 0 ? "opacity-50 cursor-not-allowed" : ""
+            (meta?.areasDisponibles || 0) <= 0
+              ? "opacity-50 cursor-not-allowed"
+              : ""
           }`}
           onClick={() => setOpen(true)}
-          disabled={areasDisponibles <= 0}
+          disabled={(meta?.areasDisponibles || 0) <= 0}
         >
           <UserPlusIcon className="w-5 h-5" />
-          {areasDisponibles > 0
+          {(meta?.areasDisponibles || 0) > 0
             ? "Registrar Responsable"
             : "No hay áreas disponibles"}
         </button>
@@ -176,19 +170,19 @@ export default function ResponsablesAcademicos() {
       <div className="grid md:grid-cols-3 gap-6 mt-8">
         <StatsCard
           title="Total Responsables"
-          value={rows.length}
+          value={meta?.totalResponsables || 0}
           variant="cta"
           icon="userplus"
         />
         <StatsCard
           title="Áreas Cubiertas"
-          value={areasCubiertas}
+          value={meta?.areasCubiertas || 0}
           variant="accent"
           icon="check"
         />
         <StatsCard
           title="Áreas Disponibles"
-          value={areasDisponibles}
+          value={meta?.areasDisponibles || 0}
           variant="cta"
           icon="check"
         />
@@ -212,6 +206,7 @@ export default function ResponsablesAcademicos() {
         submitting={submitting}
         onSubmit={handleCreate}
         takenAreas={takenAreas}
+        areas={allAreas}
       />
 
       <EditResponsibleModal
@@ -220,6 +215,7 @@ export default function ResponsablesAcademicos() {
         onClose={() => setEditOpen(false)}
         initial={editingRow}
         takenAreas={takenAreas}
+        areas={allAreas}
         onUpdate={async (updatedData) => {
           await fetchResponsables();
           setSuccessMsg("Responsable actualizado correctamente.");

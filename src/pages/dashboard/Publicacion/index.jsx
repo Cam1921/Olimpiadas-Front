@@ -12,6 +12,9 @@ import api from "@/lib/api";
 
 // 🔹 NUEVO: barra UI (solo nombre + orden nombre/nota)
 import BusquedaOrdenAdmin from "./components/BusquedaOrdenAdmin";
+import { faseService } from "@/services/faseService";
+import ResultsFinalTable from "./components/ResultsFinalTable";
+import ConfirmationModal from "@/components/ConfirmationModal";
 
 /* ===========================
    Utils de exportación (tu lógica)
@@ -42,11 +45,20 @@ function obtenerValuePorLabel(labelBuscado, opciones) {
   );
   return opcion ? opcion.value : null;
 }
+function quitarAcentos(texto) {
+  return texto
+    .normalize("NFD") // Separa letras y acentos
+    .replace(/[\u0300-\u036f]/g, "") // Elimina los acentos
+    .toLowerCase();
+}
+
 function obtenerIdArea(areas, nombreArea) {
-  const area = areas.find(
-    (a) => a.nombre.toLowerCase() === nombreArea.toLowerCase()
-  );
+  const nombreNormalizado = quitarAcentos(nombreArea);
+
+  const area = areas.find((a) => quitarAcentos(a.nombre) === nombreNormalizado);
+
   if (!area) return { error: `No se encontró el área "${nombreArea}".` };
+
   return { id_area: area.id };
 }
 
@@ -80,7 +92,9 @@ function filtrarPorTipoAreaNivel(tipo, selection, rows) {
     const areaVal = r.area ?? r.área ?? r.areaNombre;
     const nivelVal = r.nivel ?? r.level ?? r.nivelNombre;
     const okArea = selection?.area ? areaVal === selection.area : true;
-    const okNivel = selection?.nivel ? matchNivel(nivelVal, selection.nivel) : true;
+    const okNivel = selection?.nivel
+      ? matchNivel(nivelVal, selection.nivel)
+      : true;
     return okTipo && okArea && okNivel;
   });
 }
@@ -90,15 +104,13 @@ function filtrarPorTipoAreaNivel(tipo, selection, rows) {
    =========================== */
 function nombreDe(r) {
   return (
-    r?.nombre_completo ||
-    r?.competidor?.nombre_completo ||
-    r?.nombre ||
-    ""
+    r?.nombre_completo || r?.competidor?.nombre_completo || r?.nombre || ""
   );
 }
 function notaDe(r) {
   const raw = r?.nota_academica ?? r?.nota ?? r?.evaluacion?.nota ?? null;
-  if (raw === null || raw === undefined || raw === "" || raw === "0-100") return null;
+  if (raw === null || raw === undefined || raw === "" || raw === "0-100")
+    return null;
   const n = Number(String(raw).replace(",", "."));
   return Number.isFinite(n) ? n : null;
 }
@@ -108,8 +120,10 @@ function notaDe(r) {
    =========================== */
 export default function PublicacionPage() {
   const {
+    dataAreas,
     fase,
     setFase,
+    fases,
     area,
     setArea,
     nivel,
@@ -118,86 +132,60 @@ export default function PublicacionPage() {
     areasDisponibles,
   } = useFilters();
 
-  const [tipo, setTipo] = useState("all");
+  const [tipo, setTipo] = useState("");
   const [page, setPage] = useState(1);
   const perPage = 10;
-
+  /* ===========================
+     NUEVO: Buscador + Orden (solo sobre la página actual)
+     =========================== */
+  const [query, setQuery] = useState(""); // buscar por NOMBRE (solo nombre)
+  const [sort, setSort] = useState({ by: "puntaje_total", dir: "desc" }); // predeterminado: Nota ↓
   const {
-    data,           // ← filas que ya alimentan ResultsCard
+    data, // ← filas que ya alimentan ResultsCard
     loading,
     totalPages,
     toast,
     generarListas,
     publicarResultados,
     limpiarToast,
-  } = usePublicacion({ fase, area, nivel, tipo, page, perPage });
+    openModalConfirm,
+    setOpenModalConfirm,
+  } = usePublicacion({ fase, area, nivel, tipo, page, perPage, query, sort });
 
   // Para exportación (tu lógica)
-  const [allAreas, setAllAreas] = useState([]);
+
   const [flowOpen, setFlowOpen] = useState(false);
-  useEffect(() => {
-    async function fetchAreas() {
-      const aNi = await getAreasConNiveles();
-      setAllAreas(aNi);
-    }
-    fetchAreas();
-  }, []);
 
-  /* ===========================
-     NUEVO: Buscador + Orden (solo sobre la página actual)
-     =========================== */
-  const [query, setQuery] = useState(""); // buscar por NOMBRE (solo nombre)
-  const [sort, setSort] = useState({ by: "nota", dir: "desc" }); // predeterminado: Nota ↓
-
-  // Buscar por nombre (cliente, sobre data de la página actual)
-  const filtradas = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return data || [];
-    return (data || []).filter((r) => nombreDe(r).toLowerCase().includes(q));
-  }, [data, query]);
-
-  // Orden estable (cliente)
-  const ordenadas = useMemo(() => {
-    const arr = [...filtradas].map((x, i) => ({ x, i }));
-    arr.sort((A, B) => {
-      let cmp = 0;
-      if (sort.by === "nota") {
-        const a = notaDe(A.x), b = notaDe(B.x);
-        if (a === null && b === null) cmp = 0;
-        else if (a === null) cmp = sort.dir === "asc" ? -1 : 1;
-        else if (b === null) cmp = sort.dir === "asc" ?  1 : -1;
-        else cmp = a - b;
-        if (sort.dir === "desc") cmp = -cmp;
-      } else {
-        const a = nombreDe(A.x).toLocaleLowerCase();
-        const b = nombreDe(B.x).toLocaleLowerCase();
-        cmp = a.localeCompare(b, "es", { sensitivity: "base" });
-        if (sort.dir === "desc") cmp = -cmp;
-      }
-      return cmp !== 0 ? cmp : A.i - B.i; // sort estable
-    });
-    return arr.map((o) => o.x);
-  }, [filtradas, sort]);
-
-  /* ===========================
-     Exportar desde modal (tu lógica)
-     =========================== */
-  const handleDownload = async (tipo, sel) => {
+  const handleDownload = async (tipo, Nomfase, sel, sort) => {
     try {
       const opciones = [
         { label: "Todos", value: "todos" },
-        { label: "Clasificados", value: "clasificados" },
-        { label: "No Clasificados", value: "no_clasificados" },
-        { label: "Descalificados", value: "descalificados" },
+        { label: "Clasificados", value: "Clasificado" },
+        { label: "No Clasificados", value: "No clasificado" },
+        { label: "Descalificados", value: "Descalificado" },
       ];
+      console.log("tipo ", tipo);
+      let res = "";
+      if (Nomfase == "final") {
+        res = tipo;
+      }
       const tipo_clas = obtenerValuePorLabel(tipo, opciones);
-      const nombreArchivo = `${tipo} - ${sel?.area || "Todas"} (${sel?.nivel || "Todos"})`;
-      const asignaciones = obtenerIdArea(allAreas, sel.area);
+      const nombreArchivo = `${tipo} - ${sel?.area || "Todas"} (${
+        sel?.nivel || "Todos"
+      })`;
+      console.log("fases", fases);
+      const faseSel = fases.find((a) => a.nombre === "clasificacion");
+      console.log("sel", sel, faseSel, sort);
       const params = {
-        id_area: asignaciones.id_area || "",
-        nivel_nombre: sel?.nivel || "",
+        estado: res || null,
+        ordenar_por: sort?.by ?? "",
+        direccion: sort?.dir ?? "",
+        id_fase: faseSel?.id ?? "",
+        id_area: sel.areaId || "",
+        id_nivel: sel?.nivelId || "",
         estado_clasificado: tipo_clas || "",
       };
+      console.log(params);
       const response = await api.get("evaluaciones/exportar", {
         params,
         responseType: "blob",
@@ -207,7 +195,10 @@ export default function PublicacionPage() {
       link.href = url;
       link.setAttribute(
         "download",
-        `evaluaciones_${nombreArchivo}_${new Date().toISOString().slice(0, 19).replace("T", "_")}.xlsx`
+        `evaluaciones_${nombreArchivo}_${new Date()
+          .toISOString()
+          .slice(0, 19)
+          .replace("T", "_")}.xlsx`
       );
       document.body.appendChild(link);
       link.click();
@@ -224,15 +215,11 @@ export default function PublicacionPage() {
       <HeaderBar
         isGenerating={flowOpen}
         onGenerar={() => setFlowOpen(true)}
-        onPublicar={publicarResultados}
+        onPublicar={() => setOpenModalConfirm(true)}
       />
 
       {/* Tabs de fase (dejamos final deshabilitado como tenías) */}
-      <PhaseTabs
-        fase={fase}
-        setFase={(f) => f !== "final" && setFase(f)}
-        disableFinal
-      />
+      <PhaseTabs fase={fase} fases={fases} setFase={setFase} />
 
       {/* 🔹 NUEVO: Buscador/Orden SOLO arriba de la tabla, sin tocarla */}
       <BusquedaOrdenAdmin
@@ -244,6 +231,7 @@ export default function PublicacionPage() {
       />
 
       {/* Tablita: SIN CAMBIAR, solo que ahora recibe 'ordenadas' */}
+
       <ResultsCard
         titulo="Resultados Fase Clasificatoria"
         areas={areasDisponibles}
@@ -252,11 +240,12 @@ export default function PublicacionPage() {
         niveles={nivelesDisponibles}
         nivel={nivel}
         setNivel={setNivel}
-        rows={ordenadas}        // ← antes: data
+        rows={data} // ← antes: data
         setPage={setPage}
         page={page}
         totalPages={totalPages}
         loading={loading}
+        esfinal={fase?.nombre == "final"}
       />
 
       {toast && (
@@ -266,12 +255,21 @@ export default function PublicacionPage() {
           onClose={limpiarToast}
         />
       )}
-
+      <ConfirmationModal
+        open={openModalConfirm}
+        onClose={() => setOpenModalConfirm(false)}
+        onConfirm={publicarResultados}
+        title="Publicar resultados"
+        message="Esta acción no se puede deshacer."
+        confirmText="Sí, continuar"
+        cancelText="Cancelar"
+      />
       {/* Modal "Generar listas" (tu flujo) */}
       <GenerateListsFlow
         open={flowOpen}
         onClose={() => setFlowOpen(false)}
         onDownload={handleDownload}
+        areas={dataAreas}
       />
     </div>
   );

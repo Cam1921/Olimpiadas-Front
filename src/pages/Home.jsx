@@ -14,6 +14,7 @@ import {
   HiChevronRight,
 } from "react-icons/hi2";
 import olimpiadas from "@/assets/olimpiadas.png";
+import { Link, useNavigate } from "react-router-dom";
 
 const AREAS = [
   {
@@ -86,7 +87,7 @@ const NOVEDADES = [
 
 export default function Home() {
   const [open, setOpen] = useState(false);
-
+  const navigate = useNavigate();
   // ======== CARRUSEL SIMPLE: ventana de 3 áreas ========
   const [areaIndex, setAreaIndex] = useState(0); // índice del primer área visible
 
@@ -174,9 +175,9 @@ export default function Home() {
                 style={{ lineHeight: 1.5 }}
               >
                 Plataforma digital para la gestión integral de las competencias
-                científicas estudiantiles. Participa en las fases
-                clasificatoria y final, y demuestra tu talento académico en tu
-                disciplina favorita.
+                científicas estudiantiles. Participa en las fases clasificatoria
+                y final, y demuestra tu talento académico en tu disciplina
+                favorita.
               </p>
 
               <div className="flex flex-wrap gap-4 pt-2">
@@ -193,12 +194,11 @@ export default function Home() {
             <div className="relative lg:w-1/2">
               <div className="absolute -inset-4 rounded-3xl bg-white/10 blur-2xl" />
               <div className="relative mx-auto w-full max-w-xl overflow-hidden rounded-3xl shadow-xl bg-white">
-  <img
-    src={olimpiadas}
-    className="w-full h-[280px] md:h-[350px] lg:h-[420px] object-cover"
-  />
-</div>
-
+                <img
+                  src={olimpiadas}
+                  className="w-full h-[280px] md:h-[350px] lg:h-[420px] object-cover"
+                />
+              </div>
             </div>
           </div>
         </section>
@@ -326,7 +326,12 @@ export default function Home() {
                 Consulta resultados por área, fase y clasificación. Accede a
                 toda la información de manera transparente y actualizada.
               </p>
-              <button className="mt-6 rounded-full bg-[#0284c7] px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-[#0284c7]/40 transition hover:-translate-y-0.5 hover:shadow-xl">
+              <button
+                onClick={() => {
+                  navigate("/results");
+                }}
+                className="mt-6 rounded-full bg-[#0284c7] px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-[#0284c7]/40 transition hover:-translate-y-0.5 hover:shadow-xl"
+              >
                 Consultar resultados
               </button>
             </div>

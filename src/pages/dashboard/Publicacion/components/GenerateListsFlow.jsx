@@ -15,6 +15,7 @@ import {
 } from "react-icons/hi2";
 
 import { MdOutlineTimeline, MdFlag } from "react-icons/md";
+import OrdenClasificatoria from "./OrdenClasificatoria";
 
 /* Paleta */
 const BRAND = "#0284C7";
@@ -44,46 +45,54 @@ function Badge({ tipo }) {
 
 /* ----------------- Paso 1: Selección Área/Nivel ----------------- */
 function AreaCard({ area, selection, setSelection }) {
-  const hasP = areaHasPrimaria(area);
-  const hasS = areaHasSecundaria(area);
-  const isP = selection?.area === area && selection?.nivel === "Primaria";
-  const isS = selection?.area === area && selection?.nivel === "Secundaria";
-
-  const base =
-    "px-6 py-2 rounded-xl text-sm font-medium transition-colors shadow-[0_2px_6px_rgba(0,0,0,.05)]";
-  const off =
-    "bg-white border border-[#23263D]/10 text-[#23263D]/80 hover:bg-[#F8FAFB]";
-  const dis = "bg-gray-100 text-[#23263D]/40 cursor-not-allowed shadow-none";
+  const selected = selection?.areaId === area.id;
 
   return (
     <div className="bg-white rounded-xl border border-[#23263D]/10 shadow-sm p-4">
-      <div className="text-sm font-medium text-[#23263D]/80 mb-2">{area}</div>
+      {/* Título del área */}
+      <div className="text-sm font-medium text-[#23263D]/80 mb-2">
+        {area.nombre}
+      </div>
 
-      {selection?.area === area && (
+      {/* Mostrar badge cuando ya se seleccionó un nivel */}
+      {selected && selection?.nivelNombre && (
         <div className="mb-3">
-          <Badge tipo={selection.nivel} />
+          <span className="inline-block text-xs px-3 py-1 rounded-full bg-[#E6F4FB] text-[#0284C7] shadow">
+            {selection.nivelNombre}
+          </span>
         </div>
       )}
 
-      <div className="flex gap-3">
-        <button
-          type="button"
-          disabled={!hasP}
-          onClick={() => setSelection({ area, nivel: "Primaria" })}
-          className={`${base} ${hasP ? (isP ? "text-white" : off) : dis}`}
-          style={hasP ? (isP ? { backgroundColor: GREEN_MAIN } : {}) : {}}
-        >
-          Primaria
-        </button>
-        <button
-          type="button"
-          disabled={!hasS}
-          onClick={() => setSelection({ area, nivel: "Secundaria" })}
-          className={`${base} ${hasS ? (isS ? "text-white" : off) : dis}`}
-          style={hasS ? (isS ? { backgroundColor: PURPLE_MAIN } : {}) : {}}
-        >
-          Secundaria
-        </button>
+      {/* Botones de niveles dinámicos */}
+      <div className="flex flex-wrap gap-2">
+        {area.niveles.map((nivel) => {
+          const active = selected && selection?.nivelId === nivel.id;
+
+          return (
+            <button
+              key={nivel.id}
+              type="button"
+              onClick={() =>
+                setSelection({
+                  areaId: area.id,
+                  areaNombre: area.nombre,
+                  nivelId: nivel.id,
+                  nivelNombre: nivel.nombre_nivel,
+                })
+              }
+              className={`px-4 py-1 rounded-xl text-sm transition shadow ${
+                active
+                  ? "text-white"
+                  : "bg-white border border-[#23263D]/10 text-[#23263D]/80 hover:bg-[#F8FAFB]"
+              }`}
+              style={{
+                backgroundColor: active ? "#0284C7" : undefined,
+              }}
+            >
+              {nivel.nombre_nivel}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -99,12 +108,12 @@ function PhaseTabs({ phase, setPhase }) {
         <button
           type="button"
           className={`${base} border-2 shadow ${
-            phase === "clasificatoria" ? "text-[#23263D]" : "text-[#23263D]/60"
+            phase === "clasificacion" ? "text-[#23263D]" : "text-[#23263D]/60"
           }`}
           style={{
-            borderColor: phase === "clasificatoria" ? BRAND : "transparent",
+            borderColor: phase === "clasificacion" ? BRAND : "transparent",
           }}
-          onClick={() => setPhase("clasificatoria")}
+          onClick={() => setPhase("clasificacion")}
         >
           <MdOutlineTimeline className="mr-2" />
           Fase Clasificatoria
@@ -167,36 +176,78 @@ function CardClasif({ tone, Icon, title, desc, onClick }) {
 }
 
 function ContentClasificatoria({ onDownload, selection }) {
+  const [sort, setSort] = useState({ by: "nombre", dir: "asc" });
+
   return (
     <>
       <div className="text-lg font-semibold text-[#23263D] mb-1">
         Listas de Fase Clasificatoria
       </div>
+
       <p className="text-xs text-[#23263D]/60 mb-3">
         Generar listas por categoría de clasificación (xlsx)
       </p>
 
+      {/* Selector de orden */}
+      <div className="mb-4 flex flex-row gap-3 items-center justify-start">
+        <OrdenClasificatoria
+          sort={sort}
+          onSortChange={setSort}
+          disabled={false}
+        />
+      </div>
+
+      {/* Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <CardClasif
           tone="success"
           Icon={HiCheckCircle}
           title="Clasificados"
           desc="Listas de competidores que pasaron a la siguiente fase."
-          onClick={() => onDownload?.("Clasificados", selection)}
+          onClick={() =>
+            onDownload?.(
+              "Clasificados",
+              "clasificacion",
+              {
+                ...selection,
+              },
+              sort
+            )
+          }
         />
+
         <CardClasif
           tone="warn"
           Icon={HiExclamationTriangle}
           title="No Clasificados"
           desc="Listas de competidores que no alcanzaron el puntaje."
-          onClick={() => onDownload?.("No Clasificados", selection)}
+          onClick={() =>
+            onDownload?.(
+              "No Clasificados",
+              "clasificacion",
+              {
+                ...selection,
+              },
+              sort
+            )
+          }
         />
+
         <CardClasif
           tone="danger"
           Icon={HiNoSymbol}
           title="Descalificados"
           desc="Listas de competidores descalificados."
-          onClick={() => onDownload?.("Descalificados", selection)}
+          onClick={() =>
+            onDownload?.(
+              "Descalificados",
+              "clasificacion",
+              {
+                ...selection,
+              },
+              sort
+            )
+          }
         />
       </div>
     </>
@@ -204,7 +255,16 @@ function ContentClasificatoria({ onDownload, selection }) {
 }
 
 /* ----------------- Paso 2: Contenido Fase Final (solo vista) ----------------- */
-function FinalItem({ color, Icon, title, subtitle, badgeColor }) {
+function FinalItem({
+  color,
+  Icon,
+  mode,
+  selection,
+  onDownload,
+  title,
+  subtitle,
+  badgeColor,
+}) {
   return (
     <div
       className="rounded-xl bg-white shadow-sm p-4 border mb-3 flex items-center justify-between"
@@ -222,7 +282,11 @@ function FinalItem({ color, Icon, title, subtitle, badgeColor }) {
       <button
         className="h-8 px-4 rounded-xl text-white text-sm"
         style={{ backgroundColor: color, opacity: 0.9 }}
-        disabled
+        onClick={() =>
+          onDownload?.(mode, "final", {
+            ...selection,
+          })
+        }
       >
         Generar
       </button>
@@ -230,7 +294,7 @@ function FinalItem({ color, Icon, title, subtitle, badgeColor }) {
   );
 }
 
-function ContentFinalSoloVista() {
+function ContentFinalSoloVista({ selection, onDownload }) {
   return (
     <>
       <div className="text-lg font-semibold text-[#23263D] mb-1">
@@ -244,6 +308,9 @@ function ContentFinalSoloVista() {
       <FinalItem
         color={BRAND} // azul
         Icon={HiDocumentCheck}
+        mode="certificados"
+        selection={selection}
+        onDownload={onDownload}
         title="Listas de Emisión de Certificados"
         subtitle="Nombre completo, unidad educativa, departamento, área, nivel, nota, posición, profesor y responsable."
       />
@@ -251,6 +318,9 @@ function ContentFinalSoloVista() {
       <FinalItem
         color={PURPLE_MAIN} // morado
         Icon={HiTrophy}
+        mode="ceremonia"
+        selection={selection}
+        onDownload={onDownload}
         title="Listas de Ceremonia de Premiación"
         subtitle="Nombre completo, unidad educativa, departamento, área, nivel y posición obtenida."
       />
@@ -258,6 +328,9 @@ function ContentFinalSoloVista() {
       <FinalItem
         color={GREEN_MAIN} // verde
         Icon={HiClipboardDocumentList}
+        mode=""
+        selection={selection}
+        onDownload={onDownload}
         title="Listas de Publicación de Resultados"
         subtitle="Datos de olimpista y lugar obtenido para publicar en la página oficial."
       />
@@ -284,18 +357,25 @@ function ContentFinalSoloVista() {
 }
 
 /* ----------------- Componente principal ----------------- */
-export default function GenerateListsFlow({ open, onClose, onDownload }) {
+export default function GenerateListsFlow({
+  open,
+  onClose,
+  onDownload,
+  areas,
+}) {
   const [step, setStep] = useState(1); // 1: seleccionar, 2: fase
   const [selection, setSelection] = useState(null); // { area, nivel }
-  const [phaseView, setPhaseView] = useState("clasificatoria"); // 'clasificatoria' | 'final'
+  const [phaseView, setPhaseView] = useState("clasifiacion"); // 'clasificatoria' | 'final'
 
   const footer =
     step === 1 ? (
       <div className="flex justify-end">
         <button
-          onClick={() => selection?.area && selection?.nivel && setStep(2)}
+          onClick={() =>
+            selection?.areaNombre && selection?.nivelNombre && setStep(2)
+          }
           className={`h-10 px-6 rounded-full font-medium ${
-            selection?.area && selection?.nivel
+            selection?.areaNombre && selection?.nivelNombre
               ? "bg-[#0284C7] text-white hover:bg-[#027AB6]"
               : "bg-gray-200 text-[#23263D]/50 cursor-not-allowed"
           }`}
@@ -309,7 +389,7 @@ export default function GenerateListsFlow({ open, onClose, onDownload }) {
           onClick={() => {
             setStep(1);
             setSelection(null);
-            setPhaseView("clasificatoria");
+            setPhaseView("clasificacion");
             onClose?.();
           }}
           className="h-10 px-6 rounded-full bg-[#0284C7] text-white hover:bg-[#027AB6]"
@@ -325,21 +405,21 @@ export default function GenerateListsFlow({ open, onClose, onDownload }) {
       onClose={() => {
         setStep(1);
         setSelection(null);
-        setPhaseView("clasificatoria");
+        setPhaseView("clasificacion");
         onClose?.();
       }}
       title={
         step === 1
           ? "Seleccionar Area y Nivel"
-          : `Generar Listas - ${selection?.area} (${selection?.nivel})`
+          : `Generar Listas - ${selection?.areaNombre} (${selection?.nivelNombre})`
       }
       footer={footer}
     >
       {step === 1 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {AREAS.map((a) => (
+          {areas.map((a) => (
             <AreaCard
-              key={a}
+              key={a.id}
               area={a}
               selection={selection}
               setSelection={setSelection}
@@ -356,13 +436,16 @@ export default function GenerateListsFlow({ open, onClose, onDownload }) {
           {/* Tabs clickables */}
           <PhaseTabs phase={phaseView} setPhase={setPhaseView} />
 
-          {phaseView === "clasificatoria" ? (
+          {phaseView === "clasificacion" ? (
             <ContentClasificatoria
               onDownload={onDownload}
               selection={selection}
             />
           ) : (
-            <ContentFinalSoloVista />
+            <ContentFinalSoloVista
+              selection={selection}
+              onDownload={onDownload}
+            />
           )}
         </>
       )}

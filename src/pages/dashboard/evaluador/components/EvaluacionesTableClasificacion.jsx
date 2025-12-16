@@ -39,6 +39,7 @@ export default function EvaluacionesTableClasificacion({
         ordenar_por: sort.by,
         direccion: sort.dir,
       };
+      console.log(params);
       const res = await EvaluacionesRepository.getEvaluaciones(
         params,
         idAreaNivelFase
@@ -52,7 +53,10 @@ export default function EvaluacionesTableClasificacion({
       setLoading(false);
     }
   };
-
+  useEffect(() => {
+    console.log("esta entrando");
+    fetchEvaluaciones(1);
+  }, []);
   // recarga cuando cambia chip de estado o el contexto (id)
   useEffect(() => {
     fetchEvaluaciones(1);

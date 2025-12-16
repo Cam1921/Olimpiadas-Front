@@ -1,7 +1,7 @@
 // src/components/ConfirmationModal.jsx
-import { Fragment } from 'react';
-import { Dialog, Transition } from '@headlessui/react';
-import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+import { Fragment } from "react";
+import { Dialog, Transition } from "@headlessui/react";
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
 export default function ConfirmationModal({
   open,
@@ -12,6 +12,10 @@ export default function ConfirmationModal({
   confirmText = "Confirmar",
   cancelText = "Cancelar",
 }) {
+  const primary =
+    "bg-[#0284C7] text-white hover:bg-[#027AB6] active:bg-[#026BA1] " +
+    "h-10 px-5 rounded-lg inline-flex items-center gap-2 font-medium shadow-sm " +
+    "focus:outline-none focus:ring-2 focus:ring-[#0284C7]/40 transition-colors";
   return (
     <Transition.Root show={open} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={onClose}>
@@ -42,7 +46,10 @@ export default function ConfirmationModal({
                 <div className="mx-auto flex justify-center mb-4">
                   <ExclamationTriangleIcon className="h-12 w-12 text-amber-500" />
                 </div>
-                <Dialog.Title as="h3" className="text-lg font-semibold text-slate-800">
+                <Dialog.Title
+                  as="h3"
+                  className="text-lg font-semibold text-slate-800"
+                >
                   {title}
                 </Dialog.Title>
                 <div className="mt-2">
@@ -58,11 +65,7 @@ export default function ConfirmationModal({
                 >
                   {cancelText}
                 </button>
-                <button
-                  type="button"
-                  className="btn btn-danger"
-                  onClick={onConfirm}
-                >
+                <button type="button" className={primary} onClick={onConfirm}>
                   {confirmText}
                 </button>
               </div>

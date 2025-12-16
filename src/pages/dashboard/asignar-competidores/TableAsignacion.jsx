@@ -3,13 +3,14 @@ import { Eye, SlidersHorizontal, Trash2, TrashIcon } from "lucide-react";
 import React from "react";
 
 function TableAsignacion({
-  asignaciones = [],
-  onView = () => {},
-  onAssign = () => {},
-  onDelete = () => {},
-  page = 1,
-  lastPage = 1,
-  onPageChange = () => {},
+  asignaciones,
+  onView,
+  onAssign,
+  onDelete,
+  page,
+  lastPage,
+  onPageChange,
+  loading = false,
 }) {
   return (
     <div className="overflow-x-auto">
@@ -24,8 +25,20 @@ function TableAsignacion({
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100 text-sm">
-          {asignaciones.map((r) => (
-            <>
+          {loading ? (
+            <tr>
+              <td className="px-6 py-6 text-slate-500 text-sm" colSpan={8}>
+                ...Cargando
+              </td>
+            </tr>
+          ) : asignaciones.length === 0 ? (
+            <tr>
+              <td className="px-6 py-6 text-slate-500 text-sm" colSpan={8}>
+                No hay registros.
+              </td>
+            </tr>
+          ) : (
+            asignaciones.map((r) => (
               <tr key={r.id} className="hover:bg-slate-50">
                 <td className="px-6 py-4">{r.area}</td>
                 <td className="px-6 py-4">{r.nivel}</td>
@@ -72,14 +85,7 @@ function TableAsignacion({
                   </div>
                 </td>
               </tr>
-            </>
-          ))}
-          {asignaciones.length === 0 && (
-            <tr>
-              <td className="px-6 py-6 text-slate-500 text-sm" colSpan={8}>
-                No hay registros.
-              </td>
-            </tr>
+            ))
           )}
         </tbody>
       </table>

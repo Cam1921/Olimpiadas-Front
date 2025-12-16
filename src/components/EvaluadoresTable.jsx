@@ -37,7 +37,7 @@ export default function EvaluadoresTable({
               <th className="px-6 py-4">Teléfono</th>
               <th className="px-6 py-4">CI</th>
               <th className="px-6 py-4">Área</th>
-              <th className="px-6 py-4">Nivel</th>
+
               <th className="px-6 py-4">Fecha Registro</th>
               <th className="px-6 py-4">Acciones</th>
             </tr>
@@ -52,7 +52,7 @@ export default function EvaluadoresTable({
                 <td className="px-6 py-4">{r.telefono}</td>
                 <td className="px-6 py-4">{r.ci}</td>
                 <td className="px-6 py-4">{r.area}</td>
-                <td className="px-6 py-4">{r.nivel}</td>
+
                 <td className="px-6 py-4">{r.fecha}</td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">

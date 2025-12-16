@@ -111,7 +111,15 @@ export default function FilaEvaluacion({
 
   // 🔒 Bloqueo centralizado: readOnly (Clasificación) o estados que impiden editar
   const disabledAll =
-    readOnly || esClasificado || ["confirmado", "Concluido"].includes(estadoNivel);
+    readOnly ||
+    esClasificado ||
+    ["confirmado", "Concluido", "Pendiente", "publicado"].includes(
+      estadoNivel
+    ) ||
+    !(
+      item.estado_confirmado === "pendiente" ||
+      item.estado_confirmado === "rechazado"
+    );
 
   const onNotaChange = (e) => {
     if (disabledAll) return;

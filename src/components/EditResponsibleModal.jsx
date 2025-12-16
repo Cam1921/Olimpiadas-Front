@@ -15,32 +15,22 @@ export default function EditResponsibleModal({
   onUpdate,
   initial = null,
   takenAreas = [],
+  areas = [],
 }) {
   const { form, setField, errors, submitting, submit } = useEditResponsible(
     initial,
-    takenAreas,
     open
   );
   const [showAreas, setShowAreas] = useState(false);
-  const [areasConNiveles, setAreasConNiveles] = useState([]);
 
   /*   useEffect(() => {
     if (!open) setShowAreas(false);
   }, [open]); */
 
-  useEffect(() => {
-    const fetchAreas = async () => {
-      try {
-        const data = await getAreasConNiveles(); // devuelve tu JSON
-        setAreasConNiveles(data);
-      } catch (err) {
-        console.error("Error al cargar áreas con niveles:", err);
-      }
-    };
-
-    fetchAreas();
-    console.log(areasConNiveles);
-  }, []);
+  const availableAreasList = areas.filter((a) => {
+    // Buscamos el área en takenAreas
+    return !takenAreas?.find((t) => t.id === a.id);
+  });
 
   const onSubmit = async () => {
     const result = await submit();
@@ -237,7 +227,7 @@ export default function EditResponsibleModal({
             {showAreas && (
               <div className="absolute z-10 mt-1 w-full card p-0 overflow-hidden">
                 <ul className="max-h-56 overflow-auto">
-                  {areasConNiveles
+                  {/* {areasConNiveles
                     .filter((a) => !takenAreas.includes(a.nombre))
                     .map((a) => (
                       <li key={a.id}>
@@ -246,6 +236,7 @@ export default function EditResponsibleModal({
                           onMouseDown={(e) => e.preventDefault()}
                           onClick={() => {
                             setField("area", a.nombre);
+
                             console.log(takenAreas);
                             setShowAreas(false);
                           }}
@@ -253,7 +244,30 @@ export default function EditResponsibleModal({
                           {a.nombre}
                         </button>
                       </li>
-                    ))}
+                    ))} */}
+                  {availableAreasList.length > 0 ? (
+                    availableAreasList.map((a) => (
+                      <li key={a.id}>
+                        <button
+                          className="w-full text-left px-4 py-3 hover:bg-slate-50"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => {
+                            setField("id_area", a.id);
+                            setField("area", a.nombre);
+                            setShowAreas(false);
+                          }}
+                        >
+                          {a.nombre}
+                        </button>
+                      </li>
+                    ))
+                  ) : (
+                    <li>
+                      <p className="px-4 py-3 text-slate-400">
+                        Todas las áreas ya están completas.
+                      </p>
+                    </li>
+                  )}
                 </ul>
               </div>
             )}

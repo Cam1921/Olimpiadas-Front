@@ -3,6 +3,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import api from "@/lib/api";
 import EvaluadorHome from "./EvaluadorHome";
 import { FileSpreadsheet } from "lucide-react";
+import { estadoService } from "@/services/estadoService";
+import { useCorreccionNotificaciones } from "@/hooks/useCorreccionNotificaciones";
 
 // Componente principal: Calificación de Competidores
 // Requiere TailwindCSS configurado en el proyecto
@@ -12,11 +14,13 @@ export default function HomePlanillas() {
   const [areas, setAreas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedNivel, setSelectedNivel] = useState(null);
+  const { selectedNotificacion, setSelectedNotificacion, closeModal } =
+    useCorreccionNotificaciones();
 
   const fetchNiveles = async () => {
     setLoading(true);
     try {
-      const response = await api.get("/evaluador/niveles");
+      const response = await api.get("evaluaciones/mis-niveles");
 
       // Protegemos contra respuestas no esperadas
       const data = Array.isArray(response.data.data) ? response.data.data : [];
@@ -42,7 +46,16 @@ export default function HomePlanillas() {
 
   useEffect(() => {
     fetchNiveles();
+    fetchEstados();
   }, []);
+  async function fetchEstados() {
+    try {
+      const res = await estadoService.actualizarEstados();
+      console.log("Estados actualizados cargadas:", res);
+    } catch (err) {
+      console.error("Error al cargar áreas:", err);
+    }
+  }
 
   const filtered = useMemo(() => {
     if (!areas) return [];
@@ -50,7 +63,7 @@ export default function HomePlanillas() {
 
     if (filter === "clasificatoria")
       return areas.filter(
-        (a) => a.fase.toLowerCase() === "clasificación".toLowerCase()
+        (a) => a.fase.toLowerCase() === "clasificacion".toLowerCase()
       );
 
     if (filter === "final")
@@ -60,6 +73,19 @@ export default function HomePlanillas() {
 
     return areas;
   }, [filter, areas]);
+
+  useEffect(() => {
+    if (selectedNotificacion) {
+      setSelectedNivel({
+        id: selectedNotificacion.data.id_areaNivelFase,
+        nivel: selectedNotificacion.data.nivel,
+        estado: selectedNotificacion.data.estado_areaNivelFase,
+      });
+      // Opcional: limpiar la notificación seleccionada en el provider
+      setSelectedNotificacion(null);
+      closeModal();
+    }
+  }, [selectedNotificacion]);
 
   if (selectedNivel) {
     return (

@@ -2,11 +2,8 @@
 import { useState, useEffect } from "react";
 import {
   XMarkIcon,
-  ChevronDownIcon,
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
-import { AREAS } from "../services/areas";
-import { isAreaCompleta } from "../utils/areaUtils";
 import { getAreasConNiveles } from "../infrastructure/http/areas/areaRepostory";
 
 export default function RegisterEvaluadorModal({
@@ -19,22 +16,18 @@ export default function RegisterEvaluadorModal({
   onSubmit,
   takenAreas = [],
 }) {
-  const [showAreas, setShowAreas] = useState(false);
-  const [showNiveles, setShowNiveles] = useState(false);
-  const [availableNiveles, setAvailableNiveles] = useState([]); // Inicialmente ambos
+  const [searchTermArea, setSearchTermArea] = useState("");
+  const [searchTermNivel, setSearchTermNivel] = useState("");
+  const [showDropdownArea, setShowDropdownArea] = useState(false);
+  const [showDropdownNivel, setShowDropdownNivel] = useState(false);
   const [areasConNiveles, setAreasConNiveles] = useState([]);
+  const [availableNiveles, setAvailableNiveles] = useState([]);
 
-  useEffect(() => {
-    if (!open) {
-      setShowAreas(false);
-      setShowNiveles(false);
-    }
-  }, [open]);
-
+  // Cargar áreas al montar
   useEffect(() => {
     const fetchAreas = async () => {
       try {
-        const data = await getAreasConNiveles(); // devuelve tu JSON
+        const data = await getAreasConNiveles();
         setAreasConNiveles(data);
       } catch (err) {
         console.error("Error al cargar áreas con niveles:", err);
@@ -42,7 +35,18 @@ export default function RegisterEvaluadorModal({
     };
     fetchAreas();
   }, []);
-  // Actualiza los niveles disponibles cuando cambia el área
+
+  // Resetear al cerrar
+  useEffect(() => {
+    if (!open) {
+      setShowDropdownArea(false);
+      setShowDropdownNivel(false);
+      setSearchTermArea("");
+      setSearchTermNivel("");
+    }
+  }, [open]);
+
+  // Actualizar niveles disponibles cuando cambia el área
   useEffect(() => {
     if (form.area) {
       const selectedArea = areasConNiveles.find((a) => a.nombre === form.area);
@@ -61,6 +65,22 @@ export default function RegisterEvaluadorModal({
   }, [form.area, takenAreas]);
 
   if (!open) return null;
+
+  // Filtrar áreas por búsqueda y excluir tomadas
+  const filteredAreas = areasConNiveles
+    .filter((a) => {
+      const matchesSearch = a.nombre.toLowerCase().includes(searchTermArea.toLowerCase());
+      const notTaken = !takenAreas.some((ta) => ta.area === a.nombre);
+      return matchesSearch && notTaken;
+    })
+    .filter((a, index, self) =>
+      index === self.findIndex((b) => b.nombre === a.nombre)
+    );
+
+  // Filtrar niveles por búsqueda
+  const filteredNiveles = availableNiveles.filter((n) =>
+    n.nombre_nivel.toLowerCase().includes(searchTermNivel.toLowerCase())
+  );
 
   const errClass = (field) =>
     errors[field]
@@ -176,6 +196,7 @@ export default function RegisterEvaluadorModal({
               </p>
             )}
           </div>
+
           {/* Teléfono */}
           <div>
             <label className="label text-sm">Teléfono *</label>
@@ -224,25 +245,26 @@ export default function RegisterEvaluadorModal({
             )}
           </div>
 
-          {/* Área */}
-          <div className="relative md:col-span-2">
+          {/* Área - BUSCADOR */}
+          <div className="md:col-span-2 relative">
             <label className="label text-sm">Área *</label>
-            <button
-              type="button"
-              onClick={() => setShowAreas((v) => !v)}
-              className={`input text-sm flex items-center justify-between ${errClass(
-                "area"
-              )}`}
-            >
-              <span className={form.area ? "text-slate-900" : "text-slate-400"}>
-                {form.area || "Selecciona un área"}
-              </span>
-              <ChevronDownIcon className="w-4 h-4 text-slate-400" />
-            </button>
-            {showAreas && (
-              <div className="absolute z-10 mt-1 w-full max-h-48 overflow-auto card p-0 shadow-lg">
-                <ul className="max-h-56 overflow-auto">
-                  {areasConNiveles.map((a) => (
+            <input
+              type="text"
+              placeholder="Buscar área..."
+              value={searchTermArea}
+              onChange={(e) => {
+                setSearchTermArea(e.target.value);
+                setShowDropdownArea(true);
+              }}
+              onFocus={() => setShowDropdownArea(true)}
+              onBlur={() => setTimeout(() => setShowDropdownArea(false), 200)}
+              className={`input text-sm ${errClass("area")} w-full`}
+            />
+
+            {showDropdownArea && filteredAreas.length > 0 && (
+              <div className="absolute z-10 mt-1 w-full card max-h-56 overflow-auto p-0">
+                <ul>
+                  {filteredAreas.map((a) => (
                     <li key={a.id}>
                       <button
                         className="w-full text-left px-4 py-3 hover:bg-slate-50"
@@ -250,7 +272,8 @@ export default function RegisterEvaluadorModal({
                         onClick={() => {
                           setField("area", a.nombre);
                           setField("nivel", "");
-                          setShowAreas(false);
+                          setSearchTermArea(a.nombre);
+                          setShowDropdownArea(false);
                         }}
                       >
                         {a.nombre}
@@ -260,6 +283,13 @@ export default function RegisterEvaluadorModal({
                 </ul>
               </div>
             )}
+
+            {showDropdownArea && filteredAreas.length === 0 && searchTermArea && (
+              <div className="absolute z-10 mt-1 w-full card p-3 text-sm text-slate-500">
+                No se encontraron áreas que coincidan con "{searchTermArea}"
+              </div>
+            )}
+
             {getErrorMsg("area") && (
               <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
                 <ExclamationTriangleIcon className="w-4 h-4" />
@@ -268,55 +298,57 @@ export default function RegisterEvaluadorModal({
             )}
           </div>
 
-          {/* Nivel */}
-          <div className="relative md:col-span-2">
+          {/* Nivel - BUSCADOR */}
+          <div className="md:col-span-2 relative">
             <label className="label text-sm">Nivel *</label>
-            <button
-              type="button"
-              onClick={() => setShowNiveles((v) => !v)}
-              className={`input text-sm flex items-center justify-between ${errClass(
-                "nivel"
-              )}`}
+            <input
+              type="text"
+              placeholder={
+                form.area
+                  ? "Buscar nivel..."
+                  : "Primero selecciona un área"
+              }
+              value={searchTermNivel}
+              onChange={(e) => {
+                setSearchTermNivel(e.target.value);
+                setShowDropdownNivel(true);
+              }}
+              onFocus={() => form.area && setShowDropdownNivel(true)}
+              onBlur={() => setTimeout(() => setShowDropdownNivel(false), 200)}
+              className={`input text-sm ${errClass("nivel")} w-full ${
+                !form.area ? "opacity-50 cursor-not-allowed" : ""
+              }`}
               disabled={!form.area}
-            >
-              <span
-                className={form.nivel ? "text-slate-900" : "text-slate-400"}
-              >
-                {form.nivel ||
-                  (form.area
-                    ? "Selecciona un nivel"
-                    : "Primero selecciona un área")}
-              </span>
-              <ChevronDownIcon className="w-4 h-4 text-slate-400" />
-            </button>
-            {showNiveles && (
-              <div className="absolute z-10 mt-1 w-full card p-0 overflow-hidden">
-                <ul className="max-h-56 overflow-auto">
-                  {availableNiveles.length > 0 ? (
-                    availableNiveles.map((n) => (
+            />
+
+            {showDropdownNivel && form.area && (
+              <div className="absolute z-10 mt-1 w-full card max-h-56 overflow-auto p-0">
+                {availableNiveles.length > 0 ? (
+                  <ul>
+                    {filteredNiveles.map((n) => (
                       <li key={n.id}>
                         <button
                           className="w-full text-left px-4 py-3 hover:bg-slate-50"
                           onMouseDown={(e) => e.preventDefault()}
                           onClick={() => {
                             setField("nivel", n.nombre_nivel);
-                            setShowNiveles(false);
+                            setSearchTermNivel(n.nombre_nivel);
+                            setShowDropdownNivel(false);
                           }}
                         >
                           {n.nombre_nivel}
                         </button>
                       </li>
-                    ))
-                  ) : (
-                    <li>
-                      <p className="px-4 py-3 text-slate-400">
-                        Todos los niveles para esta área ya están asignados.
-                      </p>
-                    </li>
-                  )}
-                </ul>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="p-3 text-sm text-slate-500">
+                    Todos los niveles para esta área ya están asignados.
+                  </div>
+                )}
               </div>
             )}
+
             {getErrorMsg("nivel") && (
               <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
                 <ExclamationTriangleIcon className="w-4 h-4" />
