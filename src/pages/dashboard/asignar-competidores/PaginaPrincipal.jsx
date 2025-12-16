@@ -157,17 +157,6 @@ export default function PaginaPrincipal() {
   const puedePrevisualizar =
     !!areaId && !!nivelId && limiteEvaluadoresActivos > 0;
 
-  const onPreview = () => {
-    navigate("/dashboard/asignacion-competidores/preview", {
-      state: {
-        areaId,
-        nivelId,
-        limiteEvaluadoresActivos,
-        limitePorEvaluador,
-      },
-    });
-  };
-
   return (
     <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 pb-10 mt-10 md:mt-14">
       {/* Encabezado */}
@@ -247,30 +236,6 @@ export default function PaginaPrincipal() {
               </span>
             </div>
           </div>
-
-          {/* A: Límite de evaluadores activos */}
-          {/*   <div className="md:col-span-2">
-            <label className="block text-xs font-medium text-slate-600 mb-1">
-              Límite de evaluadores activos
-            </label>
-            <input
-              type="number"
-              min={0}
-              max={evaluadoresFiltrados.length}
-              value={limiteEvaluadoresActivos}
-              onChange={(e) => {
-                const n = Number(e.target.value);
-                const bounded = Math.max(
-                  0,
-                  Math.min(evaluadores.length, isNaN(n) ? 0 : n)
-                );
-                setLimiteEvaluadoresActivos(bounded);
-              }}
-              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-200"
-            />
-          </div>
- */}
-          {/* Previsualizar */}
         </div>
       </div>
 
@@ -286,7 +251,7 @@ export default function PaginaPrincipal() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {evaluadoresConEstado.map((e) => {
-            const fueraDeLimite = !e.enCupo; // inactivo si excede el límite de evaluadores activos
+            const fueraDeLimite = !e.enCupo;
             const progreso = Math.min(
               100,
               Math.round((e.cargaActual / limitePorEvaluador) * 100)

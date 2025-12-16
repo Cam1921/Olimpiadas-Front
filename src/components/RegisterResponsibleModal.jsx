@@ -2,9 +2,9 @@
 import { useState, useEffect } from "react";
 import {
   XMarkIcon,
+  ChevronDownIcon,
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
-import { getAreasConNiveles } from "../infrastructure/http/areas/areaRepostory";
 
 export default function RegisterResponsibleModal({
   open,
@@ -15,43 +15,21 @@ export default function RegisterResponsibleModal({
   submitting,
   onSubmit,
   takenAreas = [],
+  areas = [],
 }) {
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [areasConNiveles, setAreasConNiveles] = useState([]);
+  const [showAreas, setShowAreas] = useState(false);
+  const [areasConNiveles, setAreasConNiveles] = useState(areas);
 
   useEffect(() => {
-    const fetchAreas = async () => {
-      try {
-        const data = await getAreasConNiveles();
-        setAreasConNiveles(data);
-      } catch (err) {
-        console.error("Error al cargar áreas con niveles:", err);
-      }
-    };
-    fetchAreas();
-  }, []);
-
-  useEffect(() => {
-    if (!open) {
-      setShowDropdown(false);
-      setSearchTerm("");
-    }
+    if (!open) setShowAreas(false);
   }, [open]);
 
   if (!open) return null;
 
-  // Filtrar por búsqueda y excluir tomadas
-  const filteredAreas = areasConNiveles
-    .filter((a) => {
-      const matchesSearch = a.nombre.toLowerCase().includes(searchTerm.toLowerCase());
-      const notTaken = !takenAreas.includes(a.nombre);
-      return matchesSearch && notTaken;
-    })
-    // Eliminar duplicados visuales: mantener solo la primera ocurrencia por nombre
-    .filter((a, index, self) =>
-      index === self.findIndex((b) => b.nombre === a.nombre)
-    );
+  const availableAreasList = areas.filter((a) => {
+    // Buscamos el área en takenAreas
+    return !takenAreas?.find((t) => t.id === a.id);
+  });
 
   const errClass = (field) =>
     errors[field]
@@ -155,7 +133,6 @@ export default function RegisterResponsibleModal({
               </p>
             )}
           </div>
-
           {/* Teléfono */}
           <div>
             <label className="label text-sm">Teléfono *</label>
@@ -202,47 +179,66 @@ export default function RegisterResponsibleModal({
             )}
           </div>
 
-          {/* Área - BÚSQUEDA SIN DUPLICADOS Y SIN ID EN LA VISTA */}
-          <div className="md:col-span-2 relative">
+          {/* Área */}
+          <div className="relative md:col-span-2">
             <label className="label text-sm">Área *</label>
-            <input
-              type="text"
-              placeholder="Buscar área..."
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setShowDropdown(true);
-              }}
-              onFocus={() => setShowDropdown(true)}
-              onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
-              className={`input text-sm ${errClass("area")} w-full`}
-            />
+            <button
+              type="button"
+              onClick={() => setShowAreas((v) => !v)}
+              className={`input text-sm flex items-center justify-between ${errClass(
+                "area"
+              )}`}
+            >
+              <span className={form.area ? "text-slate-900" : "text-slate-400"}>
+                {form.area || "Selecciona un área"}
+              </span>
+              <ChevronDownIcon className="w-4 h-4 text-slate-400" />
+            </button>
 
-            {showDropdown && filteredAreas.length > 0 && (
-              <div className="absolute z-10 mt-1 w-full card max-h-56 overflow-auto p-0">
-                <ul>
-                  {filteredAreas.map((a) => (
-                    <li key={a.id}>
-                      <button
-                        className="w-full text-left px-4 py-3 hover:bg-slate-50"
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={() => {
-                          setField("area", a.nombre); // Guarda solo el nombre (o usa a.id si tu backend lo necesita)
-                          setSearchTerm(a.nombre);
-                          setShowDropdown(false);
-                        }}
-                      >
-                        {a.nombre} {/* Solo mostramos el nombre — limpio y profesional */}
-                      </button>
+            {showAreas && (
+              <div className="absolute z-10 mt-1 w-full card p-0 overflow-hidden">
+                <ul className="max-h-56 overflow-auto">
+                  {/*  {areasConNiveles
+                    .filter((a) => !takenAreas.includes(a.nombre))
+                    .map((a) => (
+                      <li key={a.id}>
+                        <button
+                          className="w-full text-left px-4 py-3 hover:bg-slate-50"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => {
+                            setField("area", a.nombre);
+                            console.log(takenAreas);
+                            setShowAreas(false);
+                          }}
+                        >
+                          {a.nombre}
+                        </button>
+                      </li>
+                    ))} */}
+                  {availableAreasList.length > 0 ? (
+                    availableAreasList.map((a) => (
+                      <li key={a.id}>
+                        <button
+                          className="w-full text-left px-4 py-3 hover:bg-slate-50"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => {
+                            setField("id_area", a.id);
+                            setField("area", a.nombre);
+                            setShowAreas(false);
+                          }}
+                        >
+                          {a.nombre}
+                        </button>
+                      </li>
+                    ))
+                  ) : (
+                    <li>
+                      <p className="px-4 py-3 text-slate-400">
+                        Todas las áreas ya están completas.
+                      </p>
                     </li>
-                  ))}
+                  )}
                 </ul>
-              </div>
-            )}
-
-            {showDropdown && filteredAreas.length === 0 && searchTerm && (
-              <div className="absolute z-10 mt-1 w-full card p-3 text-sm text-slate-500">
-                No se encontraron áreas que coincidan con "{searchTerm}"
               </div>
             )}
 

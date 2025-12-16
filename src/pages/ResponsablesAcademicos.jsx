@@ -92,6 +92,8 @@ export default function ResponsablesAcademicos() {
     }
   };
   const handleOpenEdit = (row, idx) => {
+    console.log("Editar fila:", row, "en el índice:", idx);
+
     setEditingRow(row);
     setEditingIndex(idx);
     setEditOpen(true);
@@ -202,7 +204,7 @@ export default function ResponsablesAcademicos() {
         form={form}
         setField={setField}
         errors={errors}
-        setErrors={setErrors} // 👈 AÑADE ESTA LÍNEA
+        setErrors={setErrors}
         submitting={submitting}
         onSubmit={handleCreate}
         takenAreas={takenAreas}

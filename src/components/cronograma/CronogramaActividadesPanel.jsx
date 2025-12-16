@@ -634,8 +634,6 @@ export default function CronogramaActividadesPanel({ userRole = "admin" }) {
           {days.map((date, idx) => {
             const isValidDate = date instanceof Date && !isNaN(date.getTime());
             const info = isValidDate ? getActivityInfo(date) : null;
-            const isSelected =
-              selectedDay && getDateString(selectedDay) === getDateString(date);
             return (
               <div
                 key={idx}
