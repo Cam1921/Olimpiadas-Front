@@ -13,7 +13,7 @@ import StatusBadge from "./components/StatusBadge";
 import DetailsModal from "./components/DetailsModal";
 import { useNotificaciones } from "./hooks/useNotificaciones";
 import api from "@/lib/api";
-import SuccessDialog from "@/components/SuccessDialog";
+import SuccessDialog from "@/components/SuccessDialog"; // Asumo que este componente existe según tu código
 
 const ROLES = ["Todos los roles", "Evaluador", "Responsable"];
 const ESTADOS = ["Todos los estados", "Confirmado", "Pendiente", "Rebotado"];
@@ -60,67 +60,73 @@ export default function NotificacionesPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
-      {/* Encabezado local (NO usar Header global) */}
-      <div className="flex items-start justify-between">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 sm:space-y-8">
+      {/* Encabezado */}
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-semibold text-gray-900">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-gray-900">
             Notificaciones de acceso
           </h1>
-          <p className="text-gray-600 mt-2">
+          <p className="text-sm sm:text-base text-gray-600 mt-2">
             Administre los correos de invitación y acceso enviados a los
             usuarios del sistema.
           </p>
         </div>
       </div>
 
-      {/* KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="rounded-2xl border p-6 bg-white">
+      {/* KPIs Grid Responsivo */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* KPI 1 */}
+        <div className="rounded-2xl border p-5 sm:p-6 bg-white shadow-sm">
           <div className="flex items-center justify-between">
-            <p className="text-gray-700 font-medium">Total de notificaciones</p>
+            <p className="text-gray-700 font-medium text-sm sm:text-base">Total notificaciones</p>
             <Mail className="text-blue-600" size={22} />
           </div>
-          <p className="mt-4 text-5xl font-semibold text-sky-600">
+          <p className="mt-4 text-3xl sm:text-4xl md:text-5xl font-semibold text-sky-600">
             {kpis.total}
           </p>
         </div>
 
-        <div className="rounded-2xl border p-6 bg-white">
+        {/* KPI 2 */}
+        <div className="rounded-2xl border p-5 sm:p-6 bg-white shadow-sm">
           <div className="flex items-center justify-between">
-            <p className="text-gray-700 font-medium">Enviadas correctamente</p>
+            <p className="text-gray-700 font-medium text-sm sm:text-base">Confirmados</p>
             <CheckCircle2 className="text-green-600" size={22} />
           </div>
-          <p className="mt-4 text-5xl font-semibold text-green-600">
+          <p className="mt-4 text-3xl sm:text-4xl md:text-5xl font-semibold text-green-600">
             {kpis.enviadasOK}
           </p>
         </div>
 
-        <div className="rounded-2xl border p-6 bg-white">
+        {/* KPI 3 */}
+        <div className="rounded-2xl border p-5 sm:p-6 bg-white shadow-sm sm:col-span-2 lg:col-span-1">
           <div className="flex items-center justify-between">
-            <p className="text-gray-700 font-medium">Fallidas o rebotadas</p>
+            <p className="text-gray-700 font-medium text-sm sm:text-base">Fallidas / Rebotadas</p>
             <XCircle className="text-red-600" size={22} />
           </div>
-          <p className="mt-4 text-5xl font-semibold text-red-600">
+          <p className="mt-4 text-3xl sm:text-4xl md:text-5xl font-semibold text-red-600">
             {kpis.rebotadas}
           </p>
         </div>
       </div>
 
-      {/* Lista de notificaciones */}
-      <div className="rounded-2xl border bg-white">
-        <div className="px-5 pt-6">
-          <h2 className="text-3xl font-semibold text-gray-900">
-            Lista de notificaciones enviadas
+      {/* Sección de Lista */}
+      <div className="rounded-2xl border bg-white shadow-sm overflow-hidden">
+        <div className="px-5 pt-6 pb-2">
+          <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">
+            Historial de envíos
           </h2>
-          <p className="text-gray-600 mt-1">
-            Historial completo de correos de invitación enviados
+          <p className="text-sm text-gray-600 mt-1">
+            Listado completo de correos de invitación.
           </p>
         </div>
 
-        {/* Controles: búsqueda + filtros (selects nativos) */}
-        <div className="px-5 py-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="relative">
+        {/* Controles: Barra de búsqueda y Filtros */}
+        {/* En móvil: Flex Column (uno debajo del otro). En Desktop: Row */}
+        <div className="px-5 py-5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          
+          {/* Input Búsqueda */}
+          <div className="relative w-full lg:w-auto">
             <Search
               size={18}
               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
@@ -129,18 +135,19 @@ export default function NotificacionesPage() {
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Buscar por nombre, correo"
-              className="w-80 pl-9 pr-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Buscar por nombre, correo..."
+              // w-full en móvil, w-80 en desktop
+              className="w-full lg:w-80 pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm transition-shadow"
             />
           </div>
 
-          <div className="flex items-center gap-3">
-            {/* Rol */}
-            <div className="relative">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
+            {/* Filtro Rol */}
+            <div className="relative w-full sm:w-auto">
               <select
                 value={rol}
                 onChange={(e) => setRol(e.target.value)}
-                className="appearance-none w-48 pl-3 pr-8 py-2 rounded-lg border border-gray-200 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="appearance-none w-full sm:w-48 pl-3 pr-8 py-2.5 rounded-xl border border-gray-200 text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               >
                 {ROLES.map((r) => (
                   <option key={r} value={r}>
@@ -154,12 +161,12 @@ export default function NotificacionesPage() {
               />
             </div>
 
-            {/* Estado */}
-            <div className="relative">
+            {/* Filtro Estado */}
+            <div className="relative w-full sm:w-auto">
               <select
                 value={estado}
                 onChange={(e) => setEstado(e.target.value)}
-                className="appearance-none w-56 pl-3 pr-8 py-2 rounded-lg border border-gray-200 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="appearance-none w-full sm:w-48 pl-3 pr-8 py-2.5 rounded-xl border border-gray-200 text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               >
                 {ESTADOS.map((s) => (
                   <option key={s} value={s}>
@@ -175,25 +182,28 @@ export default function NotificacionesPage() {
           </div>
         </div>
 
-        {/* Tabla */}
+        {/* Tabla Responsive con Scroll Horizontal */}
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead>
-              <tr className="text-left text-gray-500 text-sm">
-                <th className="py-3 pl-5">Usuario</th>
-                <th className="py-3">Correo</th>
-                <th className="py-3">Rol</th>
-                <th className="py-3">Estado</th>
-                <th className="py-3">Fecha de envío</th>
-                <th className="py-3">Confirmado</th>
-                <th className="py-3 pr-5 text-right">Acciones</th>
+            <thead className="bg-gray-50/50">
+              <tr className="text-left text-gray-500 text-xs uppercase tracking-wider">
+                <th className="py-3 pl-5 font-medium whitespace-nowrap">Usuario</th>
+                <th className="py-3 px-4 font-medium whitespace-nowrap">Correo</th>
+                <th className="py-3 px-4 font-medium whitespace-nowrap">Rol</th>
+                <th className="py-3 px-4 font-medium whitespace-nowrap">Estado</th>
+                <th className="py-3 px-4 font-medium whitespace-nowrap">Fecha de envío</th>
+                <th className="py-3 px-4 font-medium whitespace-nowrap">Confirmado</th>
+                <th className="py-3 pr-5 text-right font-medium whitespace-nowrap">Acciones</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 bg-white">
               {loading ? (
                 <tr>
                   <td colSpan={7} className="py-10 text-center text-gray-500">
-                    Cargando notificaciones...
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <RefreshCcw className="animate-spin text-blue-500" />
+                      <p>Cargando notificaciones...</p>
+                    </div>
                   </td>
                 </tr>
               ) : rows.length === 0 ? (
@@ -204,41 +214,47 @@ export default function NotificacionesPage() {
                 </tr>
               ) : (
                 rows.map((r) => (
-                  <tr key={r.id} className="text-sm text-gray-800">
-                    <td className="py-3 pl-5">{r.usuario}</td>
-                    <td className="py-3">{r.correo}</td>
-                    <td className="py-3">
-                      <span className="inline-flex px-2 py-1 rounded-full text-xs bg-blue-50 text-blue-700">
+                  <tr key={r.id} className="text-sm text-gray-700 hover:bg-gray-50/80 transition-colors">
+                    <td className="py-3 pl-5 whitespace-nowrap font-medium text-gray-900">
+                      {r.usuario}
+                    </td>
+                    <td className="py-3 px-4 whitespace-nowrap text-gray-600">
+                      {r.correo}
+                    </td>
+                    <td className="py-3 px-4 whitespace-nowrap">
+                      <span className="inline-flex px-2 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
                         {r.rol}
                       </span>
                     </td>
-                    <td className="py-3">
+                    <td className="py-3 px-4 whitespace-nowrap">
                       <StatusBadge value={r.estado} />
                     </td>
-                    <td className="py-3">{fmtDate(r.fechaEnvio)}</td>
-                    <td className="py-3">
+                    <td className="py-3 px-4 whitespace-nowrap text-gray-500">
+                      {fmtDate(r.fechaEnvio)}
+                    </td>
+                    <td className="py-3 px-4 whitespace-nowrap">
                       {r.estado === "Confirmado" ? (
-                        <span className="inline-flex items-center gap-2 text-green-700">
-                          <span className="h-2.5 w-2.5 rounded-full bg-green-500" />
+                        <span className="inline-flex items-center gap-1.5 text-green-700 text-xs font-medium">
+                          <CheckCircle2 size={16} className="text-green-500" />
                           Sí
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-2 text-gray-500">
-                          <span className="h-2.5 w-2.5 rounded-full bg-gray-400" />
+                        <span className="inline-flex items-center gap-1.5 text-gray-400 text-xs">
+                          <span className="h-1.5 w-1.5 rounded-full bg-gray-300" />
                           No
                         </span>
                       )}
                     </td>
-                    <td className="py-3 pr-5 text-right">
+                    <td className="py-3 pr-5 text-right whitespace-nowrap">
                       <button
-                        className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-1.5 hover:bg-gray-50"
+                        className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition-colors"
                         onClick={() => {
                           setFocus(r);
                           setOpen(true);
                         }}
                       >
-                        <Eye size={16} />
-                        Ver detalles
+                        <Eye size={14} />
+                        Ver
                       </button>
                     </td>
                   </tr>
@@ -248,14 +264,16 @@ export default function NotificacionesPage() {
           </table>
         </div>
       </div>
+
       <SuccessDialog
         open={showSuccessModal}
         onClose={() => setShowSuccessModal(false)}
-        title="Reenvio de correo"
-        subtitle="Correo enviado para el establecimiento de constraseña"
-        message="El correo ha sido enviado con exito."
-        confirmLabel="Aceptar"
+        title="Reenvío de correo"
+        subtitle="Proceso completado"
+        message="El correo de invitación ha sido reenviado exitosamente al usuario."
+        confirmLabel="Entendido"
       />
+
       <DetailsModal
         open={open}
         onClose={() => setOpen(false)}
