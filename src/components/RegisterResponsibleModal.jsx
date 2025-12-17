@@ -18,24 +18,36 @@ export default function RegisterResponsibleModal({
   areas = [],
 }) {
   const [showAreas, setShowAreas] = useState(false);
-  const [areasConNiveles, setAreasConNiveles] = useState(areas);
+  const [areaSearch, setAreaSearch] = useState("");
 
   useEffect(() => {
-    if (!open) setShowAreas(false);
+    if (!open) {
+      setShowAreas(false);
+      setAreaSearch("");
+    }
   }, [open]);
 
-  if (!open) return null;
-
+  // Áreas disponibles: aquellas que NO están en takenAreas
   const availableAreasList = areas.filter((a) => {
-    // Buscamos el área en takenAreas
     return !takenAreas?.find((t) => t.id === a.id);
   });
+
+  // Filtrar por búsqueda (solo nombre)
+  const filteredAreas = availableAreasList.filter((a) =>
+    a.nombre.toLowerCase().includes(areaSearch.toLowerCase())
+  );
 
   const errClass = (field) =>
     errors[field]
       ? "border-2 border-red-500 focus:border-red-500 focus:ring-red-300"
       : "";
+
   const getErrorMsg = (field) => errors[field] || null;
+
+  if (!open) return null;
+
+  // Mostrar el nombre del área seleccionado o el término de búsqueda
+  const displayValue = form.area || areaSearch || "";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -133,6 +145,7 @@ export default function RegisterResponsibleModal({
               </p>
             )}
           </div>
+
           {/* Teléfono */}
           <div>
             <label className="label text-sm">Teléfono *</label>
@@ -179,66 +192,61 @@ export default function RegisterResponsibleModal({
             )}
           </div>
 
-          {/* Área */}
+          {/* Área con buscador — SOLO NOMBRES */}
           <div className="relative md:col-span-2">
             <label className="label text-sm">Área *</label>
-            <button
-              type="button"
-              onClick={() => setShowAreas((v) => !v)}
-              className={`input text-sm flex items-center justify-between ${errClass(
-                "area"
-              )}`}
-            >
-              <span className={form.area ? "text-slate-900" : "text-slate-400"}>
-                {form.area || "Selecciona un área"}
-              </span>
-              <ChevronDownIcon className="w-4 h-4 text-slate-400" />
-            </button>
+            <div className="relative">
+              <input
+                type="text"
+                className={`input text-sm w-full ${errClass("area")}`}
+                placeholder="Buscar área..."
+                value={displayValue}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setAreaSearch(value);
+                  setField("area", ""); // Limpiar selección si se escribe manualmente
+                  setField("id_area", null);
+                  setShowAreas(true);
+                }}
+                onFocus={() => setShowAreas(true)}
+                onBlur={() => setTimeout(() => setShowAreas(false), 200)}
+                autoComplete="off"
+              />
+              <ChevronDownIcon
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"
+                aria-hidden="true"
+              />
+            </div>
 
             {showAreas && (
-              <div className="absolute z-10 mt-1 w-full card p-0 overflow-hidden">
-                <ul className="max-h-56 overflow-auto">
-                  {/*  {areasConNiveles
-                    .filter((a) => !takenAreas.includes(a.nombre))
-                    .map((a) => (
-                      <li key={a.id}>
-                        <button
-                          className="w-full text-left px-4 py-3 hover:bg-slate-50"
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={() => {
-                            setField("area", a.nombre);
-                            console.log(takenAreas);
-                            setShowAreas(false);
-                          }}
-                        >
-                          {a.nombre}
-                        </button>
-                      </li>
-                    ))} */}
-                  {availableAreasList.length > 0 ? (
-                    availableAreasList.map((a) => (
-                      <li key={a.id}>
-                        <button
-                          className="w-full text-left px-4 py-3 hover:bg-slate-50"
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={() => {
-                            setField("id_area", a.id);
-                            setField("area", a.nombre);
-                            setShowAreas(false);
-                          }}
-                        >
-                          {a.nombre}
-                        </button>
-                      </li>
-                    ))
-                  ) : (
-                    <li>
-                      <p className="px-4 py-3 text-slate-400">
-                        Todas las áreas ya están completas.
-                      </p>
-                    </li>
-                  )}
-                </ul>
+              <div
+                className="absolute z-50 mt-1 w-full bg-white border border-slate-200 rounded shadow-lg max-h-56 overflow-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {filteredAreas.length > 0 ? (
+                  filteredAreas.map((a) => (
+                    <button
+                      key={a.id}
+                      type="button"
+                      className="w-full text-left px-4 py-3 hover:bg-slate-50"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => {
+                        setField("id_area", a.id);
+                        setField("area", a.nombre);
+                        setAreaSearch("");
+                        setShowAreas(false);
+                      }}
+                    >
+                      {a.nombre}
+                    </button>
+                  ))
+                ) : (
+                  <div className="px-4 py-3 text-slate-400">
+                    {availableAreasList.length === 0
+                      ? "Todas las áreas ya tienen un responsable asignado."
+                      : "No se encontraron áreas disponibles."}
+                  </div>
+                )}
               </div>
             )}
 

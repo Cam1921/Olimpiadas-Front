@@ -9,6 +9,7 @@ import {
 export default function RegisterEvaluadorModal({
   open,
   onClose,
+  onSubmit,
   form,
   setField,
   errors,
@@ -17,54 +18,39 @@ export default function RegisterEvaluadorModal({
   areas = [],
 }) {
   const [showAreas, setShowAreas] = useState(false);
+  const [areaSearch, setAreaSearch] = useState(""); // ✅ Estado local para búsqueda
 
   useEffect(() => {
     if (!open) {
       setShowAreas(false);
+      setAreaSearch(""); // Limpiar al cerrar
     }
   }, [open]);
 
+  // Filtrar áreas disponibles según capacidad
   const availableAreasList = areas.filter((a) => {
-    // Buscamos el área en takenAreas
     const areaTaken = takenAreas?.find((t) => t.id === a.id);
-
-    // Ocupados: si no existe en takenAreas, es 0
     const ocupados = areaTaken?.ocupados || 0;
-
-    // Solo mostramos el área si aún hay cupo
     return ocupados < a.cantidad_evaluadores;
   });
 
-  // Actualiza los niveles disponibles cuando cambia el área
-  /*   useEffect(() => {
-    if (takenAreas.length > 0) {
-      const selectedArea = areasConNiveles.find((a) => a.nombre === form.area);
-      if (selectedArea) {
-        const takenForArea = takenAreas.filter((a) => a.id === form.id_area);
-        const available = selectedArea.niveles.filter(
-          (n) => !takenForArea.some((t) => t.nivel === n.nombre_nivel)
-        );
-        setAvailableNiveles(available);
-      } else {
-        setAvailableNiveles([]);
-      }
-    } else {
-      setAvailableNiveles([]);
-    }
-  }, [takenAreas]); */
-
-  if (!open) return null;
+  // Filtrar además por término de búsqueda
+  const filteredAreas = availableAreasList.filter((a) =>
+    a.nombre.toLowerCase().includes(areaSearch.toLowerCase())
+  );
 
   const errClass = (field) =>
     errors[field]
       ? "border-2 border-red-500 focus:border-red-500 focus:ring-red-300"
       : "";
+
   const getErrorMsg = (field) => errors[field] || null;
+
+  if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
-      {/* Removido overflow-y-auto del contenedor principal para evitar doble scroll */}
       <div className="relative card w-full max-w-2xl max-h-[90vh] p-6">
         <button
           className="absolute right-4 top-4 text-slate-400 hover:text-slate-600 z-10"
@@ -170,6 +156,7 @@ export default function RegisterEvaluadorModal({
               </p>
             )}
           </div>
+
           {/* Teléfono */}
           <div>
             <label className="label text-sm">Teléfono *</label>
@@ -218,57 +205,72 @@ export default function RegisterEvaluadorModal({
             )}
           </div>
 
-          {/* Área */}
+          {/* Área con buscador integrado */}
           <div className="relative md:col-span-2">
             <label className="label text-sm">Área *</label>
-            <button
-              type="button"
-              onClick={() => setShowAreas((v) => !v)}
-              className={`input text-sm flex items-center justify-between ${errClass(
-                "area"
-              )}`}
-            >
-              <span className={form.area ? "text-slate-900" : "text-slate-400"}>
-                {form.area || "Selecciona un área"}
-              </span>
-              <ChevronDownIcon className="w-4 h-4 text-slate-400" />
-            </button>
+            <div className="relative">
+              <input
+                type="text"
+                className={`input text-sm w-full ${errClass("area")}`}
+                placeholder="Buscar área..."
+                value={areaSearch}
+                onChange={(e) => {
+                  setAreaSearch(e.target.value);
+                  setShowAreas(true); // Mostrar dropdown al escribir
+                }}
+                onFocus={() => setShowAreas(true)} // Mostrar al hacer clic
+                onBlur={() => {
+                  // Si no seleccionaron nada, limpiar búsqueda
+                  if (!form.area) {
+                    setAreaSearch("");
+                  }
+                  setTimeout(() => setShowAreas(false), 200); // Retardo para permitir clic
+                }}
+              />
+              <ChevronDownIcon
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 cursor-pointer"
+                onClick={() => setShowAreas(!showAreas)}
+              />
+            </div>
+
             {showAreas && (
               <div
-                className="absolute z-50 mt-1 w-full bg-white border border-slate-200 rounded shadow-lg"
-                style={{ position: "absolute", top: "100%", left: 0 }}
+                className="absolute z-50 mt-1 w-full bg-white border border-slate-200 rounded shadow-lg max-h-56 overflow-auto"
+                onClick={(e) => e.stopPropagation()}
               >
-                <ul className="max-h-56"> {/* Eliminado overflow-auto aquí */}
-                  {availableAreasList.length > 0 ? (
-                    availableAreasList.map((a) => (
-                      <li key={a.id}>
-                        <button
-                          className="w-full text-left px-4 py-3 hover:bg-slate-50"
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={() => {
-                            setField("id_area", a.id);
-                            setField("area", a.nombre);
-                            setShowAreas(false);
-                          }}
-                        >
-                          {a.nombre} (
-                          {a.cantidad_evaluadores -
-                            (takenAreas.find((t) => t.id === a.id)?.ocupados ||
-                              0)}{" "}
-                          disponibles)
-                        </button>
-                      </li>
-                    ))
-                  ) : (
-                    <li>
-                      <p className="px-4 py-3 text-slate-400">
-                        Todas las áreas ya están completas.
-                      </p>
-                    </li>
-                  )}
-                </ul>
+                {filteredAreas.length > 0 ? (
+                  filteredAreas.map((a) => (
+                    <div key={a.id}>
+                      <button
+                        className="w-full text-left px-4 py-3 hover:bg-slate-50"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          setField("id_area", a.id);
+                          setField("area", a.nombre);
+                          setAreaSearch(a.nombre); // Mostrar nombre seleccionado
+                          setShowAreas(false);
+                        }}
+                      >
+                        {a.nombre} (
+                        {a.cantidad_evaluadores -
+                          (takenAreas.find((t) => t.id === a.id)?.ocupados ||
+                            0)}{" "}
+                        disponibles)
+                      </button>
+                    </div>
+                  ))
+                ) : (
+                  <div>
+                    <p className="px-4 py-3 text-slate-400">
+                      {availableAreasList.length === 0
+                        ? "Todas las áreas ya están completas."
+                        : "No se encontraron áreas."}
+                    </p>
+                  </div>
+                )}
               </div>
             )}
+
             {getErrorMsg("area") && (
               <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
                 <ExclamationTriangleIcon className="w-4 h-4" />
@@ -276,66 +278,6 @@ export default function RegisterEvaluadorModal({
               </p>
             )}
           </div>
-
-          {/* Nivel */}
-          {/*  <div className="relative md:col-span-2">
-            <label className="label text-sm">Nivel *</label>
-            <button
-              type="button"
-              onClick={() => setShowNiveles((v) => !v)}
-              className={`input text-sm flex items-center justify-between ${errClass(
-                "nivel"
-              )}`}
-              disabled={!form.area}
-            >
-              <span
-                className={form.nivel ? "text-slate-900" : "text-slate-400"}
-              >
-                {form.nivel ||
-                  (form.area
-                    ? "Selecciona un nivel"
-                    : "Primero selecciona un área")}
-              </span>
-              <ChevronDownIcon className="w-4 h-4 text-slate-400" />
-            </button>
-            {showNiveles && (
-              <div
-                className="absolute z-50 mt-1 w-full max-h-48 overflow-auto bg-white border border-slate-200 rounded shadow-lg"
-                style={{ position: "absolute", top: "100%", left: 0 }}
-              >
-                <ul className="max-h-56 overflow-auto">
-                  {availableNiveles.length > 0 ? (
-                    availableNiveles.map((n) => (
-                      <li key={n.id}>
-                        <button
-                          className="w-full text-left px-4 py-3 hover:bg-slate-50"
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={() => {
-                            setField("nivel", n.nombre_nivel);
-                            setShowNiveles(false);
-                          }}
-                        >
-                          {n.nombre_nivel}
-                        </button>
-                      </li>
-                    ))
-                  ) : (
-                    <li>
-                      <p className="px-4 py-3 text-slate-400">
-                        Todos los niveles para esta área ya están asignados.
-                      </p>
-                    </li>
-                  )}
-                </ul>
-              </div>
-            )}
-            {getErrorMsg("nivel") && (
-              <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
-                <ExclamationTriangleIcon className="w-4 h-4" />
-                {getErrorMsg("nivel")}
-              </p>
-            )}
-          </div> */}
         </div>
 
         <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 mt-6">

@@ -93,6 +93,8 @@ export default function App() {
           />
           <Route path="notificaciones" element={<NotificacionesPage />} />
           <Route path="evaluadores" element={<Evaluadores />} />
+          <Route path="responsable-academico
+          " element={<Evaluadores />} />
           {/*   <Route path="registrar-notas" element={<EvaluadorHome />} /> */}
           <Route path="control-fases" element={<TestControlFases />} />
           <Route
