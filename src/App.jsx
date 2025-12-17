@@ -57,11 +57,26 @@ import CorreccionNotificationsModal from "./components/correccion-notificaciones
 import CorreccionNotificationToast from "./components/correccion-notificaciones/CorreccionNotificationToast.jsx";
 import { CorreccionNotificacionesProvider } from "./hooks/useCorreccionNotificaciones";
 
+//convocatoria
+import ConvocatoriaPage from "@/application/convocatoria/ConvocatoriaPage";
+
+//areas
+import Areas from "./application/areas/Areas";
+
+
 export default function App() {
   return (
     <>
       <Routes>
         <Route path="/" element={<Home />} />
+
+<Route path="/ping" element={<div style={{ padding: 40 }}>PING OK</div>} />
+
+          {/* 👉 Convocatoria General (PÚBLICA) */}
+        <Route path="/convocatoria" element={<ConvocatoriaPage />} />
+
+          {/* 👉 Áreas (PÚBLICA) */}
+        <Route path="/areas" element={<Areas />} />
 
         <Route path="/results" element={<ResultsPage />} />
         {/* Ruta directa para probar Evaluador SIN login */}

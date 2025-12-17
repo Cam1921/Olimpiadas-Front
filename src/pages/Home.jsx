@@ -88,8 +88,9 @@ const NOVEDADES = [
 export default function Home() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+
   // ======== CARRUSEL SIMPLE: ventana de 3 áreas ========
-  const [areaIndex, setAreaIndex] = useState(0); // índice del primer área visible
+  const [areaIndex, setAreaIndex] = useState(0);
 
   const getVisibleAreas = () => {
     const visibles = [];
@@ -100,7 +101,6 @@ export default function Home() {
     return visibles;
   };
 
-  // auto-slide cada 5s
   useEffect(() => {
     const interval = setInterval(
       () => setAreaIndex((prev) => (prev + 1) % AREAS.length),
@@ -144,17 +144,6 @@ export default function Home() {
             </svg>
           </div>
 
-          {/* Círculos decorativos */}
-          <div className="pointer-events-none absolute top-20 left-10">
-            <div className="w-12 h-12 md:w-16 md:h-16 lg:w-24 lg:h-24 rounded-full bg-white opacity-10" />
-          </div>
-          <div className="pointer-events-none absolute top-40 right-20 rotate-45">
-            <div className="w-10 h-10 md:w-12 md:h-12 lg:w-16 lg:h-16 bg-white opacity-10" />
-          </div>
-          <div className="pointer-events-none absolute bottom-40 left-1/4">
-            <div className="w-16 h-16 md:w-20 md:h-20 lg:w-32 lg:h-32 rounded-full bg-white opacity-5" />
-          </div>
-
           {/* Contenido hero */}
           <div className="relative mx-auto flex max-w-6xl flex-col gap-12 px-4 pt-8 pb-20 md:px-8 md:pt-12 md:pb-24 lg:flex-row lg:items-center lg:pt-16 lg:pb-48">
             {/* Texto */}
@@ -181,11 +170,20 @@ export default function Home() {
               </p>
 
               <div className="flex flex-wrap gap-4 pt-2">
-                <button className="rounded-xl bg-white px-6 py-3 sm:px-8 sm:py-4 text-sm font-semibold text-[#0284c7] shadow-2xl shadow-black/15 transition hover:-translate-y-0.5 hover:bg-gray-50">
+                <Link
+                  to="/areas"
+                  className="rounded-xl bg-white px-6 py-3 sm:px-8 sm:py-4 text-sm font-semibold text-[#0284c7] shadow-2xl shadow-black/15 transition hover:-translate-y-0.5 hover:bg-gray-50"
+                >
                   Explorar áreas
-                </button>
-                <button className="rounded-xl border-2 border-white bg-transparent px-6 py-3 sm:px-8 sm:py-4 text-sm font-semibold text-white shadow-lg shadow-black/10 transition hover:bg-white/10">
-                  Ver convocatorias
+                </Link>
+
+                {/* ✅ MISMO ESTILO + NAVEGA A /convocatoria */}
+                <button
+                  type="button"
+                  onClick={() => navigate("/convocatoria")}
+                  className="rounded-xl border-2 border-white bg-transparent px-6 py-3 sm:px-8 sm:py-4 text-sm font-semibold text-white shadow-lg shadow-black/10 transition hover:bg-white/10"
+                >
+                  Ver convocatoria
                 </button>
               </div>
             </div>
@@ -197,6 +195,7 @@ export default function Home() {
                 <img
                   src={olimpiadas}
                   className="w-full h-[280px] md:h-[350px] lg:h-[420px] object-cover"
+                  alt="Olimpiadas"
                 />
               </div>
             </div>
@@ -240,7 +239,6 @@ export default function Home() {
 
             {/* DESKTOP/TABLET: carrusel mostrando SIEMPRE 3 */}
             <div className="relative hidden md:block">
-              {/* Flecha izquierda */}
               <button
                 type="button"
                 aria-label="Áreas anteriores"
@@ -249,7 +247,7 @@ export default function Home() {
                     (prev) => (prev - 1 + AREAS.length) % AREAS.length
                   )
                 }
-                className="absolute left-0 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white p-2 shadow-xl shadow-black/15 ring-1 ring-slate-200 hover:-translate-y-1/2 hover:-translate-x-0.5 hover:shadow-2xl"
+                className="absolute left-0 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white p-2 shadow-xl shadow-black/15 ring-1 ring-slate-200 hover:-translate-x-0.5 hover:shadow-2xl"
               >
                 <HiChevronLeft className="h-5 w-5 text-slate-600" />
               </button>
@@ -267,7 +265,6 @@ export default function Home() {
                           alt={area.nombre}
                           className="h-full w-full object-cover"
                         />
-                        {/* overlay azul en hover */}
                         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0284c7]/40 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                       </div>
                       <div className="px-6 pb-6 pt-4 text-center">
@@ -280,19 +277,15 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Flecha derecha */}
               <button
                 type="button"
                 aria-label="Áreas siguientes"
-                onClick={() =>
-                  setAreaIndex((prev) => (prev + 1) % AREAS.length)
-                }
-                className="absolute right-0 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white p-2 shadow-xl shadow-black/15 ring-1 ring-slate-200 hover:-translate-y-1/2 hover:translate-x-0.5 hover:shadow-2xl"
+                onClick={() => setAreaIndex((prev) => (prev + 1) % AREAS.length)}
+                className="absolute right-0 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white p-2 shadow-xl shadow-black/15 ring-1 ring-slate-200 hover:translate-x-0.5 hover:shadow-2xl"
               >
                 <HiChevronRight className="h-5 w-5 text-slate-600" />
               </button>
 
-              {/* Puntitos: uno por cada área (7) */}
               <div className="mt-6 flex justify-center gap-2">
                 {AREAS.map((_, index) => (
                   <button
@@ -327,9 +320,7 @@ export default function Home() {
                 toda la información de manera transparente y actualizada.
               </p>
               <button
-                onClick={() => {
-                  navigate("/results");
-                }}
+                onClick={() => navigate("/results")}
                 className="mt-6 rounded-full bg-[#0284c7] px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-[#0284c7]/40 transition hover:-translate-y-0.5 hover:shadow-xl"
               >
                 Consultar resultados
