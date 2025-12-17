@@ -13,7 +13,6 @@ export default function RegisterEvaluadorModal({
   setField,
   errors,
   submitting,
-  onSubmit,
   takenAreas = [],
   areas = [],
 }) {
@@ -65,7 +64,8 @@ export default function RegisterEvaluadorModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
-      <div className="relative card w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6">
+      {/* Removido overflow-y-auto del contenedor principal para evitar doble scroll */}
+      <div className="relative card w-full max-w-2xl max-h-[90vh] p-6">
         <button
           className="absolute right-4 top-4 text-slate-400 hover:text-slate-600 z-10"
           onClick={onClose}
@@ -235,10 +235,10 @@ export default function RegisterEvaluadorModal({
             </button>
             {showAreas && (
               <div
-                className="absolute z-50 mt-1 w-full max-h-48 overflow-auto bg-white border border-slate-200 rounded shadow-lg"
+                className="absolute z-50 mt-1 w-full bg-white border border-slate-200 rounded shadow-lg"
                 style={{ position: "absolute", top: "100%", left: 0 }}
               >
-                <ul className="max-h-56 overflow-auto">
+                <ul className="max-h-56"> {/* Eliminado overflow-auto aquí */}
                   {availableAreasList.length > 0 ? (
                     availableAreasList.map((a) => (
                       <li key={a.id}>
