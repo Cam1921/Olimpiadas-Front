@@ -27,12 +27,10 @@ export default function RegisterResponsibleModal({
     }
   }, [open]);
 
-  // Áreas disponibles: aquellas que NO están en takenAreas
   const availableAreasList = areas.filter((a) => {
     return !takenAreas?.find((t) => t.id === a.id);
   });
 
-  // Filtrar por búsqueda (solo nombre)
   const filteredAreas = availableAreasList.filter((a) =>
     a.nombre.toLowerCase().includes(areaSearch.toLowerCase())
   );
@@ -46,7 +44,6 @@ export default function RegisterResponsibleModal({
 
   if (!open) return null;
 
-  // Mostrar el nombre del área seleccionado o el término de búsqueda
   const displayValue = form.area || areaSearch || "";
 
   return (
@@ -67,14 +64,17 @@ export default function RegisterResponsibleModal({
           Completa los datos del responsable académico
         </p>
 
-        {Object.keys(errors).length > 0 && (
-          <div className="bg-red-50 border-l-4 border-red-500 p-3 mb-4 rounded">
-            <p className="text-red-700 text-sm font-medium">
-              ⚠️ Algunos datos ya están registrados o son inválidos. Revisa los
-              campos marcados en rojo.
-            </p>
-          </div>
-        )}
+        {/* ✅ Caja de error global con espacio reservado */}
+        <div className="min-h-[48px] mb-4">
+          {Object.keys(errors).length > 0 && (
+            <div className="bg-red-50 border-l-4 border-red-500 p-3 rounded">
+              <p className="text-red-700 text-sm font-medium">
+                ⚠️ Algunos datos ya están registrados o son inválidos. Revisa los
+                campos marcados en rojo.
+              </p>
+            </div>
+          )}
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
           {/* Nombre */}
@@ -86,16 +86,18 @@ export default function RegisterResponsibleModal({
               onChange={(e) => setField("nombre", e.target.value)}
               placeholder="ej: María"
             />
-            {getErrorMsg("nombre") ? (
-              <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
-                <ExclamationTriangleIcon className="w-4 h-4" />
-                {getErrorMsg("nombre")}
-              </p>
-            ) : (
-              <p className="text-xs text-slate-400 mt-1">
-                Debe tener al menos 3 letras.
-              </p>
-            )}
+            <div className="min-h-[32px] mt-1">
+              {getErrorMsg("nombre") ? (
+                <p className="flex items-center gap-1 text-red-500 text-xs">
+                  <ExclamationTriangleIcon className="w-4 h-4" />
+                  {getErrorMsg("nombre")}
+                </p>
+              ) : (
+                <p className="text-xs text-slate-400">
+                  Debe tener al menos 3 letras.
+                </p>
+              )}
+            </div>
           </div>
 
           {/* Apellidos */}
@@ -107,19 +109,21 @@ export default function RegisterResponsibleModal({
               onChange={(e) => setField("apellidos", e.target.value)}
               placeholder="ej: González Pérez"
             />
-            {getErrorMsg("apellidos") ? (
-              <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
-                <ExclamationTriangleIcon className="w-4 h-4" />
-                {getErrorMsg("apellidos")}
-              </p>
-            ) : (
-              <p className="text-xs text-slate-400 mt-1">
-                Debe tener al menos 3 letras.
-              </p>
-            )}
+            <div className="min-h-[32px] mt-1">
+              {getErrorMsg("apellidos") ? (
+                <p className="flex items-center gap-1 text-red-500 text-xs">
+                  <ExclamationTriangleIcon className="w-4 h-4" />
+                  {getErrorMsg("apellidos")}
+                </p>
+              ) : (
+                <p className="text-xs text-slate-400">
+                  Debe tener al menos 3 letras.
+                </p>
+              )}
+            </div>
           </div>
 
-          {/* Correo */}
+          {/* Correo — ✅ Solo muestra error si existe */}
           <div className="md:col-span-2">
             <label className="label text-sm">Correo electrónico *</label>
             <input
@@ -131,19 +135,17 @@ export default function RegisterResponsibleModal({
                   setField("correo", value);
                 }
               }}
-              placeholder="ej: maria@gmail.com"
+              placeholder="ej: maria@gmail.com o maria@est.umss.edu"
               maxLength={70}
             />
-            {getErrorMsg("correo") ? (
-              <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
-                <ExclamationTriangleIcon className="w-4 h-4" />
-                {getErrorMsg("correo")}
-              </p>
-            ) : (
-              <p className="text-xs text-slate-400 mt-1">
-                Debe contener "@" y ".com". Máximo 70 caracteres.
-              </p>
-            )}
+            <div className="min-h-[36px] mt-1">
+              {getErrorMsg("correo") && (
+                <p className="flex items-start gap-1 text-red-500 text-xs">
+                  <ExclamationTriangleIcon className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  {getErrorMsg("correo")}
+                </p>
+              )}
+            </div>
           </div>
 
           {/* Teléfono */}
@@ -157,16 +159,18 @@ export default function RegisterResponsibleModal({
               }
               placeholder="ej: 71234567"
             />
-            {getErrorMsg("telefono") ? (
-              <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
-                <ExclamationTriangleIcon className="w-4 h-4" />
-                {getErrorMsg("telefono")}
-              </p>
-            ) : (
-              <p className="text-xs text-slate-400 mt-1">
-                8 dígitos, empieza con 6 o 7.
-              </p>
-            )}
+            <div className="min-h-[32px] mt-1">
+              {getErrorMsg("telefono") ? (
+                <p className="flex items-center gap-1 text-red-500 text-xs">
+                  <ExclamationTriangleIcon className="w-4 h-4" />
+                  {getErrorMsg("telefono")}
+                </p>
+              ) : (
+                <p className="text-xs text-slate-400">
+                  8 dígitos, empieza con 6 o 7.
+                </p>
+              )}
+            </div>
           </div>
 
           {/* CI */}
@@ -180,19 +184,21 @@ export default function RegisterResponsibleModal({
               }
               placeholder="ej: 1234567"
             />
-            {getErrorMsg("ci") ? (
-              <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
-                <ExclamationTriangleIcon className="w-4 h-4" />
-                {getErrorMsg("ci")}
-              </p>
-            ) : (
-              <p className="text-xs text-slate-400 mt-1">
-                Entre 6 y 10 dígitos.
-              </p>
-            )}
+            <div className="min-h-[32px] mt-1">
+              {getErrorMsg("ci") ? (
+                <p className="flex items-center gap-1 text-red-500 text-xs">
+                  <ExclamationTriangleIcon className="w-4 h-4" />
+                  {getErrorMsg("ci")}
+                </p>
+              ) : (
+                <p className="text-xs text-slate-400">
+                  Entre 6 y 10 dígitos.
+                </p>
+              )}
+            </div>
           </div>
 
-          {/* Área con buscador — SOLO NOMBRES */}
+          {/* Área con buscador */}
           <div className="relative md:col-span-2">
             <label className="label text-sm">Área *</label>
             <div className="relative">
@@ -204,7 +210,7 @@ export default function RegisterResponsibleModal({
                 onChange={(e) => {
                   const value = e.target.value;
                   setAreaSearch(value);
-                  setField("area", ""); // Limpiar selección si se escribe manualmente
+                  setField("area", "");
                   setField("id_area", null);
                   setShowAreas(true);
                 }}
@@ -250,12 +256,14 @@ export default function RegisterResponsibleModal({
               </div>
             )}
 
-            {getErrorMsg("area") && (
-              <p className="flex items-center gap-1 text-red-500 text-xs mt-1">
-                <ExclamationTriangleIcon className="w-4 h-4" />
-                {getErrorMsg("area")}
-              </p>
-            )}
+            <div className="min-h-[32px] mt-1">
+              {getErrorMsg("area") ? (
+                <p className="flex items-center gap-1 text-red-500 text-xs">
+                  <ExclamationTriangleIcon className="w-4 h-4" />
+                  {getErrorMsg("area")}
+                </p>
+              ) : null}
+            </div>
           </div>
         </div>
 
